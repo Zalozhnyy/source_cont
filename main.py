@@ -101,9 +101,11 @@ class DataParcer:
         #### .PL DECODER
         with open(rf'{self.path}', 'r') as file:
             lines_pl = file.readlines()
-        pl_numeric = int(lines_pl[6])
-        out_pl = np.zeros((pl_numeric, pl_numeric), dtype=int)
         for i in range(len(lines_pl)):
+            if '<Количество слоев>' in lines_pl[i]:
+                pl_numeric = int(lines_pl[i + 1])
+                out_pl = np.zeros((pl_numeric, pl_numeric), dtype=int)
+
             if '<Частица номер>' in lines_pl[i]:
                 for k in range(pl_numeric):
                     out_pl[k, 0] = int(lines_pl[i + 2 + k].split()[0])

@@ -39,22 +39,21 @@ def pl_decoder():
     #### .PL DECODER
     with open(r'KUVSH.PL', 'r') as file:
         lines_pl = file.readlines()
-    pl_numeric = int(lines_pl[2])
-
+    pl_numeric = int(lines_pl[6])
     out_pl = np.zeros((pl_numeric, pl_numeric), dtype=int)
-    k = 0
     for i in range(len(lines_pl)):
         if '<Частица номер>' in lines_pl[i]:
             for k in range(pl_numeric):
+
                 out_pl[k, 0] = int(lines_pl[i + 2 + k].split()[0])
                 out_pl[k, 1] = int(lines_pl[i + 2 + k].split()[1])
                 out_pl[k, 2] = int(lines_pl[i + 2 + k].split()[2])
                 out_pl[k, 3] = int(lines_pl[i + 2 + k].split()[3])
                 out_pl[k, 4] = int(lines_pl[i + 2 + k].split()[4])
                 out_pl[k, 5] = int(lines_pl[i + 2 + k].split()[5])
-    print('.PL  ', out_pl)
+    print('.PL\n', out_pl)
     return out_pl
 
 
 if __name__ == '__main__':
-    tok_decoder()
+    pl_decoder()

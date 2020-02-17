@@ -25,12 +25,14 @@ def open_button():
 
 
 class FrameGen(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, name='Title', energy_type='Название типа энергии'):
         tk.Frame.__init__(self, parent)
         self.parent = parent
-        self.name = "name"
+        self.name = name
+        self.energy_type = energy_type
+        self.__konstr()
 
-    def konstr(self):
+    def __konstr(self):
         self.parent.title("PECH UTILITY")
         menubar = tk.Menu(self.parent)
         self.parent.config(menu=menubar)
@@ -45,7 +47,7 @@ class FrameGen(tk.Frame):
     def ent(self):
         nb.add(self, text=f"{self.name}")
 
-        label_name_energy = tk.Label(self, text='Название вида энергии')
+        label_name_energy = tk.Label(self, text=f'{self.energy_type}')
         label_name_energy.grid(row=3, column=0, columnspan=5)
         label_func = tk.Label(self, text='value')
         label_func.grid(row=4, column=0, padx=2, pady=10)
@@ -81,7 +83,7 @@ class DataParcer:
                 out_lay[j, 1] = int(lines[i + 3].split()[2])
                 out_lay[j, 2] = int(lines[i + 3].split()[3])
                 j += 1
-        print('.LAY  ', out_lay)
+        # print('.LAY  ', out_lay)
         return out_lay
 
     def tok_decoder(self):
@@ -94,7 +96,7 @@ class DataParcer:
                 out_tok[0] = int(lines_tok[i + 1])
             if '<Внешнее поле (0-нет,1-да)>' in lines_tok[i]:
                 out_tok[1] = int(lines_tok[i + 1])
-        print('.TOK  ', out_tok)
+        # print('.TOK  ', out_tok)
         return out_tok
 
     def pl_decoder(self):
@@ -114,7 +116,7 @@ class DataParcer:
                     out_pl[k, 3] = int(lines_pl[i + 2 + k].split()[3])
                     out_pl[k, 4] = int(lines_pl[i + 2 + k].split()[4])
                     out_pl[k, 5] = int(lines_pl[i + 2 + k].split()[5])
-        print('.PL\n', out_pl)
+        # print('.PL\n', out_pl)
         return out_pl
 
 
@@ -129,15 +131,46 @@ def main():
     lay_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.LAY')
     pl_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.PL')
     tok_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.TOK')
-    print(DataParcer(tok_dir).tok_decoder())
-    print(DataParcer(lay_dir).lay_decoder())
-    print(DataParcer(pl_dir).pl_decoder())
-    FrameGen(root).konstr()
+    # print('TOK\n',DataParcer(tok_dir).tok_decoder())
+    # print('LAY\n', DataParcer(lay_dir).lay_decoder())
+    print('PL\n', DataParcer(pl_dir).pl_decoder())
+
+    # print('NON zero PL\n', np.nonzero(DataParcer(pl_dir).pl_decoder()))
+    # print('Count non zero PL  = ', np.count_nonzero(DataParcer(pl_dir).pl_decoder()))
+    print('Count non zero LAY = ', np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:]))
+    # print('Count non zero TOK = ', np.count_nonzero(DataParcer(tok_dir).tok_decoder()))
+
+    books_pl = np.count_nonzero(DataParcer(pl_dir).pl_decoder())
+    books_tok = np.count_nonzero(DataParcer(tok_dir).tok_decoder())
+    books_lay = np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:])
+    books_count = sum((np.count_nonzero(DataParcer(pl_dir).pl_decoder()),
+                       np.count_nonzero(DataParcer(tok_dir).tok_decoder()),
+                       np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:])))
+    print('sum = ', books_count)
+    a = np.nonzero(DataParcer(pl_dir).pl_decoder())
+
+    # FrameGen(root).konstr()
     nb = ttk.Notebook(root)
     nb.grid(row=5, column=0, columnspan=10, rowspan=10)
+    LAY = DataParcer(lay_dir).lay_decoder()
+    PL = DataParcer(pl_dir).pl_decoder()
+    for i in range(LAY.shape[0]):
+        if LAY[i, 1] == 1:
+            energy_type = 'Стор. ток'
+            FrameGen(root, f'Слой № {i}, {energy_type}', 'Сторонний ток').ent()
+        if LAY[i, 2] == 1:
+            energy_type = 'Стор.ист.втор.эл.'
+            FrameGen(root, f'Слой № {i}, {energy_type}', 'Стор. источник втор. эл.').ent()
 
-    for i in range(1):
-        FrameGen(root).ent()
+    for i in range(PL.shape[0]):
+        for j in range(PL.shape[1]):
+            if PL[i, j] == 1:
+                FrameGen(root, 'PL', f'Из {j}го в {i}й').ent()
+    if PL[0, :].any() == 1:
+        mb.showerror('ERROR', 'Частицы в нулевом слое!')
+
+
+
     root.mainloop()
 
 

@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 
 def open_button():
     filename = fd.askdirectory()
-    handle = open(r"config.txt", "w", encoding='utf-8')
+    handle = open(r"entry_data/config.txt", "w", encoding='utf-8')
     handle.write(filename)
     handle.close()
 
-    with open(r"config.txt", 'r', encoding='utf-8') as g:
+    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
             cur_dir.append(line)
@@ -54,16 +54,16 @@ class FrameGen(tk.Frame):
         label_time = tk.Label(self, text='time')
         label_time.grid(row=4, column=1, padx=2, pady=10)
 
-        button_browse = tk.Button(self, width=7, text='Browse')
+        button_browse = tk.Button(self, width=10, text='Browse')
         button_browse.grid(row=1, column=10)
-        button_save = tk.Button(self, width=7, text='Save')
+        button_save = tk.Button(self, width=10, text='Save')
         button_save.grid(row=2, column=10)
 
         for i in range(5):
-            entry_func = tk.Entry(self, width=8)
-            entry_func.grid(row=5 + i, column=0, padx=2, pady=1)
-            entry_time = tk.Entry(self, width=8)
-            entry_time.grid(row=5 + i, column=1, padx=2, pady=1)
+            entry_func = tk.Entry(self, width=15)
+            entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
+            entry_time = tk.Entry(self, width=15)
+            entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
 
 
 class DataParcer:
@@ -123,8 +123,8 @@ class DataParcer:
 def main():
     global nb
     root = tk.Tk()
-    root.geometry('650x450+300+200')
-    with open(r"config.txt", 'r', encoding='utf-8') as g:
+    root.geometry('800x800+300+200')
+    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
             cur_dir.append(line)
@@ -133,27 +133,27 @@ def main():
     tok_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.TOK')
     # print('TOK\n',DataParcer(tok_dir).tok_decoder())
     # print('LAY\n', DataParcer(lay_dir).lay_decoder())
-    print('PL\n', DataParcer(pl_dir).pl_decoder())
+    # print('PL\n', DataParcer(pl_dir).pl_decoder())
 
     # print('NON zero PL\n', np.nonzero(DataParcer(pl_dir).pl_decoder()))
     # print('Count non zero PL  = ', np.count_nonzero(DataParcer(pl_dir).pl_decoder()))
-    print('Count non zero LAY = ', np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:]))
+    # print('Count non zero LAY = ', np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:]))
     # print('Count non zero TOK = ', np.count_nonzero(DataParcer(tok_dir).tok_decoder()))
 
-    books_pl = np.count_nonzero(DataParcer(pl_dir).pl_decoder())
-    books_tok = np.count_nonzero(DataParcer(tok_dir).tok_decoder())
-    books_lay = np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:])
-    books_count = sum((np.count_nonzero(DataParcer(pl_dir).pl_decoder()),
-                       np.count_nonzero(DataParcer(tok_dir).tok_decoder()),
-                       np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:])))
-    print('sum = ', books_count)
-    a = np.nonzero(DataParcer(pl_dir).pl_decoder())
+    # books_pl = np.count_nonzero(DataParcer(pl_dir).pl_decoder())
+    # books_tok = np.count_nonzero(DataParcer(tok_dir).tok_decoder())
+    # books_lay = np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:])
+    # books_count = sum((np.count_nonzero(DataParcer(pl_dir).pl_decoder()),
+    #                    np.count_nonzero(DataParcer(tok_dir).tok_decoder()),
+    #                    np.count_nonzero(DataParcer(lay_dir).lay_decoder()[:, 1:])))
+    # print('sum = ', books_count)
+    # a = np.nonzero(DataParcer(pl_dir).pl_decoder())
 
-    # FrameGen(root).konstr()
     nb = ttk.Notebook(root)
     nb.grid(row=5, column=0, columnspan=10, rowspan=10)
     LAY = DataParcer(lay_dir).lay_decoder()
     PL = DataParcer(pl_dir).pl_decoder()
+    TOK = DataParcer(tok_dir).tok_decoder()
     for i in range(LAY.shape[0]):
         if LAY[i, 1] == 1:
             energy_type = 'Стор. ток'
@@ -168,6 +168,15 @@ def main():
                 FrameGen(root, 'PL', f'Из {j}го в {i}й').ent()
     if PL[0, :].any() == 1:
         mb.showerror('ERROR', 'Частицы в нулевом слое!')
+
+    if TOK[0] == 1:
+        energy_type = 'Начальное поле'
+        FrameGen(root, 'TOK', f'{energy_type}').ent()
+    if TOK[1] == 1:
+        energy_type = 'Внешнее поле'
+        FrameGen(root, 'TOK', f'{energy_type}').ent()
+
+
 
 
 

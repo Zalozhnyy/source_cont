@@ -32,6 +32,12 @@ class FrameGen(tk.Frame):
         self.energy_type = energy_type
         self.__konstr()
 
+        self.cell_numeric = tk.StringVar()
+        self.func_entry_vel = []
+        self.time_entry_vel = []
+        self.func_list = []
+        self.time_list = []
+
     def __konstr(self):
         self.parent.title("PECH UTILITY")
         menubar = tk.Menu(self.parent)
@@ -43,8 +49,7 @@ class FrameGen(tk.Frame):
 
     def onExit(self):
         self.quit()
-
-    def ent(self):
+    def notebooks(self):
         nb.add(self, text=f"{self.name}")
         label_name_energy = tk.Label(self, text=f'{self.energy_type}')
         label_name_energy.grid(row=3, column=0, columnspan=5)
@@ -57,18 +62,32 @@ class FrameGen(tk.Frame):
         button_browse.grid(row=1, column=10)
         button_save = tk.Button(self, width=10, text='Save')
         button_save.grid(row=2, column=10)
-        entry_generate_value = tk.Entry(self, width=6)
+        entry_generate_value = tk.Entry(self, width=6, textvariable=self.cell_numeric)
         entry_generate_value.grid(row=3, column=11, padx=5)
-        button_generate = tk.Button(self, width=10, text='Generate')
+        button_generate = tk.Button(self, width=10, text='Generate', command=self.ent)
         button_generate.grid(row=3, column=10)
+        button_read_gen = tk.Button(self, width=10, text='Read', command=self.get)
+        button_read_gen.grid(row=4, column=10)
 
-
-    def grid(self, event):
-        for i in range(int(entry_grid_value.get())):
-            entry_func = tk.Entry(self, width=15)
+    def ent(self):
+        self.func_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
+        self.time_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
+        for i in range(int(self.cell_numeric.get())):
+            entry_func = tk.Entry(self, width=15, textvariable=self.func_entry_vel[i])
             entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
-            entry_time = tk.Entry(self, width=15)
+            entry_time = tk.Entry(self, width=15, textvariable=self.time_entry_vel[i])
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
+
+    def get(self):
+
+        for i in self.func_entry_vel:
+            self.func_list.append(int(i.get()))
+        for i in self.time_entry_vel:
+            self.time_list.append(int(i.get()))
+        # self.time_list = [self.time_list.append(int(i.get())) for i in self.time_entry_vel]
+
+        print('time = ', self.time_list)
+        print('func = ', self.func_list)
 
 
 class DataParcer:
@@ -170,24 +189,24 @@ def main():
     for i in range(LAY.shape[0]):
         if LAY[i, 1] == 1:
             energy_type = 'Стор. ток'
-            FrameGen(root, f'Слой № {i}, {energy_type}', 'Сторонний ток').ent()
+            FrameGen(root, f'Слой № {i}, {energy_type}', 'Сторонний ток').notebooks()
         if LAY[i, 2] == 1:
             energy_type = 'Стор.ист.втор.эл.'
-            FrameGen(root, f'Слой № {i}, {energy_type}', 'Стор. источник втор. эл.').ent()
+            FrameGen(root, f'Слой № {i}, {energy_type}', 'Стор. источник втор. эл.').notebooks()
 
     for i in range(PL.shape[0]):
         for j in range(1, PL.shape[1]):
             if PL[i, j] == 1:
-                FrameGen(root, 'PL', f'Источник электронов из {j}го в {i}й').ent()
+                FrameGen(root, 'PL', f'Источник электронов из {j}го в {i}й').notebooks()
     if PL[:, 0].any() == 1:
         mb.showerror('ERROR', 'Частицы в нулевом слое!')
 
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
-        FrameGen(root, 'TOK', f'{energy_type}').ent()
+        FrameGen(root, 'TOK', f'{energy_type}').notebooks()
     if TOK[1] == 1:
         energy_type = 'Внешнее поле'
-        FrameGen(root, 'TOK', f'{energy_type}').ent()
+        FrameGen(root, 'TOK', f'{energy_type}').notebooks()
 
 
 if __name__ == '__main__':

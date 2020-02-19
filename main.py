@@ -46,7 +46,6 @@ class FrameGen(tk.Frame):
 
     def ent(self):
         nb.add(self, text=f"{self.name}")
-
         label_name_energy = tk.Label(self, text=f'{self.energy_type}')
         label_name_energy.grid(row=3, column=0, columnspan=5)
         label_func = tk.Label(self, text='value')
@@ -58,8 +57,14 @@ class FrameGen(tk.Frame):
         button_browse.grid(row=1, column=10)
         button_save = tk.Button(self, width=10, text='Save')
         button_save.grid(row=2, column=10)
+        entry_generate_value = tk.Entry(self, width=6)
+        entry_generate_value.grid(row=3, column=11, padx=5)
+        button_generate = tk.Button(self, width=10, text='Generate')
+        button_generate.grid(row=3, column=10)
 
-        for i in range(5):
+
+    def grid(self, event):
+        for i in range(int(entry_grid_value.get())):
             entry_func = tk.Entry(self, width=15)
             entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
             entry_time = tk.Entry(self, width=15)
@@ -119,11 +124,16 @@ class DataParcer:
         # print('.PL\n', out_pl)
         return out_pl
 
+    def grid_parcer(self):
+        #### .PL DECODER
+        with open(rf'{self.path}', 'r') as file:
+            lines = file.readlines()
+        out = np.array(lines[15].split(), dtype=float)
+        return out
+
 
 def main():
     global nb
-    root = tk.Tk()
-    root.geometry('800x800+300+200')
     with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
@@ -131,6 +141,7 @@ def main():
     lay_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.LAY')
     pl_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.PL')
     tok_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.TOK')
+    grid_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.GRD')
     # print('TOK\n',DataParcer(tok_dir).tok_decoder())
     # print('LAY\n', DataParcer(lay_dir).lay_decoder())
     # print('PL\n', DataParcer(pl_dir).pl_decoder())
@@ -149,6 +160,8 @@ def main():
     # print('sum = ', books_count)
     # a = np.nonzero(DataParcer(pl_dir).pl_decoder())
 
+    print(DataParcer(grid_dir).grid_parcer().shape)
+
     nb = ttk.Notebook(root)
     nb.grid(row=5, column=0, columnspan=10, rowspan=10)
     LAY = DataParcer(lay_dir).lay_decoder()
@@ -163,10 +176,10 @@ def main():
             FrameGen(root, f'Слой № {i}, {energy_type}', 'Стор. источник втор. эл.').ent()
 
     for i in range(PL.shape[0]):
-        for j in range(PL.shape[1]):
+        for j in range(1, PL.shape[1]):
             if PL[i, j] == 1:
-                FrameGen(root, 'PL', f'Из {j}го в {i}й').ent()
-    if PL[0, :].any() == 1:
+                FrameGen(root, 'PL', f'Источник электронов из {j}го в {i}й').ent()
+    if PL[:, 0].any() == 1:
         mb.showerror('ERROR', 'Частицы в нулевом слое!')
 
     if TOK[0] == 1:
@@ -177,11 +190,9 @@ def main():
         FrameGen(root, 'TOK', f'{energy_type}').ent()
 
 
-
-
+if __name__ == '__main__':
+    root = tk.Tk()
+    root.geometry('800x800+300+200')
+    main()
 
     root.mainloop()
-
-
-if __name__ == '__main__':
-    main()

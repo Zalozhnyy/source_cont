@@ -49,6 +49,7 @@ class FrameGen(tk.Frame):
 
     def onExit(self):
         self.quit()
+
     def notebooks(self):
         nb.add(self, text=f"{self.name}")
         label_name_energy = tk.Label(self, text=f'{self.energy_type}')
@@ -58,9 +59,9 @@ class FrameGen(tk.Frame):
         label_time = tk.Label(self, text='time')
         label_time.grid(row=4, column=1, padx=2, pady=10)
 
-        button_browse = tk.Button(self, width=10, text='Browse')
+        button_browse = tk.Button(self, width=10, text='Load', command=self.ent_load)
         button_browse.grid(row=1, column=10)
-        button_save = tk.Button(self, width=10, text='Save')
+        button_save = tk.Button(self, width=10, text='Save', command=self.time_save)
         button_save.grid(row=2, column=10)
         entry_generate_value = tk.Entry(self, width=6, textvariable=self.cell_numeric)
         entry_generate_value.grid(row=3, column=11, padx=5)
@@ -78,6 +79,32 @@ class FrameGen(tk.Frame):
             entry_time = tk.Entry(self, width=15, textvariable=self.time_entry_vel[i])
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
 
+    def ent_load(self):
+        with open(rf'time functions/{self.name}.txt', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        lines = [line.strip() for line in lines]
+        print(lines)
+
+        for word in lines[0].split():
+            self.func_entry_vel.append(int(word))
+        for word in lines[1].split():
+            self.time_entry_vel.append(int(word))
+        print('func = ', self.func_entry_vel)
+        print('time = ', self.time_entry_vel)
+
+        for i in range(len(self.func_entry_vel)):
+            entry_func = tk.Entry(self, width=15, textvariable=self.func_entry_vel[i])
+            entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
+
+        for i in range(len(self.time_entry_vel)):
+            entry_time = tk.Label(self, width=15, text=self.time_entry_vel[i])
+            entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
+
+        # for string in lines:
+        #     print(string)
+        #     for word in string.split(' '):
+        #         print(int(word))
+
     def get(self):
 
         for i in self.func_entry_vel:
@@ -88,6 +115,14 @@ class FrameGen(tk.Frame):
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)
+
+    def time_save(self):
+        with open(rf'time functions/{self.name}.txt', 'w', encoding='utf-8') as file:
+            for i in self.func_list:
+                file.write(f'{i} ')
+            file.write('\n')
+            for i in self.time_list:
+                file.write(f'{i} ')
 
 
 class DataParcer:
@@ -153,10 +188,26 @@ class DataParcer:
 
 def main():
     global nb
+    if os.path.exists(r"entry_data/config.txt"):
+        print('config exist')
+    else:
+        open_button()
+
     with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
             cur_dir.append(line)
+    if not os.path.exists(rf"{cur_dir[0]}"):
+        mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')
+        open_button()
+        print('config exist ', f' {cur_dir[0]}')
+    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
+        cur_dir = []
+        for line in g:
+            cur_dir.append(line)
+    if not os.path.exists(r'time functions'):
+        os.mkdir('time functions')
+
     lay_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.LAY')
     pl_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.PL')
     tok_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.TOK')
@@ -211,7 +262,7 @@ def main():
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.geometry('800x800+300+200')
+    root.geometry('800x600+300+200')
     main()
 
     root.mainloop()

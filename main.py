@@ -74,9 +74,9 @@ class FrameGen(tk.Frame):
         self.func_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
         self.time_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
         for i in range(int(self.cell_numeric.get())):
-            entry_func = tk.Entry(self, width=15, textvariable=self.func_entry_vel[i])
+            entry_func = tk.Entry(self, width=9, textvariable=self.func_entry_vel[i])
             entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
-            entry_time = tk.Entry(self, width=15, textvariable=self.time_entry_vel[i])
+            entry_time = tk.Entry(self, width=9, textvariable=self.time_entry_vel[i])
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
 
     def ent_load(self):
@@ -86,32 +86,33 @@ class FrameGen(tk.Frame):
         print(lines)
 
         for word in lines[0].split():
-            self.func_entry_vel.append(int(word))
+            self.func_entry_vel.append(float(word))
         for word in lines[1].split():
-            self.time_entry_vel.append(int(word))
+            self.time_entry_vel.append(float(word))
         print('func = ', self.func_entry_vel)
         print('time = ', self.time_entry_vel)
 
         for i in range(len(self.func_entry_vel)):
-            entry_func = tk.Entry(self, width=15, textvariable=self.func_entry_vel[i])
+            entry_func = tk.Entry(self, width=9, justify='center')
             entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
+            entry_func.insert(0, f'{self.func_entry_vel[i]}')
 
         for i in range(len(self.time_entry_vel)):
-            entry_time = tk.Label(self, width=15, text=self.time_entry_vel[i])
+            entry_time = tk.Entry(self, width=9, justify='center')
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
+            entry_time.insert(0, f'{self.time_entry_vel[i]}')
 
-        # for string in lines:
-        #     print(string)
-        #     for word in string.split(' '):
-        #         print(int(word))
+        if len(self.func_entry_vel) != len(self.time_entry_vel):
+            mb.showerror('Load error', 'Размерности не совпадают')
+            self.onExit()
 
     def get(self):
 
         for i in self.func_entry_vel:
-            self.func_list.append(int(i.get()))
+            self.func_list.append(float(i.get()))
         for i in self.time_entry_vel:
-            self.time_list.append(int(i.get()))
-        # self.time_list = [self.time_list.append(int(i.get())) for i in self.time_entry_vel]
+            self.time_list.append(float(i.get()))
+
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)

@@ -79,6 +79,11 @@ class FrameGen(tk.Frame):
             entry_time = tk.Entry(self, width=9, textvariable=self.time_entry_vel[i])
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
 
+        entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
+        entry_time.grid(row=5 + int(self.cell_numeric.get()) + 1, column=1, padx=10, pady=1)
+        entry_func = tk.Label(self, width=9, text='[0 : 1]')
+        entry_func.grid(row=5 + int(self.cell_numeric.get()) + 1, column=0, padx=10, pady=1)
+
     def ent_load(self):
         with open(rf'time functions/{self.name}.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()
@@ -106,6 +111,12 @@ class FrameGen(tk.Frame):
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
             entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
             self.time_entry_vel[i] = entr_utility_time[i]
+
+        entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
+        entry_time.grid(row=5 + len(self.time_entry_vel) + 1, column=1, padx=10, pady=1)
+        entry_func = tk.Label(self, width=9, text='[0 : 1]')
+        entry_func.grid(row=5 + len(self.func_entry_vel) + 1, column=0, padx=10, pady=1)
+
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
@@ -116,18 +127,12 @@ class FrameGen(tk.Frame):
         self.func_list.clear()
         self.time_list.clear()
 
-        # if type(self.func_entry_vel[0]) is not tk.StringVar:
-        #     for i in self.func_entry_vel:
-        #         self.func_list.append(i)
-        #     for i in self.time_entry_vel:
-        #         self.time_list.append(i)
-
-        # else:
-
         for i in self.func_entry_vel:
             self.func_list.append(float(i.get()))
         for i in self.time_entry_vel:
             self.time_list.append(float(i.get()))
+
+        self.value_check(func=self.func_list, time=self.time_list)
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)
@@ -139,6 +144,21 @@ class FrameGen(tk.Frame):
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
+
+    def time_grid(self):
+        a = DataParcer('entry_data/KUVSH.GRD').grid_parcer()
+        return f'[{a[0]} : {a[-1]}]'
+
+    def child_parcecer_grid(self):
+        return DataParcer('entry_data/KUVSH.GRD').grid_parcer()
+
+    def value_check(self, func, time):
+        for item in func:
+            if not (0 <= item <= 1):
+                mb.showerror('Value error', 'Значение функции выходит за пределы')
+        for item in time:
+            if not (self.child_parcecer_grid()[0] <= item <= self.child_parcecer_grid()[-1]):
+                mb.showerror('Value error', 'Временная функция выходит за пределы')
 
 
 class DataParcer:
@@ -202,6 +222,8 @@ class DataParcer:
         return out
 
 
+
+
 def main():
     global nb
     if os.path.exists(r"entry_data/config.txt"):
@@ -247,7 +269,7 @@ def main():
     # a = np.nonzero(DataParcer(pl_dir).pl_decoder())
 
     print(DataParcer(grid_dir).grid_parcer().shape)
-
+    print(FrameGen(root).time_grid())
     nb = ttk.Notebook(root)
     nb.grid(row=5, column=0, columnspan=10, rowspan=10)
     LAY = DataParcer(lay_dir).lay_decoder()
@@ -274,6 +296,8 @@ def main():
     if TOK[1] == 1:
         energy_type = 'Внешнее поле'
         FrameGen(root, 'TOK', f'{energy_type}').notebooks()
+
+
 
 
 if __name__ == '__main__':

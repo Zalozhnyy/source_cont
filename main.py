@@ -92,27 +92,42 @@ class FrameGen(tk.Frame):
         print('func = ', self.func_entry_vel)
         print('time = ', self.time_entry_vel)
 
+        entr_utility_func = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
+        entr_utility_time = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         for i in range(len(self.func_entry_vel)):
-            entry_func = tk.Entry(self, width=9, justify='center')
+            entry_func = tk.Entry(self, width=9, justify='center', textvariable=entr_utility_func[i])
             entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
-            entry_func.insert(0, f'{self.func_entry_vel[i]}')
+            entr_utility_func[i].set('{:.4g}'.format(self.func_entry_vel[i]))
+            self.func_entry_vel[i] = entr_utility_func[i]
+            # print(f'{i} ', type(entr_utility_func[i]), entr_utility_func[i])
 
         for i in range(len(self.time_entry_vel)):
-            entry_time = tk.Entry(self, width=9, justify='center')
+            entry_time = tk.Entry(self, width=9, justify='center', textvariable=entr_utility_time[i])
             entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
-            entry_time.insert(0, f'{self.time_entry_vel[i]}')
-
+            entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
+            self.time_entry_vel[i] = entr_utility_time[i]
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
 
     def get(self):
 
+        print('get', type(self.func_entry_vel[0]))
+        self.func_list.clear()
+        self.time_list.clear()
+
+        # if type(self.func_entry_vel[0]) is not tk.StringVar:
+        #     for i in self.func_entry_vel:
+        #         self.func_list.append(i)
+        #     for i in self.time_entry_vel:
+        #         self.time_list.append(i)
+
+        # else:
+
         for i in self.func_entry_vel:
             self.func_list.append(float(i.get()))
         for i in self.time_entry_vel:
             self.time_list.append(float(i.get()))
-
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)

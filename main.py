@@ -7,6 +7,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def config_read():
+    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
+        cur_dir = []
+        for line in g:
+            cur_dir.append(line)
+    return cur_dir
+
+
 def open_button():
     filename = fd.askdirectory()
     handle = open(r"entry_data/config.txt", "w", encoding='utf-8')
@@ -21,7 +29,7 @@ def open_button():
         mb.showerror('Error', 'Путь не выбран')
     else:
         mb.showinfo('Info', 'Путь сохранён.')
-    print(cur_dir)
+    print(cur_dir[0])
 
 
 class FrameGen(tk.Frame):
@@ -222,27 +230,24 @@ class DataParcer:
         return out
 
 
-
-
 def main():
     global nb
     if os.path.exists(r"entry_data/config.txt"):
         print('config exist')
     else:
         open_button()
+    cur_dir = config_read()
 
-    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
-        cur_dir = []
-        for line in g:
-            cur_dir.append(line)
+    if len(cur_dir) == 0:
+        open_button()
+        cur_dir = config_read()
+
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')
         open_button()
         print('config exist ', f' {cur_dir[0]}')
-    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
-        cur_dir = []
-        for line in g:
-            cur_dir.append(line)
+        cur_dir = config_read()
+
     if not os.path.exists(r'time functions'):
         os.mkdir('time functions')
 
@@ -298,11 +303,10 @@ def main():
         FrameGen(root, 'TOK', f'{energy_type}').notebooks()
 
 
-
-
 if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('800x600+300+200')
+
     main()
 
     root.mainloop()

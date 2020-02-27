@@ -47,6 +47,7 @@ class FrameGen(tk.Frame):
         self.func_list = []
         self.time_list = []
 
+
     def __konstr(self):
         self.parent.title("PECH UTILITY")
         menubar = tk.Menu(self.parent)
@@ -61,30 +62,34 @@ class FrameGen(tk.Frame):
     def notebooks(self):
         nb.add(self, text=f"{self.name}")
         label_name_energy = tk.Label(self, text=f'{self.energy_type}')
-        label_name_energy.grid(row=4, column=0, columnspan=2)
-        label_func = tk.Label(self, text='value')
-        label_func.grid(row=6, column=0, padx=2, pady=10)
-        label_time = tk.Label(self, text='time')
-        label_time.grid(row=6, column=1, padx=2, pady=10)
+        label_name_energy.grid(row=5, column=0, columnspan=2)
+        label_func = tk.Label(self, text='value', width=8)
+        label_func.grid(row=6, column=0, padx=2, pady=2)
+        label_time = tk.Label(self, text='time', width=8)
+        label_time.grid(row=6, column=1, padx=2, pady=2)
 
-        self.button_browse = tk.Button(self, width=10, text='Load', command=self.ent_load, state='active')
-        self.button_browse.grid(row=1, column=10)
-        self.button_browse_def = tk.Button(self, width=10, text='Load default', command=self.ent_load_def,
-                                           state='active')
-        self.button_browse_def.grid(row=2, column=10)
-        self.button_save = tk.Button(self, width=10, text='Save', command=self.time_save, state='disabled')
-        self.button_save.grid(row=3, column=10)
+        self.button_browse = tk.Button(self, width=10, text='Load', state='active',
+                                       command=lambda: self.ent_load(self.name))
+        self.button_browse.grid(row=1, column=2, padx=3)
+        self.button_browse_def = tk.Button(self, width=10, text='Load default', state='active',
+                                           command=lambda: self.ent_load('default'))
+        self.button_browse_def.grid(row=1, column=3, padx=3)
+        self.button_save = tk.Button(self, width=10, text='Save', state='disabled', command=self.time_save)
+        self.button_save.grid(row=2, column=2, padx=3)
         self.button_save_def = tk.Button(self, width=10, text='Save as default', command=self.time_save_def,
                                          state='disabled')
-        self.button_save_def.grid(row=4, column=10)
-        self.entry_generate_value = tk.Entry(self, width=6, textvariable=self.cell_numeric, state='normal')
-        self.entry_generate_value.grid(row=5, column=11, padx=5)
+        self.button_save_def.grid(row=2, column=3, padx=3)
+        self.entry_generate_value = tk.Entry(self, width=5, textvariable=self.cell_numeric, state='normal')
+        self.entry_generate_value.grid(row=5, column=3)
         self.button_generate = tk.Button(self, width=10, text='Generate', command=self.ent, state='active')
-        self.button_generate.grid(row=5, column=10)
+        self.button_generate.grid(row=5, column=2, padx=3)
         self.button_read_gen = tk.Button(self, width=10, text='Read', command=self.get, state='disabled')
-        self.button_read_gen.grid(row=6, column=10)
+        self.button_read_gen.grid(row=6, column=2)
         self.button_calculate = tk.Button(self, width=10, text='Calculate', command=self.calculate, state='disabled')
-        self.button_calculate.grid(row=1, column=30)
+        self.button_calculate.grid(row=1, column=30, padx=3)
+        self.add_button = tk.Button(self, width=6, text='Add one', state='disabled',
+                                    command=lambda: self.add_entry())
+        self.add_button.grid(row=1, column=0)
 
     def ent(self):
         self.func_entry_vel.clear()
@@ -93,21 +98,22 @@ class FrameGen(tk.Frame):
         self.time_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
         for i in range(int(self.cell_numeric.get())):
             entry_func = tk.Entry(self, width=9, textvariable=self.func_entry_vel[i])
-            entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
+            entry_func.grid(row=7 + i, column=0, pady=3)
             entry_time = tk.Entry(self, width=9, textvariable=self.time_entry_vel[i])
-            entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
+            entry_time.grid(row=7 + i, column=1, pady=3)
 
-        entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
-        entry_time.grid(row=6 + int(self.cell_numeric.get()) + 1, column=1, padx=5, pady=1)
-        entry_func = tk.Label(self, width=9, text='[0 : 1]')
-        entry_func.grid(row=6 + int(self.cell_numeric.get()) + 1, column=0, padx=5, pady=1)
+        self.entry_time = tk.Label(self, text=f'{self.time_grid()}')
+        self.entry_time.grid(row=7 + int(self.cell_numeric.get()) + 1, column=1)
+        self.entry_func = tk.Label(self, text='[0 : 1]')
+        self.entry_func.grid(row=7 + int(self.cell_numeric.get()) + 1, column=0)
 
         self.button_browse.configure(state='disabled')
         self.button_browse_def.configure(state='disabled')
         self.button_read_gen.configure(state='normal')
+        self.add_button.configure(state='normal')
 
-    def ent_load(self):
-        with open(rf'time functions/user configuration/{self.name}.txt', 'r', encoding='utf-8') as file:
+    def ent_load(self, path):
+        with open(rf'time functions/user configuration/{path}.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         print(lines)
@@ -123,72 +129,54 @@ class FrameGen(tk.Frame):
         entr_utility_time = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         for i in range(len(self.func_entry_vel)):
             entry_func = tk.Entry(self, width=9, justify='center', textvariable=entr_utility_func[i])
-            entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
+            entry_func.grid(row=7 + i, column=0)
             entr_utility_func[i].set('{:.4g}'.format(self.func_entry_vel[i]))
             self.func_entry_vel[i] = entr_utility_func[i]
             # print(f'{i} ', type(entr_utility_func[i]), entr_utility_func[i])
 
         for i in range(len(self.time_entry_vel)):
             entry_time = tk.Entry(self, width=9, justify='center', textvariable=entr_utility_time[i])
-            entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
+            entry_time.grid(row=7 + i, column=1)
             entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
             self.time_entry_vel[i] = entr_utility_time[i]
 
-        entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
-        entry_time.grid(row=5 + len(self.time_entry_vel) + 1, column=1, padx=10, pady=1)
-        entry_func = tk.Label(self, width=9, text='[0 : 1]')
-        entry_func.grid(row=5 + len(self.func_entry_vel) + 1, column=0, padx=10, pady=1)
+        self.entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
+        self.entry_time.grid(row=7 + len(self.time_entry_vel) + 1, column=1)
+        self.entry_func = tk.Label(self, width=9, text='[0 : 1]')
+        self.entry_func.grid(row=7 + len(self.func_entry_vel) + 1, column=0)
 
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
 
         self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-        self.labes_load_path.grid(row=1, column=11, columnspan=5)
+        self.labes_load_path.grid(row=1, column=4, columnspan=5)
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
+        self.button_browse_def.configure(state='disabled')
+        self.button_browse.configure(state='disabled')
+        self.add_button.configure(state='normal')
 
-    def ent_load_def(self):
-        with open(rf'time functions/user configuration/default.txt', 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-        lines = [line.strip() for line in lines]
-        print(lines)
+    def add_entry(self):
 
-        for word in lines[0].split():
-            self.func_entry_vel.append(float(word))
-        for word in lines[1].split():
-            self.time_entry_vel.append(float(word))
-        print('func = ', self.func_entry_vel)
-        print('time = ', self.time_entry_vel)
+        self.func_entry_vel.append(tk.StringVar())
+        self.time_entry_vel.append(tk.StringVar())
 
-        entr_utility_func = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
-        entr_utility_time = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
-        for i in range(len(self.func_entry_vel)):
-            entry_func = tk.Entry(self, width=9, justify='center', textvariable=entr_utility_func[i])
-            entry_func.grid(row=5 + i, column=0, padx=10, pady=1)
-            entr_utility_func[i].set('{:.4g}'.format(self.func_entry_vel[i]))
-            self.func_entry_vel[i] = entr_utility_func[i]
-            # print(f'{i} ', type(entr_utility_func[i]), entr_utility_func[i])
+        entry_func = tk.Entry(self, width=9, justify='center', textvariable=self.func_entry_vel[-1])
+        entry_func.grid(row=len(self.func_entry_vel) + 1 + 7, column=0)
 
-        for i in range(len(self.time_entry_vel)):
-            entry_time = tk.Entry(self, width=9, justify='center', textvariable=entr_utility_time[i])
-            entry_time.grid(row=5 + i, column=1, padx=10, pady=1)
-            entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
-            self.time_entry_vel[i] = entr_utility_time[i]
+        entry_time = tk.Entry(self, width=9, justify='center', textvariable=self.time_entry_vel[-1])
+        entry_time.grid(row=len(self.func_entry_vel) + 1 + 7, column=1)
 
-        entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
-        entry_time.grid(row=5 + len(self.time_entry_vel) + 1, column=1, padx=10, pady=1)
-        entry_func = tk.Label(self, width=9, text='[0 : 1]')
-        entry_func.grid(row=5 + len(self.func_entry_vel) + 1, column=0, padx=10, pady=1)
+        self.entry_time.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
+        self.entry_func.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
 
-        if len(self.func_entry_vel) != len(self.time_entry_vel):
-            mb.showerror('Load error', 'Размерности не совпадают')
-            self.onExit()
+    # def del_entry(self):
+    #
+    #     self.func_entry_vel.pop()
+    #     self.time_entry_vel.pop()
 
-        self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-        self.labes_load_path.grid(row=1, column=11, columnspan=5)
-        self.button_read_gen.configure(state='normal')
-        self.button_generate.configure(state='disabled')
+
 
     def get(self):
 
@@ -220,7 +208,7 @@ class FrameGen(tk.Frame):
             for i in self.time_list:
                 file.write(f'{i} ')
             self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-            self.labes_load_path.grid(row=3, column=11, columnspan=5)
+            self.labes_load_path.grid(row=3, column=4, columnspan=5)
 
     def time_save_def(self):
         with open(rf'time functions/user configuration/default.txt', 'w', encoding='utf-8') as file:
@@ -230,7 +218,7 @@ class FrameGen(tk.Frame):
             for i in self.time_list:
                 file.write(f'{i} ')
             self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.txt')
-            self.labes_load_path.grid(row=4, column=11, columnspan=5)
+            self.labes_load_path.grid(row=4, column=4, columnspan=5)
 
     def calculate(self):
 
@@ -299,8 +287,8 @@ class FrameGen(tk.Frame):
 
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)
-        ax.plot(time_count, func_out * np.max(old_tf[:, 1]), label='Пользовательская функция')
-        ax.plot(time_count, old_tf[:, 1], label='Стандартная функция')
+        ax.plot(time_count, func_out, label='Пользовательская функция')
+        ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
         ax.set_xlabel('Time , s', fontsize=14)
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
@@ -315,7 +303,6 @@ class FrameGen(tk.Frame):
 
     def onExit(self):
         self.quit()
-
 
     def time_grid(self):
         a = DataParcer('entry_data/KUVSH.GRD').grid_parcer()
@@ -447,36 +434,41 @@ def main():
     # print(DataParcer(grid_dir).grid_parcer().shape)
     # print(FrameGen(root).time_grid())
     nb = ttk.Notebook(root)
-    nb.grid(row=0, column=0, columnspan=100, rowspan=100)
+    nb.grid(row=0, column=0, rowspan=100, columnspan=100, sticky='NWSE')
     LAY = DataParcer(lay_dir).lay_decoder()
     PL = DataParcer(pl_dir).pl_decoder()
     TOK = DataParcer(tok_dir).tok_decoder()
     for i in range(LAY.shape[0]):
         if LAY[i, 1] == 1:
-            energy_type = 'Стор. ток'
-            FrameGen(root, f'Слой № {i}, {energy_type}', 'Сторонний ток').notebooks()
+            energy_type = 'Current'
+            FrameGen(root, f'{energy_type}, layer {i}', 'Current').notebooks()
         if LAY[i, 2] == 1:
-            energy_type = 'Стор.ист.втор.эл.'
-            FrameGen(root, f'Слой № {i}, {energy_type}', 'Стор. источник втор. эл.').notebooks()
+            energy_type = 'Sigma'
+            FrameGen(root, f'{energy_type}, layer {i}', 'Sigma').notebooks()
 
     for i in range(PL.shape[0]):
         for j in range(1, PL.shape[1]):
             if PL[i, j] == 1:
-                FrameGen(root, 'PL', f'Источник электронов из {j}го в {i}й').notebooks()
+                FrameGen(root, f'Flu_e{j}{i}', f'Источник электронов из {j}го в {i}й').notebooks()
     if PL[:, 0].any() == 1:
         mb.showerror('ERROR', 'Частицы в нулевом слое!')
 
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
-        FrameGen(root, 'TOK', f'{energy_type}').notebooks()
+        FrameGen(root, 'Int', f'{energy_type}').notebooks()
     if TOK[1] == 1:
         energy_type = 'Внешнее поле'
-        FrameGen(root, 'TOK', f'{energy_type}').notebooks()
+        FrameGen(root, 'Int', f'{energy_type}').notebooks()
 
 
 if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('1200x600')
+    rows = 0
+    while rows < 100:
+        root.rowconfigure(rows, weight=10)
+        root.columnconfigure(rows, weight=10)
+        rows += 1
 
     main()
 

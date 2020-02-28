@@ -6,7 +6,7 @@ import os
 
 def lay_decoder():
     #### .LAY DECODER
-    with open(r'KUVSH.LAY', 'r') as file:
+    with open(r'entry_data/KUVSH.LAY', 'r') as file:
         lines = file.readlines()
     lay_numeric = int(lines[2])
     out_lay = np.zeros((lay_numeric, 3), dtype=int)
@@ -23,7 +23,7 @@ def lay_decoder():
 
 def tok_decoder():
     #### .TOK DECODER
-    with open(r'KUVSH.TOK', 'r') as file:
+    with open(r'entry_data/KUVSH.TOK', 'r') as file:
         lines_tok = file.readlines()
     out_tok = np.zeros(2, dtype=int)
     for i in range(len(lines_tok)):
@@ -37,7 +37,7 @@ def tok_decoder():
 
 def pl_decoder():
     #### .PL DECODER
-    with open(r'KUVSH.PL', 'r') as file:
+    with open(r'entry_data/KUVSH.PL', 'r') as file:
         lines_pl = file.readlines()
     for i in range(len(lines_pl)):
         if '<Количество слоев>' in lines_pl[i]:

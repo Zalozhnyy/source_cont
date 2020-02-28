@@ -6,10 +6,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy import integrate
 
 
 def config_read():
-    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
+    with open(r"config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
             cur_dir.append(line)
@@ -18,11 +19,11 @@ def config_read():
 
 def open_button():
     filename = fd.askdirectory()
-    handle = open(r"entry_data/config.txt", "w", encoding='utf-8')
+    handle = open(r"config.txt", "w", encoding='utf-8')
     handle.write(filename)
     handle.close()
 
-    with open(r"entry_data/config.txt", 'r', encoding='utf-8') as g:
+    with open(r"config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
             cur_dir.append(line)
@@ -46,7 +47,9 @@ class FrameGen(tk.Frame):
         self.time_entry_vel = []
         self.func_list = []
         self.time_list = []
+        self.entry_f_val = tk.StringVar()
 
+        self.path = os.path.normpath(config_read()[0])
 
     def __konstr(self):
         self.parent.title("PECH UTILITY")
@@ -90,6 +93,13 @@ class FrameGen(tk.Frame):
         self.add_button = tk.Button(self, width=6, text='Add one', state='disabled',
                                     command=lambda: self.add_entry())
         self.add_button.grid(row=1, column=0)
+
+        if 'Sigma' or 'Current' or 'Flu_e' in self.name:
+            self.entry_f_val.set(1.)
+            self.label_f = tk.Label(self, text='F')
+            self.label_f.grid(row=2, column=30, padx=3, sticky='E')
+            self.entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
+            self.entry_f.grid(row=2, column=31, padx=3)
 
     def ent(self):
         self.func_entry_vel.clear()
@@ -149,8 +159,8 @@ class FrameGen(tk.Frame):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
 
-        self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-        self.labes_load_path.grid(row=1, column=4, columnspan=5)
+        # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
+        # self.labes_load_path.grid(row=1, column=4, columnspan=5)
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
         self.button_browse_def.configure(state='disabled')
@@ -175,8 +185,6 @@ class FrameGen(tk.Frame):
     #
     #     self.func_entry_vel.pop()
     #     self.time_entry_vel.pop()
-
-
 
     def get(self):
 
@@ -207,8 +215,9 @@ class FrameGen(tk.Frame):
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
-            self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-            self.labes_load_path.grid(row=3, column=4, columnspan=5)
+            mb.showinfo('Save', f'Сохранено в time functions/user configuration/{self.name}.txt')
+            # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
+            # self.labes_load_path.grid(row=3, column=3, columnspan=5)
 
     def time_save_def(self):
         with open(rf'time functions/user configuration/default.txt', 'w', encoding='utf-8') as file:
@@ -217,8 +226,9 @@ class FrameGen(tk.Frame):
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
-            self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.txt')
-            self.labes_load_path.grid(row=4, column=4, columnspan=5)
+            mb.showinfo('Save default', f'Сохранено стандартной в time functions/user configuration/default.txt')
+            # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.txt')
+            # self.labes_load_path.grid(row=4, column=3, columnspan=5)
 
     def calculate(self):
 
@@ -238,9 +248,9 @@ class FrameGen(tk.Frame):
         for i in range(len(entry_t) - 1):
             if entry_t[i] > entry_t[i + 1]:
                 print(f'Value error время уменьшается на одном из отрезков {i}')
-
-        old_tf = np.loadtxt(r'entry_data\time.tf', skiprows=3)
-
+        old_tf_path = os.path.join(self.path, 'time.tf')
+        # old_tf = np.loadtxt(r'entry_data\time.tf', skiprows=3)
+        old_tf = np.loadtxt(old_tf_path, skiprows=3)
         time_count = []
         func_out = []
         for i in range(len(entry_t) - 1):
@@ -276,14 +286,26 @@ class FrameGen(tk.Frame):
         func_out = np.array(func_out)
         time_count = np.array(time_count)
         output_matrix = np.column_stack((time_count, func_out))
+
+        # integrate
+        if ('Current' or 'Sigma' or 'Flu_e') in self.name:
+            spectr = np.loadtxt(os.path.join(config_read()[0], 'pechs\spectrs\G'), skiprows=3, dtype=float)
+            spectr_avg = np.average(spectr[:, 0])
+            F = float(self.entry_f_val.get())
+            intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
+
+            koef = F / (0.23 * spectr_avg * intergal_tf * 1e3 * 1.6e-19)
+            np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
+                       header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
+                       comments='')
+        else:
+            np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
+                       header=f'1 pechs\n{time_count[0]} {time_count[-1]} {1.0}\n{len(time_count)}', delimiter='\t',
+                       comments='')
         print(func_out.shape)
         print('заданныйэ = ', time_cell.shape, time_cell[-1])
         print('по факту = ', time_count.shape, time_count[-1])
         print(old_tf.shape)
-
-        np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
-                   header=f'1 pechs\n{time_count[0]} {time_count[-1]} {1.0}\n{len(time_count)}\n', delimiter='\t',
-                   comments='')
 
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)
@@ -293,7 +315,7 @@ class FrameGen(tk.Frame):
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
 
-        chart_type.get_tk_widget().grid(row=4, rowspan=100, column=20, columnspan=100)
+        chart_type.get_tk_widget().grid(row=4, column=8, rowspan=100, columnspan=50, padx=10)
         ax.set_title(f'{self.name}')
         ax.legend()
 
@@ -305,11 +327,11 @@ class FrameGen(tk.Frame):
         self.quit()
 
     def time_grid(self):
-        a = DataParcer('entry_data/KUVSH.GRD').grid_parcer()
+        a = DataParcer(os.path.join(f'{self.path}', 'KUVSH.GRD')).grid_parcer()
         return f'[{a[0]} : {a[-1]}]'
 
     def child_parcecer_grid(self):
-        return DataParcer('entry_data/KUVSH.GRD').grid_parcer()
+        return DataParcer(os.path.join(f'{self.path}', 'KUVSH.GRD')).grid_parcer()
 
     def value_check(self, func, time):
         for item in func:
@@ -396,7 +418,7 @@ class DataParcer:
 def main():
     global nb
 
-    if os.path.exists(r"entry_data/config.txt"):
+    if os.path.exists(r"config.txt"):
         print('config exist')
     else:
         open_button()
@@ -414,11 +436,11 @@ def main():
 
     if not os.path.exists(r'time functions'):
         os.mkdir('time functions')
-    if not os.path.exists(os.path.join(cur_dir[0], 'time functions/user configuration')):
-        os.mkdir(os.path.join(cur_dir[0], 'time functions/user configuration'))
+    if not os.path.exists('time functions/user configuration'):
+        os.mkdir(os.path.join('time functions/user configuration'))
 
     try:
-        lay_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.LAY')
+        lay_dir = os.path.join(cur_dir[0], 'KUVSH.LAY')
         DataParcer(lay_dir).lay_decoder()
     except FileNotFoundError:
         mb.showerror('Path error', 'Директория указана неверно')
@@ -426,10 +448,10 @@ def main():
         open_button()
         cur_dir = config_read()
 
-    lay_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.LAY')
-    pl_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.PL')
-    tok_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.TOK')
-    grid_dir = os.path.join(cur_dir[0], 'entry_data/KUVSH.GRD')
+    lay_dir = os.path.join(cur_dir[0], 'KUVSH.LAY')
+    pl_dir = os.path.join(cur_dir[0], 'KUVSH.PL')
+    tok_dir = os.path.join(cur_dir[0], 'KUVSH.TOK')
+    grid_dir = os.path.join(cur_dir[0], 'KUVSH.GRD')
 
     # print(DataParcer(grid_dir).grid_parcer().shape)
     # print(FrameGen(root).time_grid())

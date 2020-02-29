@@ -42,7 +42,7 @@ def check_folder():
         if f.endswith(".PRJ") or f.endswith(".prj"):
             prj_name.append(f)
 
-    with open(os.path.join(config_read()[0],rf'{prj_name[0]}'), 'r') as file:
+    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r') as file:
         lines = file.readlines()
 
     out = {}
@@ -315,15 +315,16 @@ class FrameGen(tk.Frame):
         # integrate
         if ('Current' or 'Sigma' or 'Flu_e') in self.name:
             if os.path.exists(config_read()[1]):
-                spectr = np.loadtxt(config_read()[1], skiprows=3, dtype=float)
+                spectr = np.loadtxt(config_read()[1], skiprows=3)
             else:
                 mb.showerror('Spektr error', 'Spectr не существует')
                 self.reset()
-            spectr_avg = np.average(spectr[:, 0])
+
+            E_cp = integrate.trapz(y=spectr[:, 1], x=spectr[:, 0]) / (spectr[-1, 0] - spectr[0, 0])
             F = float(self.entry_f_val.get())
             intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
-            koef = F / (0.23 * spectr_avg * intergal_tf * 1e3 * 1.6e-19)
+            koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
             np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                        header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                        comments='')
@@ -420,33 +421,28 @@ class DataParcer:
         #### .PL DECODER
         with open(rf'{self.path}', 'r') as file:
             lines_pl = file.readlines()
-        for i in range(len(lines_pl)):
-            if '<Количество слоев>' in lines_pl[i]:
-                pl_numeric = int(lines_pl[i + 1])
+        for line in range(len(lines_pl)):
+            if '<Количество слоев>' in lines_pl[line]:
+                pl_numeric = int(lines_pl[line + 1])
                 out_pl = np.zeros((pl_numeric, pl_numeric), dtype=int)
 
-            if '<Частица номер>' in lines_pl[i]:
-                for k in range(pl_numeric):
-                    out_pl[k, 0] = int(lines_pl[i + 2 + k].split()[0])
-                    out_pl[k, 1] = int(lines_pl[i + 2 + k].split()[1])
-                    out_pl[k, 2] = int(lines_pl[i + 2 + k].split()[2])
-                    out_pl[k, 3] = int(lines_pl[i + 2 + k].split()[3])
-                    out_pl[k, 4] = int(lines_pl[i + 2 + k].split()[4])
-                    out_pl[k, 5] = int(lines_pl[i + 2 + k].split()[5])
+            if '<Частица номер>' in lines_pl[line]:
+                for i in range(pl_numeric):
+                    for j in range(len(lines_pl[line + 2 + i].split())):
+                        out_pl[i, j] = int(lines_pl[line + 2 + i].split()[j])
+
         # print('.PL\n', out_pl)
         return out_pl
 
     def grid_parcer(self):
-        #### .PL DECODER
+    #### .PL DECODER
         with open(rf'{self.path}', 'r') as file:
             lines = file.readlines()
         out = np.array(lines[15].split(), dtype=float)
         return out
 
 
-def main():
-    global nb
-
+def checker():
     if os.path.exists(r"config.txt"):
         print('config exist')
     else:
@@ -469,24 +465,26 @@ def main():
         os.mkdir(os.path.join('time functions/user configuration'))
 
     try:
-        lay_dir = os.path.join(cur_dir[0], 'KUVSH.LAY')
+        lay_dir = os.path.join(cur_dir[0], check_folder().get('LAY'))
         DataParcer(lay_dir).lay_decoder()
     except FileNotFoundError:
         mb.showerror('Path error', 'Директория указана неверно')
         cur_dir.clear()
         open_button()
         cur_dir = config_read()
+    return cur_dir
 
+
+def main():
+    global nb
+
+    cur_dir = checker()
     file_dict = check_folder()
 
-    lay_dir = os.path.join(cur_dir[0], file_dict.get('LAY'))
-    pl_dir = os.path.join(cur_dir[0], file_dict.get('PL'))
-    tok_dir = os.path.join(cur_dir[0], file_dict.get('TOK'))
-    grid_dir = os.path.join(cur_dir[0], file_dict.get('GRD'))
-
-
-    # print(DataParcer(grid_dir).grid_parcer().shape)
-    # print(FrameGen(root).time_grid())
+    lay_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('LAY')))
+    pl_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('PL')))
+    tok_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('TOK')))
+    grid_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('GRD')))
 
     nb = ttk.Notebook(root)
     nb.grid(row=0, column=0, rowspan=100, columnspan=100, sticky='NWSE')
@@ -525,7 +523,6 @@ if __name__ == '__main__':
         root.rowconfigure(rows, weight=10)
         root.columnconfigure(rows, weight=10)
         rows += 1
-
     main()
 
     root.mainloop()

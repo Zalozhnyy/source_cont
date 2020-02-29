@@ -13,25 +13,50 @@ def config_read():
     with open(r"config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
-            cur_dir.append(line)
+            cur_dir.append(line.strip())
     return cur_dir
 
 
 def open_button():
-    filename = fd.askdirectory()
+    filename = fd.askdirectory(title='Укажите путь к проекту REMP')
+    spectr = fd.askopenfilename(title='Выберите файл spectr', initialdir=rf'{filename}\pechs\spectrs',
+                                initialfile=rf'{filename}\pechs\spectrs\spectr')
     handle = open(r"config.txt", "w", encoding='utf-8')
-    handle.write(filename)
+    handle.write(f'{filename}\n{spectr}')
     handle.close()
 
     with open(r"config.txt", 'r', encoding='utf-8') as g:
         cur_dir = []
         for line in g:
-            cur_dir.append(line)
+            cur_dir.append(line.strip())
     if len(cur_dir) < 1:
         mb.showerror('Error', 'Путь не выбран')
     else:
         mb.showinfo('Info', 'Путь сохранён.')
-    print(cur_dir[0])
+    print(cur_dir)
+
+
+def check_folder():
+    prj_name = []
+    for f in os.listdir(config_read()[0]):
+        if f.endswith(".PRJ") or f.endswith(".prj"):
+            prj_name.append(f)
+
+    with open(os.path.join(config_read()[0],rf'{prj_name[0]}'), 'r') as file:
+        lines = file.readlines()
+
+    out = {}
+    for i in range(len(lines)):
+        if '<Grd name>' in lines[i]:
+            out.setdefault('GRD', lines[i + 1].strip())
+        if '<Tok name>' in lines[i]:
+            out.setdefault('TOK', lines[i + 1].strip())
+        if '<Layers name>' in lines[i]:
+            out.setdefault('LAY', lines[i + 1].strip())
+        if '<Particles-Layers name>' in lines[i]:
+            out.setdefault('PL', lines[i + 1].strip())
+
+    return out
 
 
 class FrameGen(tk.Frame):
@@ -94,7 +119,7 @@ class FrameGen(tk.Frame):
                                     command=lambda: self.add_entry())
         self.add_button.grid(row=1, column=0)
 
-        if 'Sigma' or 'Current' or 'Flu_e' in self.name:
+        if 'Sigma' in self.name or 'Current' in self.name or 'Flu' in self.name:
             self.entry_f_val.set(1.)
             self.label_f = tk.Label(self, text='F')
             self.label_f.grid(row=2, column=30, padx=3, sticky='E')
@@ -289,7 +314,11 @@ class FrameGen(tk.Frame):
 
         # integrate
         if ('Current' or 'Sigma' or 'Flu_e') in self.name:
-            spectr = np.loadtxt(os.path.join(config_read()[0], 'pechs\spectrs\G'), skiprows=3, dtype=float)
+            if os.path.exists(config_read()[1]):
+                spectr = np.loadtxt(config_read()[1], skiprows=3, dtype=float)
+            else:
+                mb.showerror('Spektr error', 'Spectr не существует')
+                self.reset()
             spectr_avg = np.average(spectr[:, 0])
             F = float(self.entry_f_val.get())
             intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
@@ -327,11 +356,11 @@ class FrameGen(tk.Frame):
         self.quit()
 
     def time_grid(self):
-        a = DataParcer(os.path.join(f'{self.path}', 'KUVSH.GRD')).grid_parcer()
+        a = DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
         return f'[{a[0]} : {a[-1]}]'
 
     def child_parcecer_grid(self):
-        return DataParcer(os.path.join(f'{self.path}', 'KUVSH.GRD')).grid_parcer()
+        return DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
 
     def value_check(self, func, time):
         for item in func:
@@ -448,15 +477,20 @@ def main():
         open_button()
         cur_dir = config_read()
 
-    lay_dir = os.path.join(cur_dir[0], 'KUVSH.LAY')
-    pl_dir = os.path.join(cur_dir[0], 'KUVSH.PL')
-    tok_dir = os.path.join(cur_dir[0], 'KUVSH.TOK')
-    grid_dir = os.path.join(cur_dir[0], 'KUVSH.GRD')
+    file_dict = check_folder()
+
+    lay_dir = os.path.join(cur_dir[0], file_dict.get('LAY'))
+    pl_dir = os.path.join(cur_dir[0], file_dict.get('PL'))
+    tok_dir = os.path.join(cur_dir[0], file_dict.get('TOK'))
+    grid_dir = os.path.join(cur_dir[0], file_dict.get('GRD'))
+
 
     # print(DataParcer(grid_dir).grid_parcer().shape)
     # print(FrameGen(root).time_grid())
+
     nb = ttk.Notebook(root)
     nb.grid(row=0, column=0, rowspan=100, columnspan=100, sticky='NWSE')
+
     LAY = DataParcer(lay_dir).lay_decoder()
     PL = DataParcer(pl_dir).pl_decoder()
     TOK = DataParcer(tok_dir).tok_decoder()

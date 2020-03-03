@@ -20,7 +20,8 @@ def config_read():
 def open_button():
     filename = fd.askdirectory(title='Укажите путь к проекту REMP')
     spectr = fd.askopenfilename(title='Выберите файл spectr', initialdir=rf'{filename}\pechs\spectrs',
-                                initialfile=rf'{filename}\pechs\spectrs\spectr')
+                                initialfile=rf'{filename}\pechs\spectrs\spectr',
+                                filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
     handle = open(r"config.txt", "w", encoding='utf-8')
     handle.write(f'{filename}\n{spectr}')
     handle.close()
@@ -34,6 +35,7 @@ def open_button():
     else:
         mb.showinfo('Info', 'Путь сохранён.')
     print(cur_dir)
+    main()
 
 
 def check_folder():
@@ -81,7 +83,7 @@ class FrameGen(tk.Frame):
         menubar = tk.Menu(self.parent)
         self.parent.config(menu=menubar)
         filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Путь к PECHS", command=open_button)
+        filemenu.add_command(label="Путь к PECHS", command= lambda: (tk.Frame.destroy(self), open_button()))
         filemenu.add_command(label="Reset", command=self.reset)
         filemenu.add_command(label="Exit", command=self.onExit)
 
@@ -273,9 +275,7 @@ class FrameGen(tk.Frame):
         for i in range(len(entry_t) - 1):
             if entry_t[i] > entry_t[i + 1]:
                 print(f'Value error время уменьшается на одном из отрезков {i}')
-        old_tf_path = os.path.join(self.path, 'time.tf')
-        # old_tf = np.loadtxt(r'entry_data\time.tf', skiprows=3)
-        old_tf = np.loadtxt(old_tf_path, skiprows=3)
+
         time_count = []
         func_out = []
         for i in range(len(entry_t) - 1):
@@ -332,15 +332,20 @@ class FrameGen(tk.Frame):
             np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                        header=f'1 pechs\n{time_count[0]} {time_count[-1]} {1.0}\n{len(time_count)}', delimiter='\t',
                        comments='')
-        print(func_out.shape)
-        print('заданныйэ = ', time_cell.shape, time_cell[-1])
-        print('по факту = ', time_count.shape, time_count[-1])
-        print(old_tf.shape)
+        # print(func_out.shape)
+        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
+        # print('по факту = ', time_count.shape, time_count[-1])
 
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
-        ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+
+        if os.path.exists(os.path.join(self.path, 'time.tf')):
+            old_tf_path = os.path.join(self.path, 'time.tf')
+            old_tf = np.loadtxt(old_tf_path, skiprows=3)
+            ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+        else:
+            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
         ax.set_xlabel('Time , s', fontsize=14)
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
@@ -350,8 +355,11 @@ class FrameGen(tk.Frame):
         ax.legend()
 
     def reset(self):
+
         nb.destroy()
+        check_folder().clear()
         main()
+
 
     def onExit(self):
         self.quit()
@@ -435,7 +443,7 @@ class DataParcer:
         return out_pl
 
     def grid_parcer(self):
-    #### .PL DECODER
+        #### .PL DECODER
         with open(rf'{self.path}', 'r') as file:
             lines = file.readlines()
         out = np.array(lines[15].split(), dtype=float)
@@ -456,8 +464,9 @@ def checker():
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')
         open_button()
-        print('config exist ', f' {cur_dir[0]}')
+        print('dir not exist ', f' {cur_dir[0]}')
         cur_dir = config_read()
+
 
     if not os.path.exists(r'time functions'):
         os.mkdir('time functions')
@@ -472,6 +481,7 @@ def checker():
         cur_dir.clear()
         open_button()
         cur_dir = config_read()
+    check_folder()
     return cur_dir
 
 
@@ -505,7 +515,7 @@ def main():
             if PL[i, j] == 1:
                 FrameGen(root, f'Flu_e{j}{i}', f'Источник электронов из {j}го в {i}й').notebooks()
     if PL[:, 0].any() == 1:
-        mb.showerror('ERROR', 'Частицы в нулевом слое!')
+        mb.showinfo('ERROR', 'Частицы в нулевом слое!')
 
     if TOK[0] == 1:
         energy_type = 'Начальное поле'

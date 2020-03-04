@@ -20,7 +20,6 @@ def config_read():
 def open_button():
     filename = fd.askdirectory(title='Укажите путь к проекту REMP')
     spectr = fd.askopenfilename(title='Выберите файл spectr', initialdir=rf'{filename}\pechs\spectrs',
-                                initialfile=rf'{filename}\pechs\spectrs\spectr',
                                 filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
     handle = open(r"config.txt", "w", encoding='utf-8')
     handle.write(f'{filename}\n{spectr}')
@@ -64,7 +63,7 @@ def check_folder():
 class FrameGen(tk.Frame):
     def __init__(self, parent, name='Title', energy_type='Название типа энергии'):
         tk.Frame.__init__(self, parent)
-        self.parent = parent
+        self.parent = root
         self.name = name
         self.energy_type = energy_type
         self.__konstr()
@@ -77,13 +76,14 @@ class FrameGen(tk.Frame):
         self.entry_f_val = tk.StringVar()
 
         self.path = os.path.normpath(config_read()[0])
+        self.dir_name = config_read()[0].split('/')[-1]
 
     def __konstr(self):
-        self.parent.title("PECH UTILITY")
+        self.parent.title("Sources")
         menubar = tk.Menu(self.parent)
         self.parent.config(menu=menubar)
         filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Путь к PECHS", command= lambda: (tk.Frame.destroy(self), open_button()))
+        filemenu.add_command(label="Путь к PECHS", command=lambda: (tk.Frame.destroy(self), open_button()))
         filemenu.add_command(label="Reset", command=self.reset)
         filemenu.add_command(label="Exit", command=self.onExit)
 
@@ -91,6 +91,11 @@ class FrameGen(tk.Frame):
 
     def notebooks(self):
         nb.add(self, text=f"{self.name}")
+        # rows = 0
+        # while rows < 50:
+        #     self.rowconfigure(rows, weight=1,minsize=3)
+        #     self.columnconfigure(rows, weight=1,minsize=3)
+        #     rows += 1
         label_name_energy = tk.Label(self, text=f'{self.energy_type}')
         label_name_energy.grid(row=5, column=0, columnspan=2)
         label_func = tk.Label(self, text='value', width=8)
@@ -123,10 +128,35 @@ class FrameGen(tk.Frame):
 
         if 'Sigma' in self.name or 'Current' in self.name or 'Flu' in self.name:
             self.entry_f_val.set(1.)
-            self.label_f = tk.Label(self, text='F')
-            self.label_f.grid(row=2, column=30, padx=3, sticky='E')
-            self.entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
-            self.entry_f.grid(row=2, column=31, padx=3)
+            label_f = tk.Label(self, text='F')
+            label_f.grid(row=2, column=30, padx=3, sticky='E')
+            entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
+            entry_f.grid(row=2, column=31, padx=3)
+
+        if 'Initial_field' in self.name or 'External_field' in self.name:
+            tk.Label(self, text='Ex').grid(row=2, column=30, sticky='E', padx=3)
+            tk.Label(self, text='Ey').grid(row=3, column=30, sticky='E', padx=3)
+            tk.Label(self, text='Ez').grid(row=4, column=30, sticky='E', padx=3)
+            tk.Label(self, text='hx').grid(row=5, column=30, sticky='E', padx=3)
+            tk.Label(self, text='hy').grid(row=6, column=30, sticky='E', padx=3)
+            tk.Label(self, text='hz').grid(row=7, column=30, sticky='E', padx=3)
+
+            self.some_x_val = [tk.StringVar() for _ in range(6)]
+            for i in self.some_x_val:
+                i.set('0')
+            for i in range(6):
+                some_x = tk.Entry(self, textvariable=self.some_x_val[i], width=4)
+                some_x.grid(row=2 + i, column=31)
+
+        if 'External_field' in self.name:
+            for i in range(6):
+                tk.Button(self, text='Browse tf', command=lambda: print(123),
+                          width=10, ).grid(row=2 + i, column=32, padx=5)
+
+    def gursa_nb(self):
+        nb.add(self, text=f"{self.name}")
+        add_button_gursa = tk.Button(self, text='add',
+                                     command=lambda: Gursa().child_window()).grid(row=1, column=1)
 
     def ent(self):
         self.func_entry_vel.clear()
@@ -150,7 +180,7 @@ class FrameGen(tk.Frame):
         self.add_button.configure(state='normal')
 
     def ent_load(self, path):
-        with open(rf'time functions/user configuration/{path}.txt', 'r', encoding='utf-8') as file:
+        with open(rf'time functions/{self.dir_name}/user configuration/{path}.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         print(lines)
@@ -236,29 +266,29 @@ class FrameGen(tk.Frame):
         print('func = ', self.func_list)
 
     def time_save(self):
-        with open(rf'time functions/user configuration/{self.name}.txt', 'w', encoding='utf-8') as file:
+        with open(rf'functions/{self.dir_name}/user configuration/{self.name}.txt', 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
-            mb.showinfo('Save', f'Сохранено в time functions/user configuration/{self.name}.txt')
+            mb.showinfo('Save', f'Сохранено в time functions/{self.dir_name}/user configuration/{self.name}.txt')
             # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
             # self.labes_load_path.grid(row=3, column=3, columnspan=5)
 
     def time_save_def(self):
-        with open(rf'time functions/user configuration/default.txt', 'w', encoding='utf-8') as file:
+        with open(rf'time functions/{self.dir_name}/user configuration/default.txt', 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
-            mb.showinfo('Save default', f'Сохранено стандартной в time functions/user configuration/default.txt')
+            mb.showinfo('Save default',
+                        f'Сохранено стандартной в time functions/{self.dir_name}/user configuration/default.txt')
             # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.txt')
             # self.labes_load_path.grid(row=4, column=3, columnspan=5)
 
-    def calculate(self):
-
+    def interpolate_user_time(self):
         time_cell = self.child_parcecer_grid()
         print(f'функция {self.func_list}')
         print(f'время {self.time_list}')
@@ -308,6 +338,15 @@ class FrameGen(tk.Frame):
                     func_out.append(Calculations().solve(j, k, b))
                     time_count.append(j)
 
+            return func_out, time_count
+
+    def calculate(self):
+        if ('Current' or 'Sigma' or 'Flu_e') in self.name:
+            self.calculate_lay_pl()
+
+    def calculate_lay_pl(self):
+
+        func_out, time_count = self.interpolate_user_time()
         func_out = np.array(func_out)
         time_count = np.array(time_count)
         output_matrix = np.column_stack((time_count, func_out))
@@ -320,16 +359,17 @@ class FrameGen(tk.Frame):
                 mb.showerror('Spektr error', 'Spectr не существует')
                 self.reset()
 
-            E_cp = integrate.trapz(y=spectr[:, 1], x=spectr[:, 0]) / (spectr[-1, 0] - spectr[0, 0])
+            E_cp = np.sum(spectr[:, 0] * spectr[:, 1]) / np.sum(spectr[:, 1])
+
             F = float(self.entry_f_val.get())
             intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
             koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
-            np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
+            np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                        header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                        comments='')
         else:
-            np.savetxt(f'time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
+            np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                        header=f'1 pechs\n{time_count[0]} {time_count[-1]} {1.0}\n{len(time_count)}', delimiter='\t',
                        comments='')
         # print(func_out.shape)
@@ -360,7 +400,6 @@ class FrameGen(tk.Frame):
         check_folder().clear()
         main()
 
-
     def onExit(self):
         self.quit()
 
@@ -378,6 +417,98 @@ class FrameGen(tk.Frame):
         for item in time:
             if not (self.child_parcecer_grid()[0] <= item <= self.child_parcecer_grid()[-1]):
                 mb.showerror('Value error', f'Значение временной функции {item} выходит за пределы')
+
+
+class Gursa(tk.Toplevel):
+    def __init__(self):
+        tk.Toplevel.__init__(self, root)
+        self.spectr_type = tk.IntVar()
+        self.spectr_path = ''
+
+    def child_window(self):
+        self.title('PE source')
+        self.geometry('800x600')
+
+        rows = 0
+        while rows < 30:
+            self.rowconfigure(rows, weight=0, minsize=3)
+            self.columnconfigure(rows, weight=0, minsize=3)
+            rows += 1
+        print(self.grid_size())
+
+        x_y_z = ['X', 'Y', 'Z']
+        label_names = ['Координаты источника (км)', 'Координаты объекта (км)', 'Число ячеек сетки']
+        entry_koord_ist_val = [tk.StringVar() for _ in range(3)]
+        entry_koord_obj_val = [tk.StringVar() for _ in range(3)]
+        entry_koord_ist_val[0].set('0')
+        entry_koord_ist_val[1].set('0')
+        entry_koord_ist_val[2].set('40')
+        entry_koord_obj_val[0].set('0')
+        entry_koord_obj_val[1].set('0')
+        entry_koord_obj_val[2].set('40')
+        entry_grid_value = tk.StringVar()
+        entry_grid_value.set('1000')
+        tk.Entry(self, textvariable=entry_grid_value, width=9).grid(row=3, column=1)
+
+        for i in range(3):
+            entry_koord_ist = tk.Entry(self, textvariable=entry_koord_ist_val[i], width=9)
+            entry_koord_ist.grid(row=1, column=1 + i, padx=1, pady=2)
+            tk.Label(self, text=x_y_z[i]).grid(row=0, column=1 + i)
+            tk.Label(self, text=label_names[i]).grid(row=1 + i, column=0, sticky='W')
+        for i in range(3):
+            entry_koord_ist = tk.Entry(self, textvariable=entry_koord_obj_val[i], width=9)
+            entry_koord_ist.grid(row=2, column=1 + i, padx=1, pady=2)
+
+        self.button_browse_spectr = tk.Button(self, text='Browse',
+                                              command=self.take_spectr, state='normal')
+        self.button_browse_spectr.grid(row=1, column=5, padx=5)
+        self.button_rasch = tk.Button(self, text='Calc',
+                                      command=lambda: print('calculated!'), state='disabled')
+        self.button_rasch.grid(row=5, column=0)
+
+        self.spectr_type.set(0)
+        radio_cont = tk.Radiobutton(self, text='CONTINUOUS', variable=self.spectr_type, value=0)
+        radio_cont.grid(row=1, column=6, sticky="W")
+        radio_dis = tk.Radiobutton(self, text='DISCRETE', variable=self.spectr_type, value=1)
+        radio_dis.grid(row=2, column=6, sticky="W")
+
+        self.grab_set()
+        self.focus_set()
+
+    def take_spectr(self):
+        path = fd.askopenfilename(title='Выберите файл spectr',
+                                  filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+        with open(path, 'r') as file_handler:
+            i = 0
+            s = []
+
+            if self.spectr_type.get() == 0:
+                for line in file_handler:
+                    i += 1
+                    if 'SP_TYPE=DISCRETE' in line:
+                        mb.showerror('Spectr error', 'Выбран спектр DISCRETE')
+                        break
+                    if i < 3: continue
+                    if len(line.split()) < 2:
+                        print(type(s))
+                        line = line + '0'
+                        s.append(line.split())
+                    else:
+                        s.append(line.split())
+
+                out = np.array(s, dtype=float)
+                for i in range(len(out) - 1):
+                    out[i, 0] = (out[i, 0] + out[i + 1, 0]) / 2
+                    out[i, 1] = out[i + 1, 1]
+                out = np.delete(out, np.s_[-1:], 0)
+            elif self.spectr_type.get() == 1:
+                for line in file_handler:
+                    if 'SP_TYPE=CONTINUOUS' in line:
+                        mb.showerror('Spectr error', 'Выбран спектр CONTINUOUS')
+                        break
+                out = np.loadtxt(path, skiprows=2)
+        return print(out)
+
 
 
 class Calculations:
@@ -416,12 +547,15 @@ class DataParcer:
         #### .TOK DECODER
         with open(rf'{self.path}', 'r') as file:
             lines_tok = file.readlines()
-        out_tok = np.zeros(2, dtype=int)
+        out_tok = np.zeros(3, dtype=int)
         for i in range(len(lines_tok)):
             if '<Начальное поле (0-нет,1-да)>' in lines_tok[i]:
                 out_tok[0] = int(lines_tok[i + 1])
             if '<Внешнее поле (0-нет,1-да)>' in lines_tok[i]:
                 out_tok[1] = int(lines_tok[i + 1])
+            if '<Тип задачи (0-Коши 1-Гурса>' in lines_tok[i]:
+                out_tok[2] = int(lines_tok[i + 1])
+            # добавить тение строки гурса
         # print('.TOK  ', out_tok)
         return out_tok
 
@@ -457,7 +591,9 @@ def checker():
         open_button()
     cur_dir = config_read()
 
-    if len(cur_dir) == 0:
+    if len(cur_dir) < 2:
+        print(f'len cur_dir < 2')
+        mb.showerror('Path error', 'Укажите все необходимые директории')
         open_button()
         cur_dir = config_read()
 
@@ -467,11 +603,16 @@ def checker():
         print('dir not exist ', f' {cur_dir[0]}')
         cur_dir = config_read()
 
-
     if not os.path.exists(r'time functions'):
         os.mkdir('time functions')
-    if not os.path.exists('time functions/user configuration'):
-        os.mkdir(os.path.join('time functions/user configuration'))
+    if not os.path.exists(f'time functions/{FrameGen(root).dir_name}'):
+        os.mkdir(f'time functions/{FrameGen(root).dir_name}')
+    if not os.path.exists(f'time functions/{FrameGen(root).dir_name}/user configuration'):
+        os.mkdir(os.path.join(f'time functions/{FrameGen(root).dir_name}/user configuration'))
+
+    if len(DataParcer(os.path.normpath(os.path.join(cur_dir[0], check_folder().get('TOK')))).tok_decoder()) > 0:
+        if not os.path.exists(f'time functions/{FrameGen(root).dir_name}/TOK'):
+            os.mkdir(os.path.join(f'time functions/{FrameGen(root).dir_name}/TOK'))
 
     try:
         lay_dir = os.path.join(cur_dir[0], check_folder().get('LAY'))
@@ -481,7 +622,8 @@ def checker():
         cur_dir.clear()
         open_button()
         cur_dir = config_read()
-    check_folder()
+    # check_folder()
+
     return cur_dir
 
 
@@ -502,6 +644,7 @@ def main():
     LAY = DataParcer(lay_dir).lay_decoder()
     PL = DataParcer(pl_dir).pl_decoder()
     TOK = DataParcer(tok_dir).tok_decoder()
+
     for i in range(LAY.shape[0]):
         if LAY[i, 1] == 1:
             energy_type = 'Current'
@@ -519,20 +662,24 @@ def main():
 
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
-        FrameGen(root, 'Int', f'{energy_type}').notebooks()
+        FrameGen(root, 'Initial_field', f'{energy_type}').notebooks()
     if TOK[1] == 1:
         energy_type = 'Внешнее поле'
-        FrameGen(root, 'Int', f'{energy_type}').notebooks()
+        FrameGen(root, 'External_field', f'{energy_type}').notebooks()
+    if TOK[2] == 1:
+        energy_type = 'Gursa'
+        FrameGen(root, 'Gursa', f'{energy_type}').gursa_nb()
 
 
 if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('1200x600')
     rows = 0
-    while rows < 100:
-        root.rowconfigure(rows, weight=10)
-        root.columnconfigure(rows, weight=10)
+    while rows < 50:
+        root.rowconfigure(rows, weight=1)
+        root.columnconfigure(rows, weight=1)
         rows += 1
+    print()
     main()
 
     root.mainloop()

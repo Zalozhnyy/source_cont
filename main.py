@@ -817,13 +817,17 @@ def checker():
         open_button()
     cur_dir = config_read()
 
-    check_class = FrameGen(root, 'Check')
-
     if len(cur_dir) < 2:
         print(f'len cur_dir < 2')
         mb.showerror('Path error', 'Укажите все необходимые директории')
-        open_button()
-        cur_dir = config_read()
+        answer = mb.askyesno(title="Директории не выбраны", message="Выбрать директории заново?")
+        if answer == True:
+            open_button()
+            cur_dir = config_read()
+        else:
+            root.destroy()
+
+    check_class = FrameGen(root, 'Check')
 
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')

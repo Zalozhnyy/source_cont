@@ -368,7 +368,72 @@ class FrameGen(tk.Frame):
 
     def calculate(self):
         if ('Current' or 'Sigma' or 'Flu_e') in self.name:
+            if os.path.exists(config_read()[1]):
+                self.spectr = np.loadtxt(config_read()[1], skiprows=3)
+            else:
+                mb.showerror('Spektr error', 'Spectr не существует')
+                self.reset()
             self.calculate_lay_pl()
+
+        if 'Initial_field' in self.name:
+            if os.path.exists(config_read()[1]):
+                self.spectr = np.loadtxt(config_read()[1], skiprows=3)
+            else:
+                mb.showerror('Spektr error', 'Spectr не существует')
+                self.reset()
+            self.calculate_Initial_field()
+
+    def calculate_Initial_field(self):
+
+        func_out, time_count = self.interpolate_user_time()
+        func_out = np.array(func_out)
+        time_count = np.array(time_count)
+        output_matrix = np.column_stack((time_count, func_out))
+
+        Initial_field_values_dict = {
+            'Ex': self.some_x_val[0].get(),
+            'Ey': self.some_x_val[1].get(),
+            'Ez': self.some_x_val[2].get(),
+            'hx': self.some_x_val[3].get(),
+            'hy': self.some_x_val[4].get(),
+            'hz': self.some_x_val[5].get()
+        }
+
+        # integrate
+        # E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
+        #
+        # F = float(self.entry_f_val.get())
+        # intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
+        #
+        # koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
+                   header=f'1 pechs\n{time_count[0]} {time_count[-1]} time_{self.name}_koef.txt\n{len(time_count)}',
+                   delimiter='\t',comments='')
+        print(Initial_field_values_dict.items(),type(Initial_field_values_dict.items()))
+        with open(rf'time functions/{self.dir_name}/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
+            f.writelines(Initial_field_values_dict.items())
+
+        # print(func_out.shape)
+        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
+        # print('по факту = ', time_count.shape, time_count[-1])
+
+        figure = plt.Figure(figsize=(6, 4), dpi=100)
+        ax = figure.add_subplot(111)
+        ax.plot(time_count, func_out, label='Пользовательская функция')
+
+        if os.path.exists(os.path.join(self.path, 'time.tf')):
+            old_tf_path = os.path.join(self.path, 'time.tf')
+            old_tf = np.loadtxt(old_tf_path, skiprows=3)
+            ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+        else:
+            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
+        ax.set_xlabel('Time , s', fontsize=14)
+        ax.set_ylabel('Function', fontsize=14)
+        chart_type = FigureCanvasTkAgg(figure, self)
+
+        chart_type.get_tk_widget().grid(row=4, column=8, rowspan=100, columnspan=50, padx=10)
+        ax.set_title(f'{self.name}')
+        ax.legend()
 
     def calculate_lay_pl(self):
 
@@ -378,26 +443,15 @@ class FrameGen(tk.Frame):
         output_matrix = np.column_stack((time_count, func_out))
 
         # integrate
-        if ('Current' or 'Sigma' or 'Flu_e') in self.name:
-            if os.path.exists(config_read()[1]):
-                spectr = np.loadtxt(config_read()[1], skiprows=3)
-            else:
-                mb.showerror('Spektr error', 'Spectr не существует')
-                self.reset()
+        E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
 
-            E_cp = np.sum(spectr[:, 0] * spectr[:, 1]) / np.sum(spectr[:, 1])
+        F = float(self.entry_f_val.get())
+        intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
-            F = float(self.entry_f_val.get())
-            intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
-
-            koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
-            np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
-                       header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
-                       comments='')
-        else:
-            np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
-                       header=f'1 pechs\n{time_count[0]} {time_count[-1]} {1.0}\n{len(time_count)}', delimiter='\t',
-                       comments='')
+        koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
+                   header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
+                   comments='')
         # print(func_out.shape)
         # print('заданныйэ = ', time_cell.shape, time_cell[-1])
         # print('по факту = ', time_count.shape, time_count[-1])
@@ -756,12 +810,14 @@ class DataParcer:
 
 
 def checker():
-    check_class = FrameGen(root, 'Check')
+
     if os.path.exists(r"config.txt"):
         print('config exist')
     else:
         open_button()
     cur_dir = config_read()
+
+    check_class = FrameGen(root, 'Check')
 
     if len(cur_dir) < 2:
         print(f'len cur_dir < 2')

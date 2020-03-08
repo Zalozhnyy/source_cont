@@ -1,0 +1,49 @@
+Корпус кувшина
+   <Dxf name>
+korp_tzpt_e_fixed_new1_E_2Air.dxf
+   <Grd name>
+KUVSH.GRD
+   <Cell name>
+KUVSH.CEL
+   <Norm name> 
+NONE
+   <Tok name>
+KUVSH.TOK
+   <Layers name>
+KUVSH.LAY
+   <Particles name>
+KUVSH.PAR
+   <Particles-Layers name>
+KUVSH.PL
+   <Particles spectrum>
+18
+electron_2_1_1_0_1.SPC
+electron_2_1_1_1_1.SPC
+electron_2_1_1_2_1.SPC
+electron_2_1_1_3_1.SPC
+electron_2_1_1_4_1.SPC
+electron_2_1_1_5_1.SPC
+electron_3_1_1_0_1.SPC
+electron_3_1_1_1_1.SPC
+electron_3_1_1_3_1.SPC
+electron_3_1_1_2_1.SPC
+electron_3_1_1_4_1.SPC
+electron_3_1_1_5_1.SPC
+electron_5_1_1_0_1.SPC
+electron_5_1_1_1_1.SPC
+electron_5_1_1_2_1.SPC
+electron_5_1_1_3_1.SPC
+electron_5_1_1_4_1.SPC
+electron_5_1_1_5_1.SPC
+   <List name>
+NONE
+   <Energy grid>
+NONE
+   <Output>
+2
+MKUVSH.VID
+MKUVSH.DAT
+PKUVSH.VID
+PKUVSH.DAT
+   <Recent calculation>
+NONE

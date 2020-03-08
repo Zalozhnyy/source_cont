@@ -364,7 +364,11 @@ class FrameGen(tk.Frame):
                     func_out.append(Calculations().solve(j, k, b))
                     time_count.append(j)
 
-            return func_out, time_count
+        # print(len(func_out))
+        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
+        # print('по факту = ', len(time_count), time_count[-1])
+
+        return func_out, time_count
 
     def calculate(self):
         if ('Current' or 'Sigma' or 'Flu_e') in self.name:
@@ -410,8 +414,11 @@ class FrameGen(tk.Frame):
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} time_{self.name}_koef.txt\n{len(time_count)}',
                    delimiter='\t',comments='')
         print(Initial_field_values_dict.items(),type(Initial_field_values_dict.items()))
+
         with open(rf'time functions/{self.dir_name}/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
-            f.writelines(Initial_field_values_dict.items())
+            for item in Initial_field_values_dict.items():
+                print(f'{item[0]} = {item[1]}')
+                f.write(f'{item[0]} = {item[1]}\n')
 
         # print(func_out.shape)
         # print('заданныйэ = ', time_cell.shape, time_cell[-1])
@@ -421,12 +428,12 @@ class FrameGen(tk.Frame):
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
 
-        if os.path.exists(os.path.join(self.path, 'time.tf')):
-            old_tf_path = os.path.join(self.path, 'time.tf')
-            old_tf = np.loadtxt(old_tf_path, skiprows=3)
-            ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
-        else:
-            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
+        # if os.path.exists(os.path.join(self.path, 'time.tf')):
+        #     old_tf_path = os.path.join(self.path, 'time.tf')
+        #     old_tf = np.loadtxt(old_tf_path, skiprows=3)
+        #     ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+        # else:
+        #     mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
         ax.set_xlabel('Time , s', fontsize=14)
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
@@ -452,9 +459,7 @@ class FrameGen(tk.Frame):
         np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                    comments='')
-        # print(func_out.shape)
-        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
-        # print('по факту = ', time_count.shape, time_count[-1])
+
 
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)

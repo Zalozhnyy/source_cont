@@ -77,6 +77,7 @@ class FrameGen(tk.Frame):
         self.func_list = []
         self.time_list = []
         self.entry_f_val = tk.StringVar()
+        self.entry_time_fix_val = tk.StringVar()
 
         self.path = os.path.normpath(config_read()[0])
         self.dir_name = config_read()[0].split('/')[-1]
@@ -153,6 +154,7 @@ class FrameGen(tk.Frame):
             tk.Label(self, text='hz').grid(row=7, column=5, sticky='E', padx=3)
 
             self.some_x_val = [tk.StringVar() for _ in range(6)]
+
             for i in self.some_x_val:
                 i.set('0')
             for i in range(6):
@@ -161,8 +163,8 @@ class FrameGen(tk.Frame):
 
         if 'External_field' in self.name:
             for i in range(6):
-                tk.Button(self, text='Browse tf', command=lambda: print(123),
-                          width=10, ).grid(row=2 + i, column=32, padx=5)
+                tk.Button(self, text='Browse tf', command=lambda: print(123), overrelief='ridge',
+                          width=9).grid(row=2 + i, column=7, padx=3)
 
         if 'Gursa' in self.name:
             # add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
@@ -179,7 +181,8 @@ class FrameGen(tk.Frame):
         self.existe_gursa_label.clear()
 
         for i in range(len(self.gursa_count)):
-            self.existe_gursa_label.append(tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}'))
+            self.existe_gursa_label.append(
+                tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}'))
             self.existe_gursa_label[i].grid(row=12 + i, column=2)
 
         self.gursa_numeric += 1
@@ -205,10 +208,18 @@ class FrameGen(tk.Frame):
             entry_time = tk.Entry(self, width=9, textvariable=self.time_entry_vel[i])
             entry_time.grid(row=7 + i, column=1, pady=3)
 
-        self.entry_time = tk.Label(self, text=f'{self.time_grid()}')
+        a, A = self.time_grid()
+
+        self.entry_time = tk.Label(self, text=f'{a}')
         self.entry_time.grid(row=7 + int(self.cell_numeric.get()) + 1, column=1)
         self.entry_func = tk.Label(self, text='[0 : 1]')
         self.entry_func.grid(row=7 + int(self.cell_numeric.get()) + 1, column=0)
+
+        self.obriv_tf_lavel = tk.Label(self, text='Обрыв tf')
+        self.obriv_tf_lavel.grid(row=8 + int(self.cell_numeric.get()) + 1, column=0)
+        self.entry_time_fix_val.set(f'{A[-1]}')
+        self.entry_time_fix = tk.Entry(self, textvariable=self.entry_time_fix_val, width=6)
+        self.entry_time_fix.grid(row=8 + int(self.cell_numeric.get()) + 1, column=1)
 
         self.button_browse.configure(state='disabled')
         self.button_browse_def.configure(state='disabled')
@@ -243,10 +254,18 @@ class FrameGen(tk.Frame):
             entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
             self.time_entry_vel[i] = entr_utility_time[i]
 
-        self.entry_time = tk.Label(self, width=9, text=f'{self.time_grid()}')
+        a, A = self.time_grid()
+
+        self.entry_time = tk.Label(self, width=9, text=f'{a}')
         self.entry_time.grid(row=7 + len(self.time_entry_vel) + 1, column=1)
         self.entry_func = tk.Label(self, width=9, text='[0 : 1]')
         self.entry_func.grid(row=7 + len(self.func_entry_vel) + 1, column=0)
+
+        self.obriv_tf_lavel = tk.Label(self, text='Обрыв tf')
+        self.obriv_tf_lavel.grid(row=8 + len(self.func_entry_vel) + 1, column=0)
+        self.entry_time_fix_val.set(f'{A[-1]}')
+        self.entry_time_fix = tk.Entry(self, textvariable=self.entry_time_fix_val, width=6)
+        self.entry_time_fix.grid(row=8 + len(self.func_entry_vel) + 1, column=1)
 
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
@@ -273,6 +292,8 @@ class FrameGen(tk.Frame):
 
         self.entry_time.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
         self.entry_func.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
+        self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
+        self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
 
     # def del_entry(self):
     #
@@ -325,18 +346,40 @@ class FrameGen(tk.Frame):
             # self.labes_load_path.grid(row=4, column=3, columnspan=5)
 
     def interpolate_user_time(self):
-        time_cell = self.child_parcecer_grid()
+        self.grd_def = self.child_parcecer_grid()
+        self.user_timeset = float(self.entry_time_fix_val.get())
+
         print(f'функция {self.func_list}')
         print(f'время {self.time_list}')
         entry_f = np.array(self.func_list)
         entry_t = np.array(self.time_list)
 
-        if entry_t[-1] != time_cell[-1]:
-            entry_t = np.append(entry_t, time_cell[-1])
-            entry_f = np.append(entry_f, 0)
-        if entry_t[0] != 0 and entry_f[0] != 0:
-            entry_t = np.insert(entry_t, 0, 0)
-            entry_f = np.insert(entry_f, 0, 0)
+        # блок проверки на ограничение пользователем тайм функции
+        if self.grd_def[-1] == self.user_timeset:
+            time_cell = self.grd_def
+            if entry_t[-1] != time_cell[-1]:
+                entry_t = np.append(entry_t, time_cell[-1])
+                entry_f = np.append(entry_f, 0)
+            if entry_t[0] != 0 and entry_f[0] != 0:
+                entry_t = np.insert(entry_t, 0, 0)
+                entry_f = np.insert(entry_f, 0, 0)
+        else:
+            time_right_side = np.where(self.user_timeset == self.grd_def)[0]
+            if len(time_right_side) == 0:
+                time_right_side = np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
+            # print(time_right_side)
+            time_cell = self.grd_def[:time_right_side[0]]
+            for i in range(len(entry_f)):
+                if entry_t[i] > time_cell[-1]:
+                    entry_t = np.delete(entry_t, np.s_[i:], 0)
+                    entry_f = np.delete(entry_f, np.s_[i:], 0)
+                    break
+            if entry_t[-1] != time_cell[-1]:
+                entry_t = np.append(entry_t, time_cell[-1])
+                entry_f = np.append(entry_f, entry_f[-1])
+            if entry_t[0] != 0 and entry_f[0] != 0:
+                entry_t = np.insert(entry_t, 0, 0)
+                entry_f = np.insert(entry_f, 0, 0)
 
         for i in range(len(entry_t) - 1):
             if entry_t[i] > entry_t[i + 1]:
@@ -474,10 +517,11 @@ class FrameGen(tk.Frame):
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
 
-        if os.path.exists(os.path.join(self.path, 'time.tf')):
-            old_tf_path = os.path.join(self.path, 'time.tf')
-            old_tf = np.loadtxt(old_tf_path, skiprows=3)
-            ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+        if self.grd_def[-1] == self.user_timeset:
+            if os.path.exists(os.path.join(self.path, 'time.tf')):
+                old_tf_path = os.path.join(self.path, 'time.tf')
+                old_tf = np.loadtxt(old_tf_path, skiprows=3)
+                ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
         else:
             mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
         ax.set_xlabel('Time , s', fontsize=14)
@@ -499,7 +543,7 @@ class FrameGen(tk.Frame):
 
     def time_grid(self):
         a = DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
-        return f'[{a[0]} : {a[-1]}]'
+        return f'[{a[0]} : {a[-1]}]', a
 
     def child_parcecer_grid(self):
         return DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()

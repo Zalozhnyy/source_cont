@@ -80,8 +80,9 @@ class FrameGen(tk.Frame):
 
         self.path = os.path.normpath(config_read()[0])
         self.dir_name = config_read()[0].split('/')[-1]
-        self.gursa_count = 0
-        self.label_util = []
+        self.gursa_count = []
+        self.gursa_numeric = 0
+        self.existe_gursa_label = []
         print(repr(self))
 
     def __repr__(self):
@@ -131,7 +132,7 @@ class FrameGen(tk.Frame):
         self.button_read_gen = tk.Button(self, width=10, text='Read', command=self.get, state='disabled')
         self.button_read_gen.grid(row=6, column=2)
         self.button_calculate = tk.Button(self, width=10, text='Calculate', command=self.calculate, state='disabled')
-        self.button_calculate.grid(row=1, column=30, padx=3)
+        self.button_calculate.grid(row=1, column=5, padx=3)
         self.add_button = tk.Button(self, width=6, text='Add one', state='disabled',
                                     command=lambda: self.add_entry())
         self.add_button.grid(row=1, column=0)
@@ -139,24 +140,24 @@ class FrameGen(tk.Frame):
         if 'Sigma' in self.name or 'Current' in self.name or 'Flu' in self.name:
             self.entry_f_val.set(1.)
             label_f = tk.Label(self, text='F')
-            label_f.grid(row=2, column=30, padx=3, sticky='E')
+            label_f.grid(row=2, column=5, padx=3, sticky='E')
             entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
-            entry_f.grid(row=2, column=31, padx=3)
+            entry_f.grid(row=2, column=6, padx=3)
 
         if 'Initial_field' in self.name or 'External_field' in self.name:
-            tk.Label(self, text='Ex').grid(row=2, column=30, sticky='E', padx=3)
-            tk.Label(self, text='Ey').grid(row=3, column=30, sticky='E', padx=3)
-            tk.Label(self, text='Ez').grid(row=4, column=30, sticky='E', padx=3)
-            tk.Label(self, text='hx').grid(row=5, column=30, sticky='E', padx=3)
-            tk.Label(self, text='hy').grid(row=6, column=30, sticky='E', padx=3)
-            tk.Label(self, text='hz').grid(row=7, column=30, sticky='E', padx=3)
+            tk.Label(self, text='Ex').grid(row=2, column=5, sticky='E', padx=3)
+            tk.Label(self, text='Ey').grid(row=3, column=5, sticky='E', padx=3)
+            tk.Label(self, text='Ez').grid(row=4, column=5, sticky='E', padx=3)
+            tk.Label(self, text='hx').grid(row=5, column=5, sticky='E', padx=3)
+            tk.Label(self, text='hy').grid(row=6, column=5, sticky='E', padx=3)
+            tk.Label(self, text='hz').grid(row=7, column=5, sticky='E', padx=3)
 
             self.some_x_val = [tk.StringVar() for _ in range(6)]
             for i in self.some_x_val:
                 i.set('0')
             for i in range(6):
                 some_x = tk.Entry(self, textvariable=self.some_x_val[i], width=4)
-                some_x.grid(row=2 + i, column=31)
+                some_x.grid(row=2 + i, column=6)
 
         if 'External_field' in self.name:
             for i in range(6):
@@ -164,25 +165,34 @@ class FrameGen(tk.Frame):
                           width=10, ).grid(row=2 + i, column=32, padx=5)
 
         if 'Gursa' in self.name:
+            # add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
+            # add_button_gursa.grid(row=10, column=2)
             add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
             add_button_gursa.grid(row=10, column=2)
+            add_button_gursa = tk.Button(self, text='check', width=10, command=self.check_class)
+            add_button_gursa.grid(row=11, column=2)
 
     def gursa_cw(self):
 
-        try:
-            x = Gursa(name=f'Gursa {self.gursa_count}')
-            self.gursa_count += 1
+        x = Gursa(name=f'Gursa_{self.gursa_numeric}')
+        self.gursa_count.append(x)
+        self.existe_gursa_label.clear()
 
-            self.label_util.append(x.name)
-            print(self.label_util)
+        for i in range(len(self.gursa_count)):
+            self.existe_gursa_label.append(tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}'))
+            self.existe_gursa_label[i].grid(row=12 + i, column=2)
 
-            for i in range(len(self.label_util)):
-                existe_gursa_label = tk.Label(self, text=f'{self.label_util[i]} / {x} / {repr(x)}')
-                existe_gursa_label.grid(row=11 + i, column=2)
+        self.gursa_numeric += 1
 
+    def check_class(self):
+        self.gursa_count[0].name = 'abae'
+        print(self.gursa_count[0].name)
 
-        except:
-            pass
+        for i in self.existe_gursa_label:
+            i.destroy()
+        for i in range(len(self.gursa_count)):
+            self.existe_gursa_label = tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}')
+            self.existe_gursa_label.grid(row=12 + i, column=2)
 
     def ent(self):
         self.func_entry_vel.clear()
@@ -256,10 +266,10 @@ class FrameGen(tk.Frame):
         self.time_entry_vel.append(tk.StringVar())
 
         entry_func = tk.Entry(self, width=9, justify='center', textvariable=self.func_entry_vel[-1])
-        entry_func.grid(row=len(self.func_entry_vel) + 1 + 7, column=0)
+        entry_func.grid(row=len(self.func_entry_vel) + 1 + 7, column=0, pady=0)
 
         entry_time = tk.Entry(self, width=9, justify='center', textvariable=self.time_entry_vel[-1])
-        entry_time.grid(row=len(self.func_entry_vel) + 1 + 7, column=1)
+        entry_time.grid(row=len(self.func_entry_vel) + 1 + 7, column=1, pady=0)
 
         self.entry_time.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
         self.entry_func.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
@@ -412,8 +422,8 @@ class FrameGen(tk.Frame):
         # koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
         np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} time_{self.name}_koef.txt\n{len(time_count)}',
-                   delimiter='\t',comments='')
-        print(Initial_field_values_dict.items(),type(Initial_field_values_dict.items()))
+                   delimiter='\t', comments='')
+        print(Initial_field_values_dict.items(), type(Initial_field_values_dict.items()))
 
         with open(rf'time functions/{self.dir_name}/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
             for item in Initial_field_values_dict.items():
@@ -428,12 +438,12 @@ class FrameGen(tk.Frame):
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
 
-        # if os.path.exists(os.path.join(self.path, 'time.tf')):
-        #     old_tf_path = os.path.join(self.path, 'time.tf')
-        #     old_tf = np.loadtxt(old_tf_path, skiprows=3)
-        #     ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
-        # else:
-        #     mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
+        if os.path.exists(os.path.join(self.path, 'time.tf')):
+            old_tf_path = os.path.join(self.path, 'time.tf')
+            old_tf = np.loadtxt(old_tf_path, skiprows=3)
+            ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+        else:
+            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
         ax.set_xlabel('Time , s', fontsize=14)
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
@@ -459,7 +469,6 @@ class FrameGen(tk.Frame):
         np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                    comments='')
-
 
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)
@@ -626,7 +635,6 @@ class Gursa(tk.Toplevel):
         return x
 
     def main(self):
-        print(repr(self))
 
         M2 = self.koord(self.entry_koord_ist_val[0].get(),
                         self.entry_koord_ist_val[1].get(),
@@ -815,7 +823,6 @@ class DataParcer:
 
 
 def checker():
-
     if os.path.exists(r"config.txt"):
         print('config exist')
     else:

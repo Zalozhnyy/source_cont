@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
+from tkinter import simpledialog
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -145,14 +146,30 @@ class FrameGen(tk.Frame):
             entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
             entry_f.grid(row=2, column=6, padx=3)
 
-        if 'Initial_field' in self.name or 'External_field' in self.name:
+        if 'External_field' in self.name:
             tk.Label(self, text='Ex').grid(row=2, column=5, sticky='E', padx=3)
             tk.Label(self, text='Ey').grid(row=3, column=5, sticky='E', padx=3)
             tk.Label(self, text='Ez').grid(row=4, column=5, sticky='E', padx=3)
             tk.Label(self, text='hx').grid(row=5, column=5, sticky='E', padx=3)
             tk.Label(self, text='hy').grid(row=6, column=5, sticky='E', padx=3)
             tk.Label(self, text='hz').grid(row=7, column=5, sticky='E', padx=3)
+            self.button_calculate.destroy()
 
+            self.graph_ext_checkbutton = tk.BooleanVar()
+            self.graph_ext_checkbutton.set(0)
+            ttk.Checkbutton(self, text='Построение графика', variable=self.graph_ext_checkbutton,
+                            onvalue=1, offvalue=0).grid(row=1, column=7, columnspan=2)
+
+            self.ext_load_tf_button = []
+            self.external_field_values_dict = {
+                'Ex': 0,
+                'Ey': 0,
+                'Ez': 0,
+                'hx': 0,
+                'hy': 0,
+                'hz': 0
+            }
+            self.ext_load_tf_button = []
             self.some_x_val = [tk.StringVar() for _ in range(6)]
 
             for i in self.some_x_val:
@@ -161,10 +178,20 @@ class FrameGen(tk.Frame):
                 some_x = tk.Entry(self, textvariable=self.some_x_val[i], width=4)
                 some_x.grid(row=2 + i, column=6)
 
-        if 'External_field' in self.name:
-            for i in range(6):
-                tk.Button(self, text='Browse tf', command=lambda: print(123), overrelief='ridge',
-                          width=9).grid(row=2 + i, column=7, padx=3)
+            keys = []
+            [keys.append(i) for i in self.external_field_values_dict.keys()]
+
+            for i in range(len(keys)):
+                self.ext_load_tf_button.append(tk.Button(self, text=f'load {keys[i]} tf', overrelief='ridge',
+                                                         width=9, state='disabled'))
+                self.ext_load_tf_button[i].grid(row=2 + i, column=7, padx=3)
+
+            self.ext_load_tf_button[0].configure(command=lambda: self.calculate_external_field(keys[0]))
+            self.ext_load_tf_button[1].configure(command=lambda: self.calculate_external_field(keys[1]))
+            self.ext_load_tf_button[2].configure(command=lambda: self.calculate_external_field(keys[2]))
+            self.ext_load_tf_button[3].configure(command=lambda: self.calculate_external_field(keys[3]))
+            self.ext_load_tf_button[4].configure(command=lambda: self.calculate_external_field(keys[4]))
+            self.ext_load_tf_button[5].configure(command=lambda: self.calculate_external_field(keys[5]))
 
         if 'Gursa' in self.name:
             # add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
@@ -186,6 +213,34 @@ class FrameGen(tk.Frame):
             self.existe_gursa_label[i].grid(row=12 + i, column=2)
 
         self.gursa_numeric += 1
+
+    def initial_field_notebook(self):
+        nb.add(self, text=f"{self.name}")
+        self.ini_f_labes_file = []
+
+        rows = 0
+        while rows < 50:
+            self.rowconfigure(rows, weight=1, minsize=3)
+            self.columnconfigure(rows, weight=1, minsize=3)
+            rows += 1
+
+        tk.Label(self, text='Ex').grid(row=2, column=5, sticky='E', padx=3)
+        tk.Label(self, text='Ey').grid(row=3, column=5, sticky='E', padx=3)
+        tk.Label(self, text='Ez').grid(row=4, column=5, sticky='E', padx=3)
+        tk.Label(self, text='hx').grid(row=5, column=5, sticky='E', padx=3)
+        tk.Label(self, text='hy').grid(row=6, column=5, sticky='E', padx=3)
+        tk.Label(self, text='hz').grid(row=7, column=5, sticky='E', padx=3)
+
+        self.some_x_val = [tk.StringVar() for _ in range(6)]
+
+        for i in self.some_x_val:
+            i.set('0')
+        for i in range(6):
+            some_x = tk.Entry(self, textvariable=self.some_x_val[i], width=4)
+            some_x.grid(row=2 + i, column=6)
+
+        ini_save_button = tk.Button(self, width=10, text='Save', state='normal', command=self.save_Initial_field)
+        ini_save_button.grid(row=0, column=6, pady=5)
 
     def check_class(self):
         self.gursa_count[0].name = 'abae'
@@ -317,7 +372,11 @@ class FrameGen(tk.Frame):
         self.button_save.configure(state='active')
         self.button_save_def.configure(state='active')
         self.button_browse.configure(state='disabled')
-        self.button_calculate.configure(state='normal')
+        if self.name != 'External_field':
+            self.button_calculate.configure(state='normal')
+
+        for i in self.ext_load_tf_button:
+            i.configure(state='normal')
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)
@@ -366,7 +425,8 @@ class FrameGen(tk.Frame):
         else:
             time_right_side = np.where(self.user_timeset == self.grd_def)[0]
             if len(time_right_side) == 0:
-                time_right_side = np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
+                time_right_side = \
+                    np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
             # print(time_right_side)
             time_cell = self.grd_def[:time_right_side[0]]
             for i in range(len(entry_f)):
@@ -423,30 +483,21 @@ class FrameGen(tk.Frame):
 
         return func_out, time_count
 
-    def calculate(self):
-        if ('Current' or 'Sigma' or 'Flu_e') in self.name:
-            if os.path.exists(config_read()[1]):
-                self.spectr = np.loadtxt(config_read()[1], skiprows=3)
-            else:
-                mb.showerror('Spektr error', 'Spectr не существует')
-                self.reset()
-            self.calculate_lay_pl()
+    def save_Initial_field(self):
+        ask = mb.askyesno('?', 'Дать файлу уникальное название?')
+        back = self.name
 
-        if 'Initial_field' in self.name:
-            if os.path.exists(config_read()[1]):
-                self.spectr = np.loadtxt(config_read()[1], skiprows=3)
-            else:
-                mb.showerror('Spektr error', 'Spectr не существует')
-                self.reset()
-            self.calculate_Initial_field()
+        if len(self.ini_f_labes_file) != 0:
+            for i in self.ini_f_labes_file:
+                i.destroy()
+            self.ini_f_labes_file.clear()
 
-    def calculate_Initial_field(self):
-
-        func_out, time_count = self.interpolate_user_time()
-        func_out = np.array(func_out)
-        time_count = np.array(time_count)
-        output_matrix = np.column_stack((time_count, func_out))
-
+        if ask is True:
+            self.name = tk.simpledialog.askstring('Введите имя файла', 'Func name')
+            if len(self.name) == 0 or self.name == ' ':
+                self.name = back
+        self.ini_f_labes_file.append(tk.Label(self, text=f'time functions/{self.dir_name}/time_{self.name}_koef.txt'))
+        self.ini_f_labes_file[0].grid(row=0, column=7)
         Initial_field_values_dict = {
             'Ex': self.some_x_val[0].get(),
             'Ey': self.some_x_val[1].get(),
@@ -456,44 +507,19 @@ class FrameGen(tk.Frame):
             'hz': self.some_x_val[5].get()
         }
 
-        # integrate
-        # E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
-        #
-        # F = float(self.entry_f_val.get())
-        # intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
-        #
-        # koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
-        np.savetxt(f'time functions/{self.dir_name}/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
-                   header=f'1 pechs\n{time_count[0]} {time_count[-1]} time_{self.name}_koef.txt\n{len(time_count)}',
-                   delimiter='\t', comments='')
-        print(Initial_field_values_dict.items(), type(Initial_field_values_dict.items()))
-
         with open(rf'time functions/{self.dir_name}/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
             for item in Initial_field_values_dict.items():
-                print(f'{item[0]} = {item[1]}')
+                # print(f'{item[0]} = {item[1]}')
                 f.write(f'{item[0]} = {item[1]}\n')
 
-        # print(func_out.shape)
-        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
-        # print('по факту = ', time_count.shape, time_count[-1])
-
-        figure = plt.Figure(figsize=(6, 4), dpi=100)
-        ax = figure.add_subplot(111)
-        ax.plot(time_count, func_out, label='Пользовательская функция')
-
-        if os.path.exists(os.path.join(self.path, 'time.tf')):
-            old_tf_path = os.path.join(self.path, 'time.tf')
-            old_tf = np.loadtxt(old_tf_path, skiprows=3)
-            ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
-        else:
-            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
-        ax.set_xlabel('Time , s', fontsize=14)
-        ax.set_ylabel('Function', fontsize=14)
-        chart_type = FigureCanvasTkAgg(figure, self)
-
-        chart_type.get_tk_widget().grid(row=4, column=8, rowspan=100, columnspan=50, padx=10)
-        ax.set_title(f'{self.name}')
-        ax.legend()
+    def calculate(self):
+        if 'Current' in self.name or 'Sigma' in self.name or 'Flu_e' in self.name:
+            if os.path.exists(config_read()[1]):
+                self.spectr = np.loadtxt(config_read()[1], skiprows=3)
+                self.calculate_lay_pl()
+            else:
+                mb.showerror('Spektr error', 'Spectr не существует')
+                self.reset()
 
     def calculate_lay_pl(self):
 
@@ -531,6 +557,33 @@ class FrameGen(tk.Frame):
         chart_type.get_tk_widget().grid(row=4, column=8, rowspan=100, columnspan=50, padx=10)
         ax.set_title(f'{self.name}')
         ax.legend()
+
+    def calculate_external_field(self, key):
+
+        self.external_field_values_dict = {
+            'Ex': self.some_x_val[0].get(),
+            'Ey': self.some_x_val[1].get(),
+            'Ez': self.some_x_val[2].get(),
+            'hx': self.some_x_val[3].get(),
+            'hy': self.some_x_val[4].get(),
+            'hz': self.some_x_val[5].get()
+        }
+
+        func_out, time_count = self.interpolate_user_time()
+        func_out = np.array(func_out)
+        time_count = np.array(time_count)
+        output_matrix = np.column_stack((time_count, func_out))
+
+        np.savetxt(f'time functions/{self.dir_name}/TOK/time_ext_{key}.tf', output_matrix, fmt='%-8.4g',
+                   header=f'{key} = {self.external_field_values_dict.get(key)}\ntime\t\tfunc', delimiter='\t',
+                   comments='')
+
+        if self.graph_ext_checkbutton.get() == 1:
+            plt.plot(time_count, func_out)
+            plt.title(f'{key} = {self.external_field_values_dict.get(key)}')
+            plt.xlabel('Time , s', fontsize=14)
+            plt.ylabel('Function', fontsize=14)
+            plt.show()
 
     def reset(self):
 
@@ -951,7 +1004,7 @@ def main():
 
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
-        FrameGen(root, 'Initial_field', f'{energy_type}').notebooks()
+        FrameGen(root, 'Initial_field', f'{energy_type}').initial_field_notebook()
     if TOK[1] == 1:
         energy_type = 'Внешнее поле'
         FrameGen(root, 'External_field', f'{energy_type}').notebooks()

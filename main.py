@@ -141,9 +141,8 @@ class FrameGen(tk.Frame):
                                     command=lambda: self.add_entry())
         self.del_button = tk.Button(self, width=6, text='del cell', state='disabled',
                                     command=lambda: self.delete_entry())
-        self.add_button.grid(row=1,column=0,sticky='WS')
-        self.del_button.grid(row=1, column=1,sticky='WS')
-
+        self.add_button.grid(row=1, column=0, sticky='WS')
+        self.del_button.grid(row=1, column=1, sticky='WS')
 
         if 'Sigma' in self.name or 'Current' in self.name or 'Flu' in self.name:
             self.entry_f_val.set(1.)
@@ -199,8 +198,7 @@ class FrameGen(tk.Frame):
             self.ext_load_tf_button[5].configure(command=lambda: self.calculate_external_field(keys[5]))
 
         if 'Gursa' in self.name:
-            # add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
-            # add_button_gursa.grid(row=10, column=2)
+
             add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
             add_button_gursa.grid(row=10, column=2)
             add_button_gursa = tk.Button(self, text='check', width=10, command=self.check_class)
@@ -209,15 +207,18 @@ class FrameGen(tk.Frame):
     def gursa_cw(self):
 
         x = Gursa(name=f'Gursa_{self.gursa_numeric}')
-        self.gursa_count.append(x)
-        self.existe_gursa_label.clear()
+        self.grab_release()
+        print(x.calc_state)
+        if x.calc_state == 1:
+            self.gursa_count.append(x)
+            self.existe_gursa_label.clear()
 
-        for i in range(len(self.gursa_count)):
-            self.existe_gursa_label.append(
-                tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}'))
-            self.existe_gursa_label[i].grid(row=12 + i, column=2)
+            for i in range(len(self.gursa_count)):
+                self.existe_gursa_label.append(
+                    tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}'))
+                self.existe_gursa_label[i].grid(row=12 + i, column=2)
 
-        self.gursa_numeric += 1
+            self.gursa_numeric += 1
 
     def initial_field_notebook(self):
         nb.add(self, text=f"{self.name}")
@@ -669,6 +670,7 @@ class Gursa(tk.Toplevel):
         self.EnergyP = []
         self.spectr_path = ''
         self.Spektr_output = []
+        self.calc_state = 0
 
         self.child_window()
         print(repr(self))
@@ -884,6 +886,8 @@ class Gursa(tk.Toplevel):
                        self.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                        header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.spectr_cont[0, 0]))
 
+
+        self.calc_state = 1
         self.destroy()
 
     # def name_transfer(self):

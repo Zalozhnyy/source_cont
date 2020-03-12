@@ -20,10 +20,8 @@ def config_read():
 
 def open_button():
     filename = fd.askdirectory(title='Укажите путь к проекту REMP')
-    spectr = fd.askopenfilename(title='Выберите файл spectr', initialdir=rf'{filename}\pechs\spectrs',
-                                filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
     handle = open(r"config.txt", "w", encoding='utf-8')
-    handle.write(f'{filename}\n{spectr}')
+    handle.write(f'{filename}')
     handle.close()
 
     with open(r"config.txt", 'r', encoding='utf-8') as g:
@@ -81,6 +79,7 @@ class FrameGen(tk.Frame):
         self.time_list = []
         self.entry_f_val = tk.StringVar()
         self.entry_time_fix_val = tk.StringVar()
+        self.spectr = []
 
         self.path = os.path.normpath(config_read()[0])
         self.dir_name = config_read()[0].split('/')[-1]
@@ -198,27 +197,36 @@ class FrameGen(tk.Frame):
             self.ext_load_tf_button[5].configure(command=lambda: self.calculate_external_field(keys[5]))
 
         if 'Gursa' in self.name:
-
             add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
             add_button_gursa.grid(row=10, column=2)
-            add_button_gursa = tk.Button(self, text='check', width=10, command=self.check_class)
-            add_button_gursa.grid(row=11, column=2)
+
+            self.button_calculate.destroy()
+
+            self.gursa_graphs_checkbutton_val = tk.BooleanVar()
+            self.gursa_graphs_checkbutton_val.set(0)
+            gursa_graphs_checkbutton = tk.Checkbutton(self, text='Построение графиков',
+                                                      variable=self.gursa_graphs_checkbutton_val, onvalue=1, offvalue=0)
+            gursa_graphs_checkbutton.grid(row=1, column=7, columnspan=2)
 
     def gursa_cw(self):
-
-        x = Gursa(name=f'Gursa_{self.gursa_numeric}')
         self.grab_release()
-        print(x.calc_state)
-        if x.calc_state == 1:
-            self.gursa_count.append(x)
+
+        self.x = Gursa(name=f'Gursa_{self.gursa_numeric}')
+        self.wait_window(self.x)
+
+        if self.x.calc_state == 1:
+            self.gursa_count.append(self.x)
             self.existe_gursa_label.clear()
 
             for i in range(len(self.gursa_count)):
                 self.existe_gursa_label.append(
-                    tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}'))
+                    tk.Label(self, text=f'{self.gursa_count[i].name}'))
                 self.existe_gursa_label[i].grid(row=12 + i, column=2)
 
             self.gursa_numeric += 1
+
+        self.spectr = x.Spektr_output
+
 
     def initial_field_notebook(self):
         nb.add(self, text=f"{self.name}")
@@ -247,16 +255,6 @@ class FrameGen(tk.Frame):
 
         ini_save_button = tk.Button(self, width=10, text='Save', state='normal', command=self.save_Initial_field)
         ini_save_button.grid(row=0, column=6, pady=5)
-
-    def check_class(self):
-        self.gursa_count[0].name = 'abae'
-        print(self.gursa_count[0].name)
-
-        for i in self.existe_gursa_label:
-            i.destroy()
-        for i in range(len(self.gursa_count)):
-            self.existe_gursa_label = tk.Label(self, text=f'{self.gursa_count[i].name} / {repr(self.gursa_count[i])}')
-            self.existe_gursa_label.grid(row=12 + i, column=2)
 
     def ent(self):
         self.entry_func.clear()
@@ -423,6 +421,7 @@ class FrameGen(tk.Frame):
         self.button_browse.configure(state='disabled')
         if self.name != 'External_field':
             self.button_calculate.configure(state='normal')
+
         if self.name == 'External_field':
             for i in self.ext_load_tf_button:
                 i.configure(state='normal')
@@ -563,10 +562,22 @@ class FrameGen(tk.Frame):
 
     def calculate(self):
         if 'Current' in self.name or 'Sigma' in self.name or 'Flu_e' in self.name:
-            if os.path.exists(config_read()[1]):
-                self.spectr = np.loadtxt(config_read()[1], skiprows=3)
-                self.calculate_lay_pl()
+
+            if len(self.spectr) == 0:
+                spectr_dir =fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
+                                                            filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+                self.spectr = np.loadtxt(spectr_dir, skiprows=3)
+
             else:
+                answer = mb.askyesno(title="Spectr", message="Выбрать новый спектр?")
+                if answer is True:
+                    spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
+                                                    filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+                    self.spectr = np.loadtxt(spectr_dir, skiprows=3)
+
+            self.calculate_lay_pl()
+
+            if len(self.spectr) == 0:
                 mb.showerror('Spektr error', 'Spectr не существует')
                 self.reset()
 
@@ -634,6 +645,43 @@ class FrameGen(tk.Frame):
             plt.ylabel('Function', fontsize=14)
             plt.show()
 
+    def calculate_gursa(self):
+        func_out, time_count = self.interpolate_user_time()
+        func_out = np.array(func_out)
+        time_count = np.array(time_count)
+        output_matrix = np.column_stack((time_count, func_out))
+
+        # integrate
+        E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
+
+        # F = float(self.entry_f_val.get())
+        F=1
+        intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
+
+        koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        np.savetxt(f'time functions/{self.dir_name}/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
+                   header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
+                   comments='')
+
+        figure = plt.Figure(figsize=(6, 4), dpi=100)
+        ax = figure.add_subplot(111)
+        ax.plot(time_count, func_out, label='Пользовательская функция')
+
+        if self.grd_def[-1] == self.user_timeset:
+            if os.path.exists(os.path.join(self.path, 'time.tf')):
+                old_tf_path = os.path.join(self.path, 'time.tf')
+                old_tf = np.loadtxt(old_tf_path, skiprows=3)
+                ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
+        else:
+            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
+        ax.set_xlabel('Time , s', fontsize=14)
+        ax.set_ylabel('Function', fontsize=14)
+        chart_type = FigureCanvasTkAgg(figure, self)
+
+        chart_type.get_tk_widget().grid(row=4, column=8, rowspan=100, columnspan=50, padx=10)
+        ax.set_title(f'{self.name}')
+        ax.legend()
+
     def reset(self):
 
         nb.destroy()
@@ -672,6 +720,9 @@ class Gursa(tk.Toplevel):
         self.Spektr_output = []
         self.calc_state = 0
 
+        self.grab_set()
+        self.focus()
+
         self.child_window()
         print(repr(self))
 
@@ -681,8 +732,6 @@ class Gursa(tk.Toplevel):
     def child_window(self):
         self.title('PE source')
         self.geometry('800x600')
-        self.grab_set()
-        self.focus()
 
         rows = 0
         while rows < 30:
@@ -886,8 +935,8 @@ class Gursa(tk.Toplevel):
                        self.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                        header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.spectr_cont[0, 0]))
 
-
         self.calc_state = 1
+        print(f'self.calc_state = {self.calc_state}')
         self.destroy()
 
     # def name_transfer(self):
@@ -978,11 +1027,11 @@ def checker():
         open_button()
     cur_dir = config_read()
 
-    if len(cur_dir) < 2:
-        print(f'len cur_dir < 2')
+    if len(cur_dir) < 1:
+        print(f'len cur_dir < 1')
         mb.showerror('Path error', 'Укажите все необходимые директории')
         answer = mb.askyesno(title="Директории не выбраны", message="Выбрать директории заново?")
-        if answer == True:
+        if answer is True:
             open_button()
             cur_dir = config_read()
         else:
@@ -1002,6 +1051,9 @@ def checker():
         os.mkdir(f'time functions/{check_class.dir_name}')
     if not os.path.exists(f'time functions/{check_class.dir_name}/user configuration'):
         os.mkdir(os.path.join(f'time functions/{check_class.dir_name}/user configuration'))
+
+    if not os.path.exists(f'time functions/{check_class.dir_name}/Gursa'):
+        os.mkdir(os.path.join(f'time functions/{check_class.dir_name}/Gursa'))
 
     if len(DataParcer(os.path.normpath(os.path.join(cur_dir[0], check_folder().get('TOK')))).tok_decoder()) > 0:
         if not os.path.exists(f'time functions/{check_class.dir_name}/TOK'):

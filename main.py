@@ -143,7 +143,7 @@ class FrameGen(tk.Frame):
         self.add_button.grid(row=1, column=0, sticky='WS')
         self.del_button.grid(row=1, column=1, sticky='WS')
 
-        if 'Sigma' in self.name or 'Current' in self.name or 'Flu' in self.name:
+        if 'Sigma' in self.name or 'Current' in self.name or 'Flu' in self.name or 'Gursa' in self.name:
             self.entry_f_val.set(1.)
             label_f = tk.Label(self, text='F')
             label_f.grid(row=2, column=5, padx=3, sticky='E')
@@ -225,7 +225,25 @@ class FrameGen(tk.Frame):
 
             self.gursa_numeric += 1
 
-        self.spectr = x.Spektr_output
+            self.spectr = self.x.Spektr_output
+            try:
+                self.calculate_gursa()
+
+                if self.x.spectr_type.get() == 1:
+                    type = 'DISCRETE'
+                    np.savetxt(f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{self.x.name}_1.txt',
+                               self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
+                               comments='', delimiter='\t')
+                elif self.x.spectr_type.get() == 0:
+                    type = 'DISCRETE'
+                    np.savetxt(
+                        f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{self.x.name}_1.txt',
+                        self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
+                        header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
+            except:
+                mb.showinfo('Inf', 'Что-то пошло не так =(')
+
+
 
 
     def initial_field_notebook(self):
@@ -564,8 +582,8 @@ class FrameGen(tk.Frame):
         if 'Current' in self.name or 'Sigma' in self.name or 'Flu_e' in self.name:
 
             if len(self.spectr) == 0:
-                spectr_dir =fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
-                                                            filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+                spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
+                                                filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
                 self.spectr = np.loadtxt(spectr_dir, skiprows=3)
 
             else:
@@ -654,15 +672,14 @@ class FrameGen(tk.Frame):
         # integrate
         E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
 
-        # F = float(self.entry_f_val.get())
-        F=1
+        F = float(self.entry_f_val.get())
         intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
         koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+
         np.savetxt(f'time functions/{self.dir_name}/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                    comments='')
-
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
@@ -923,15 +940,15 @@ class Gursa(tk.Toplevel):
 
         if self.spectr_type.get() == 1:
             self.Spektr_output[:, 0] = self.Energy0
-            np.savetxt(f'time functions/{gursa_class_nb.dir_name}/TOK/Spektr_output_{gursa_class_nb.name}_1.txt',
-                       self.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
-                       comments='', delimiter='\t')
+            # np.savetxt(f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{gursa_class_nb.name}_1.txt',
+            #            self.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
+            #            comments='', delimiter='\t')
         elif self.spectr_type.get() == 0:
             self.Spektr_output[:, 0] = self.spectr_cont[1:, 0]
             for i in range(len(self.Spektr_output) - 1, 0, -1):
                 self.Spektr_output[i, 1] = self.Spektr_output[i - 1, 1]
 
-            np.savetxt(f'time functions/{gursa_class_nb.dir_name}/TOK/Spektr_output_{gursa_class_nb.name}_1.txt',
+            np.savetxt(f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{gursa_class_nb.name}_1.txt',
                        self.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                        header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.spectr_cont[0, 0]))
 

@@ -419,7 +419,7 @@ class FrameGen(tk.Frame):
         self.button_save.configure(state='active')
         self.button_save_def.configure(state='active')
         self.button_browse.configure(state='disabled')
-        if self.name != 'External_field':
+        if self.name != 'External_field' and self.name != 'Gursa':
             self.button_calculate.configure(state='normal')
 
         if self.name == 'External_field':

@@ -197,8 +197,9 @@ class FrameGen(tk.Frame):
             self.ext_load_tf_button[5].configure(command=lambda: self.calculate_external_field(keys[5]))
 
         if 'Gursa' in self.name:
-            add_button_gursa = tk.Button(self, text='add', width=10, command=self.gursa_cw)
-            add_button_gursa.grid(row=10, column=2)
+            self.add_button_gursa = tk.Button(self, text='Add source', width=10, command=self.gursa_cw,
+                                              state='disabled')
+            self.add_button_gursa.grid(row=10, column=2)
 
             self.button_calculate.destroy()
 
@@ -242,9 +243,6 @@ class FrameGen(tk.Frame):
                         header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
             except:
                 mb.showinfo('Inf', 'Что-то пошло не так =(')
-
-
-
 
     def initial_field_notebook(self):
         nb.add(self, text=f"{self.name}")
@@ -306,6 +304,15 @@ class FrameGen(tk.Frame):
         self.button_read_gen.configure(state='normal')
         self.add_button.configure(state='normal')
         self.del_button.configure(state='normal')
+
+        if self.name != 'External_field' and self.name != 'Gursa':
+            self.button_calculate.configure(state='normal')
+
+        if self.name == 'External_field':
+            for i in self.ext_load_tf_button:
+                i.configure(state='normal')
+        if self.name == 'Gursa':
+            self.add_button_gursa.configure(state='normal')
 
     def ent_load(self, path):
         with open(rf'time functions/{self.dir_name}/user configuration/{path}.txt', 'r', encoding='utf-8') as file:
@@ -443,6 +450,8 @@ class FrameGen(tk.Frame):
         if self.name == 'External_field':
             for i in self.ext_load_tf_button:
                 i.configure(state='normal')
+        if self.name == 'Gursa':
+            self.add_button_gursa.configure(state='normal')
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)
@@ -621,13 +630,6 @@ class FrameGen(tk.Frame):
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
 
-        if self.grd_def[-1] == self.user_timeset:
-            if os.path.exists(os.path.join(self.path, 'time.tf')):
-                old_tf_path = os.path.join(self.path, 'time.tf')
-                old_tf = np.loadtxt(old_tf_path, skiprows=3)
-                ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
-        else:
-            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
         ax.set_xlabel('Time , s', fontsize=14)
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
@@ -680,24 +682,30 @@ class FrameGen(tk.Frame):
         np.savetxt(f'time functions/{self.dir_name}/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                    comments='')
-        figure = plt.Figure(figsize=(6, 4), dpi=100)
-        ax = figure.add_subplot(111)
-        ax.plot(time_count, func_out, label='Пользовательская функция')
+        if self.gursa_graphs_checkbutton_val.get() is True:
+            figure = plt.Figure(figsize=(8, 4.5), dpi=65)
+            ax = figure.add_subplot(111)
+            ax.plot(time_count, func_out, label='Пользовательская функция')
 
-        if self.grd_def[-1] == self.user_timeset:
-            if os.path.exists(os.path.join(self.path, 'time.tf')):
-                old_tf_path = os.path.join(self.path, 'time.tf')
-                old_tf = np.loadtxt(old_tf_path, skiprows=3)
-                ax.plot(time_count, old_tf[:, 1] / np.max(old_tf[:, 1]), label='Стандартная функция')
-        else:
-            mb.showinfo('Time.tf', 'В проекте не найден time.tf, стандартная функция не отображена.')
-        ax.set_xlabel('Time , s', fontsize=14)
-        ax.set_ylabel('Function', fontsize=14)
-        chart_type = FigureCanvasTkAgg(figure, self)
+            ax.set_xlabel('Time , s', fontsize=12)
+            ax.set_ylabel('Function', fontsize=12)
+            chart_type = FigureCanvasTkAgg(figure, self)
 
-        chart_type.get_tk_widget().grid(row=4, column=8, rowspan=100, columnspan=50, padx=10)
-        ax.set_title(f'{self.name}')
-        ax.legend()
+            chart_type.get_tk_widget().grid(row=2, column=8, rowspan=15, columnspan=30, padx=10)
+            ax.set_title(f'{self.x.name}')
+            ax.legend()
+
+            figure1 = plt.Figure(figsize=(8, 4.5), dpi=65)
+            ax = figure1.add_subplot(111)
+            ax.semilogy(self.x.pe_source_graph[:, 0], self.x.pe_source_graph[:, 1])
+
+            ax.set_xlabel('Radius between objects, km', fontsize=12)
+            ax.set_ylabel('Energy part', fontsize=12)
+            chart_type = FigureCanvasTkAgg(figure1, self)
+
+            chart_type.get_tk_widget().grid(row=17, column=8, rowspan=15, columnspan=30, padx=10, pady=10)
+            ax.set_title('Photon flux, $\mathdefault{1/cm^{2}}$')
+            ax.legend()
 
     def reset(self):
 
@@ -952,6 +960,8 @@ class Gursa(tk.Toplevel):
                        self.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                        header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.spectr_cont[0, 0]))
 
+        self.pe_source_graph = np.column_stack((R[1:], sum_dol_out[1:]))
+        print(self.pe_source_graph)
         self.calc_state = 1
         print(f'self.calc_state = {self.calc_state}')
         self.destroy()

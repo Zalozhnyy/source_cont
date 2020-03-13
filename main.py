@@ -118,12 +118,12 @@ class FrameGen(tk.Frame):
         label_time.grid(row=6, column=1, padx=2, pady=2)
 
         self.button_browse = tk.Button(self, width=10, text='Load', state='active',
-                                       command=lambda: self.ent_load(self.name))
+                                       command=lambda: self.ent_load(fd.askopenfilename().split('/')[-1]))
         self.button_browse.grid(row=1, column=2, padx=3)
         self.button_browse_def = tk.Button(self, width=10, text='Load default', state='active',
-                                           command=lambda: self.ent_load('default'))
+                                           command=lambda: self.ent_load('default.txt'))
         self.button_browse_def.grid(row=1, column=3, padx=3)
-        self.button_save = tk.Button(self, width=10, text='Save', state='disabled', command=self.time_save)
+        self.button_save = tk.Button(self, width=10, text='Save as', state='disabled', command=self.time_save)
         self.button_save.grid(row=2, column=2, padx=3)
         self.button_save_def = tk.Button(self, width=10, text='Save as default', command=self.time_save_def,
                                          state='disabled')
@@ -236,7 +236,7 @@ class FrameGen(tk.Frame):
                                self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
                                comments='', delimiter='\t')
                 elif self.x.spectr_type.get() == 0:
-                    type = 'DISCRETE'
+                    type = 'CONTINUOUS'
                     np.savetxt(
                         f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{self.x.name}_1.txt',
                         self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
@@ -315,7 +315,7 @@ class FrameGen(tk.Frame):
             self.add_button_gursa.configure(state='normal')
 
     def ent_load(self, path):
-        with open(rf'time functions/{self.dir_name}/user configuration/{path}.txt', 'r', encoding='utf-8') as file:
+        with open(rf'time functions/{self.dir_name}/user configuration/{path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         print(lines)
@@ -457,15 +457,17 @@ class FrameGen(tk.Frame):
         print('func = ', self.func_list)
 
     def time_save(self):
-        with open(rf'functions/{self.dir_name}/user configuration/{self.name}.txt', 'w', encoding='utf-8') as file:
+
+        save_dir = fd.asksaveasfilename(title='Назовите файл', filetypes=(("dtf files", "*.dtf"), ("All files", "*.*"))
+                                        , defaultextension=("dtf files", "*.dtf"),
+                                        initialdir=rf'time functions/{self.dir_name}/user configuration')
+        with open(save_dir, 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
             mb.showinfo('Save', f'Сохранено в time functions/{self.dir_name}/user configuration/{self.name}.txt')
-            # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-            # self.labes_load_path.grid(row=3, column=3, columnspan=5)
 
     def time_save_def(self):
         with open(rf'time functions/{self.dir_name}/user configuration/default.txt', 'w', encoding='utf-8') as file:
@@ -802,9 +804,9 @@ class Gursa(tk.Toplevel):
         self.spectr_type.set(0)
 
     def take_spectr(self):
-        # path = fd.askopenfilename(title='Выберите файл spectr',
-        #                           filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-        path = 'spectr_3_49_norm_na_1.txt'
+        path = fd.askopenfilename(title='Выберите файл spectr',
+                                  filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+        # path = 'spectr_3_49_norm_na_1.txt'
         with open(path, 'r') as file_handler:
             i = 0
             s = []
@@ -955,10 +957,6 @@ class Gursa(tk.Toplevel):
             self.Spektr_output[:, 0] = self.spectr_cont[1:, 0]
             for i in range(len(self.Spektr_output) - 1, 0, -1):
                 self.Spektr_output[i, 1] = self.Spektr_output[i - 1, 1]
-
-            np.savetxt(f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{gursa_class_nb.name}_1.txt',
-                       self.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
-                       header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.spectr_cont[0, 0]))
 
         self.pe_source_graph = np.column_stack((R[1:], sum_dol_out[1:]))
         print(self.pe_source_graph)

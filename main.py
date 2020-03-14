@@ -145,7 +145,7 @@ class FrameGen(tk.Frame):
                                                '/')[-1]))
         self.button_browse.grid(row=1, column=2, padx=3)
         self.button_browse_def = tk.Button(self, width=10, text='Load default', state='active',
-                                           command=lambda: self.ent_load('default.txt'))
+                                           command=lambda: self.ent_load('default.dtf'))
         self.button_browse_def.grid(row=1, column=3, padx=3)
         self.button_save = tk.Button(self, width=10, text='Save as', state='disabled', command=self.time_save)
         self.button_save.grid(row=2, column=2, padx=3)
@@ -274,13 +274,13 @@ class FrameGen(tk.Frame):
 
                 if self.x.spectr_type.get() == 1:
                     type = 'DISCRETE'
-                    np.savetxt(f'time functions/Gursa/Spektr_output_{self.x.name}_1.txt',
+                    np.savetxt(f'time functions/Gursa/Spektr_output_{self.x.name}.txt',
                                self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
                                comments='', delimiter='\t')
                 elif self.x.spectr_type.get() == 0:
                     type = 'CONTINUOUS'
                     np.savetxt(
-                        f'time functions/Gursa/Spektr_output_{self.x.name}_1.txt',
+                        f'time functions/Gursa/Spektr_output_{self.x.name}.txt',
                         self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                         header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
             except:
@@ -538,15 +538,15 @@ class FrameGen(tk.Frame):
             mb.showinfo('Save', f'Сохранено в time functions/user configuration/{save_dir_inf}')
 
     def time_save_def(self):
-        with open(rf'time functions/user configuration/default.txt', 'w', encoding='utf-8') as file:
+        with open(rf'time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')
             for i in self.time_list:
                 file.write(f'{i} ')
             mb.showinfo('Save default',
-                        f'Сохранено стандартной в time functions/user configuration/default.txt')
-            # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.txt')
+                        f'Сохранено стандартной в time functions/user configuration/default.dtf')
+            # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.dtf')
             # self.labes_load_path.grid(row=4, column=3, columnspan=5)
 
     def interpolate_user_time(self):
@@ -1048,9 +1048,7 @@ class Gursa(tk.Toplevel):
 
         if self.spectr_type.get() == 1:
             self.Spektr_output[:, 0] = self.Energy0
-            # np.savetxt(f'time functions/{gursa_class_nb.dir_name}/Gursa/Spektr_output_{gursa_class_nb.name}_1.txt',
-            #            self.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
-            #            comments='', delimiter='\t')
+
         elif self.spectr_type.get() == 0:
             self.Spektr_output[:, 0] = self.spectr_cont[1:, 0]
             for i in range(len(self.Spektr_output) - 1, 0, -1):

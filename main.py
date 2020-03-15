@@ -19,7 +19,8 @@ def config_read():
 
 
 def open_button():
-    filename = fd.askdirectory(title='Укажите путь к проекту REMP')
+    filename = fd.askdirectory(title='Укажите путь к проекту REMP',
+                               initialdir=os.getcwd())
     handle = open(r"config.txt", "w", encoding='utf-8')
     handle.write(f'{filename}')
     handle.close()
@@ -285,6 +286,17 @@ class FrameGen(tk.Frame):
                         header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
             except:
                 mb.showinfo('Inf', 'Что-то пошло не так =(')
+
+    def koshi_nb(self):
+        nb.add(self, text=f"{self.name}")
+
+        rows = 0
+        while rows < 100:
+            self.rowconfigure(rows, weight=0, minsize=5)
+            self.columnconfigure(rows, weight=0, minsize=5)
+            rows += 1
+        source_button = tk.Button(self,text = 'Открыть программу source',command=lambda: os.startfile('source.exe'))
+        source_button.grid(row=5,column=5)
 
     def regrid_gursa(self):
 
@@ -1236,6 +1248,9 @@ def main():
     if TOK[2] == 1:
         energy_type = 'Gursa'
         FrameGen(root, 'Gursa', f'{energy_type}').notebooks()
+    if TOK[2] == 0:
+        energy_type = 'Koshi'
+        FrameGen(root, 'Koshi', f'{energy_type}').koshi_nb()
 
 
 if __name__ == '__main__':

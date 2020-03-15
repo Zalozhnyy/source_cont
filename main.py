@@ -70,7 +70,7 @@ def timef_global_save():
                 for i in item:
                     file.write(f'{i[0]} = {i[1]}\n')
 
-
+        mb.showinfo('Save','Сохранено в time functions list.txt')
 
 
 class FrameGen(tk.Frame):

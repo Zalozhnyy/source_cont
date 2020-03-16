@@ -36,7 +36,7 @@ def open_button():
     print(cur_dir)
     main()
 
- 
+
 def check_folder():
     prj_name = []
     for f in os.listdir(config_read()[0]):
@@ -62,7 +62,7 @@ def check_folder():
 
 def timef_global_save():
     # global time_func_dict
-    with open('time functions list.txt', 'w', encoding='utf-8') as file:
+    with open(f'{pr_dir}/time functions list.txt', 'w', encoding='utf-8') as file:
 
         for item in time_func_dict.items():
             if type(item) is not list:
@@ -71,7 +71,7 @@ def timef_global_save():
                 for i in item:
                     file.write(f'{i[0]} = {i[1]}\n')
 
-        mb.showinfo('Save','Сохранено в time functions list.txt')
+        mb.showinfo('Save', 'Сохранено в time functions list.txt')
 
 
 class FrameGen(tk.Frame):
@@ -105,6 +105,7 @@ class FrameGen(tk.Frame):
         self.gursa_label_dict = {}
 
         self.x = []
+
         self.external_tf_num = []
 
         print(repr(self))
@@ -142,7 +143,8 @@ class FrameGen(tk.Frame):
 
         self.button_browse = tk.Button(self, width=10, text='Load', state='active',
                                        command=lambda: self.ent_load(
-                                           fd.askopenfilename(initialdir=rf'time functions/user configuration').split(
+                                           fd.askopenfilename(
+                                               initialdir=rf'{pr_dir}/time functions/user configuration').split(
                                                '/')[-1]))
         self.button_browse.grid(row=1, column=2, padx=3)
         self.button_browse_def = tk.Button(self, width=10, text='Load default', state='active',
@@ -241,6 +243,7 @@ class FrameGen(tk.Frame):
 
     def gursa_cw(self):
         self.grab_release()
+        self.gursa_out_num.clear()
 
         self.x = Gursa(name=f'Gursa_{self.gursa_numeric}')
         self.wait_window(self.x)
@@ -249,7 +252,6 @@ class FrameGen(tk.Frame):
             self.gursa_count.append(self.x)
 
             self.gursa_dict.update({f'{self.x.name}': self.x})
-
 
             for label in self.gursa_label_dict.values():
                 label.destroy()
@@ -275,15 +277,20 @@ class FrameGen(tk.Frame):
 
                 if self.x.spectr_type.get() == 1:
                     type = 'DISCRETE'
-                    np.savetxt(f'time functions/Gursa/Spektr_output_{self.x.name}.txt',
+                    np.savetxt(f'{pr_dir}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
                                self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
                                comments='', delimiter='\t')
+
                 elif self.x.spectr_type.get() == 0:
                     type = 'CONTINUOUS'
                     np.savetxt(
-                        f'time functions/Gursa/Spektr_output_{self.x.name}.txt',
+                        f'{pr_dir}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
                         self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                         header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
+
+                    time_func_dict.update({f'{self.x.name}': [f'time functions/Gursa/time_{self.x.name}.tf',
+                                                              f'time functions/Gursa/Spektr_output_{self.x.name}.txt']})
+
             except:
                 mb.showinfo('Inf', 'Что-то пошло не так =(')
 
@@ -295,8 +302,8 @@ class FrameGen(tk.Frame):
             self.rowconfigure(rows, weight=0, minsize=5)
             self.columnconfigure(rows, weight=0, minsize=5)
             rows += 1
-        source_button = tk.Button(self,text = 'Открыть программу source',command=lambda: os.startfile('source.exe'))
-        source_button.grid(row=5,column=5)
+        source_button = tk.Button(self, text='Открыть программу source', command=lambda: os.startfile('source.exe'))
+        source_button.grid(row=5, column=5)
 
     def regrid_gursa(self):
 
@@ -304,7 +311,6 @@ class FrameGen(tk.Frame):
 
         self.gursa_dict.pop(self.gursa_combobox.get())
         time_func_dict.pop(self.gursa_combobox.get())
-
 
         self.gursa_label_dict.pop(self.gursa_combobox.get())
 
@@ -394,7 +400,7 @@ class FrameGen(tk.Frame):
             self.add_button_gursa.configure(state='normal')
 
     def ent_load(self, path):
-        with open(rf'time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
+        with open(rf'{pr_dir}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         print(lines)
@@ -438,8 +444,7 @@ class FrameGen(tk.Frame):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
 
-        # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/{self.name}.txt')
-        # self.labes_load_path.grid(row=1, column=4, columnspan=5)
+
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
         self.button_browse_def.configure(state='disabled')
@@ -539,7 +544,7 @@ class FrameGen(tk.Frame):
 
         save_dir = fd.asksaveasfilename(title='Назовите файл', filetypes=(("dtf files", "*.dtf"), ("All files", "*.*"))
                                         , defaultextension=("dtf files", "*.dtf"),
-                                        initialdir=rf'time functions/user configuration')
+                                        initialdir=rf'{pr_dir}/time functions/user configuration')
         with open(save_dir, 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
@@ -550,7 +555,7 @@ class FrameGen(tk.Frame):
             mb.showinfo('Save', f'Сохранено в time functions/user configuration/{save_dir_inf}')
 
     def time_save_def(self):
-        with open(rf'time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
+        with open(rf'{pr_dir}/time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')
@@ -558,8 +563,6 @@ class FrameGen(tk.Frame):
                 file.write(f'{i} ')
             mb.showinfo('Save default',
                         f'Сохранено стандартной в time functions/user configuration/default.dtf')
-            # self.labes_load_path = tk.Label(self, text=f'time functions/user configuration/default.dtf')
-            # self.labes_load_path.grid(row=4, column=3, columnspan=5)
 
     def interpolate_user_time(self):
         self.grd_def = self.child_parcecer_grid()
@@ -664,7 +667,7 @@ class FrameGen(tk.Frame):
             'hz': self.some_x_val[5].get()
         }
 
-        with open(rf'time functions/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
+        with open(rf'{pr_dir}/time functions/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
             for item in Initial_field_values_dict.items():
                 # print(f'{item[0]} = {item[1]}')
                 f.write(f'{item[0]} = {item[1]}\n')
@@ -707,7 +710,7 @@ class FrameGen(tk.Frame):
         koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
 
         file_name = f'time functions/time_{self.name}.tf'
-        np.savetxt(file_name, output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{pr_dir}/time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                    comments='')
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
@@ -720,7 +723,7 @@ class FrameGen(tk.Frame):
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
 
-        chart_type.get_tk_widget().grid(row=2, column=8, rowspan=20, columnspan=20, padx=10)
+        chart_type.get_tk_widget().grid(row=2, column=8, rowspan=40, columnspan=20, padx=10)
         ax.set_title(f'{self.name}')
         ax.legend()
 
@@ -754,7 +757,7 @@ class FrameGen(tk.Frame):
         output_matrix = np.column_stack((time_count, func_out))
 
         file_name = f'time functions/TOK/time_ext_{key}.tf'
-        np.savetxt(file_name, output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{pr_dir}/time functions/TOK/time_ext_{key}.tf', output_matrix, fmt='%-8.4g',
                    header=f'{key} = {self.external_field_values_dict.get(key)}\ntime\t\tfunc', delimiter='\t',
                    comments='')
         self.external_tf_num.append(file_name)
@@ -788,10 +791,9 @@ class FrameGen(tk.Frame):
         koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
 
         file_name = f'time functions/Gursa/time_{self.x.name}.tf'
-        np.savetxt(file_name, output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{pr_dir}/time functions/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
                    comments='')
-        time_func_dict.update({f'{self.x.name}': os.path.normpath(file_name)})
 
         if self.gursa_graphs_checkbutton_val.get() is True:
             figure = plt.Figure(figsize=(8, 4.5), dpi=65)
@@ -1170,6 +1172,8 @@ def checker():
         else:
             root.destroy()
 
+    global pr_dir
+    pr_dir = os.path.abspath(config_read()[0])
     check_class = FrameGen(root, 'Check')
 
     if not os.path.exists(rf"{cur_dir[0]}"):
@@ -1178,17 +1182,17 @@ def checker():
         print('dir not exist ', f' {cur_dir[0]}')
         cur_dir = config_read()
 
-    if not os.path.exists(r'time functions'):
-        os.mkdir('time functions')
-    if not os.path.exists(f'time functions/user configuration'):
-        os.mkdir(os.path.join(f'time functions/user configuration'))
+    if not os.path.exists(rf'{pr_dir}/time functions'):
+        os.mkdir(f'{pr_dir}/time functions')
+    if not os.path.exists(f'{pr_dir}/time functions/user configuration'):
+        os.mkdir(os.path.join(f'{pr_dir}/time functions/user configuration'))
 
-    if not os.path.exists(f'time functions/Gursa'):
-        os.mkdir(os.path.join(f'time functions/Gursa'))
+    if not os.path.exists(f'{pr_dir}/time functions/Gursa'):
+        os.mkdir(os.path.join(f'{pr_dir}/time functions/Gursa'))
 
     if len(DataParcer(os.path.normpath(os.path.join(cur_dir[0], check_folder().get('TOK')))).tok_decoder()) > 0:
-        if not os.path.exists(f'time functions/TOK'):
-            os.mkdir(os.path.join(f'time functions/TOK'))
+        if not os.path.exists(f'{pr_dir}/time functions/TOK'):
+            os.mkdir(os.path.join(f'{pr_dir}/time functions/TOK'))
 
     try:
         lay_dir = os.path.join(cur_dir[0], check_folder().get('LAY'))
@@ -1210,6 +1214,7 @@ def main():
     time_func_dict = {}
 
     cur_dir = checker()
+
     file_dict = check_folder()
 
     lay_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('LAY')))

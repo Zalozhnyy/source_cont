@@ -36,7 +36,7 @@ def open_button():
     print(cur_dir)
     main()
 
-
+ 
 def check_folder():
     prj_name = []
     for f in os.listdir(config_read()[0]):

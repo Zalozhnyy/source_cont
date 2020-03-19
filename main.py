@@ -62,7 +62,7 @@ def check_folder():
 
 def timef_global_save():
     # global time_func_dict
-    with open(f'{pr_dir}/time functions list.txt', 'w', encoding='utf-8') as file:
+    with open(f'{pr_dir}/time functions/time functions list.txt', 'w', encoding='utf-8') as file:
 
         for item in time_func_dict.items():
             if type(item) is not list:
@@ -74,7 +74,6 @@ def timef_global_save():
         mb.showinfo('Save', 'Сохранено в time functions list.txt')
 
         for out_dict in source_list:
-            print(out_dict.get('<название источника>'))
             name = out_dict.get('<название источника>')
             with open(rf'{pr_dir}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
                 for item in out_dict.items():
@@ -154,11 +153,11 @@ class FrameGen(tk.Frame):
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label="Путь к PECHS", command=lambda: (tk.Frame.destroy(self), open_button()))
         filemenu.add_command(label="Reset", command=self.reset)
-        filemenu.add_command(label="Save time functions name", command=timef_global_save)
+        filemenu.add_command(label="Global save", command=timef_global_save)
         filemenu.add_command(label="Exit", command=self.onExit)
 
         menubar.add_cascade(label="Файл", menu=filemenu)
-        menubar.add_command(label="test", command=lambda: print(len(source_list)))
+        # menubar.add_command(label="test", command=lambda: print(len(source_list)))
 
     def notebooks(self):
         nb.add(self, text=f"{self.name}")
@@ -247,7 +246,7 @@ class FrameGen(tk.Frame):
             [keys.append(i) for i in self.external_field_values_dict.keys()]
 
             for i in range(len(keys)):
-                self.ext_load_tf_button.append(tk.Button(self, text=f'load {keys[i]} tf', overrelief='ridge',
+                self.ext_load_tf_button.append(tk.Button(self, text=f'calc {keys[i]} tf', overrelief='ridge',
                                                          width=9, state='disabled'))
                 self.ext_load_tf_button[i].grid(row=2 + i, column=7, padx=3)
 
@@ -1147,7 +1146,7 @@ class Gursa(tk.Toplevel):
 
     def child_window(self):
         self.title('PE source')
-        self.geometry('800x600')
+        self.geometry('800x300')
 
         rows = 0
         while rows < 30:
@@ -1254,6 +1253,16 @@ class Gursa(tk.Toplevel):
         self.M1 = self.koord(self.entry_koord_obj_val[0].get(),
                              self.entry_koord_obj_val[1].get(),
                              self.entry_koord_obj_val[2].get())
+        try:
+            if not self.M2.all() >= 0 and not self.M1.all() >= 0:
+                mb.showerror('Koord error', 'Введите положительные значения')
+                raise Exception('Введите положительные значения')
+        except Exception:
+            print(self.M2)
+            print(self.M1)
+            return print('Введите положительные значения')
+
+
         N = int(self.entry_grid_value.get())
 
         self.Energy0 = self.spectr[:, 0] * 10 ** -3  # энергия должна быть в МэВ

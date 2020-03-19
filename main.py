@@ -73,6 +73,15 @@ def timef_global_save():
 
         mb.showinfo('Save', 'Сохранено в time functions list.txt')
 
+        for out_dict in source_list:
+            name = out_dict.get('< название источника >')
+            with open(rf'output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
+                for item in out_dict.items():
+                    file.write(f'{item[0]}\n')
+                    file.write(f'{item[1]}\n')
+
+
+
 
 class FrameGen(tk.Frame):
     # def __new__(cls, parent, name='Title', energy_type='Название типа энергии'):
@@ -108,6 +117,32 @@ class FrameGen(tk.Frame):
 
         self.external_tf_num = []
 
+        self.pr_dict = {
+            '< номер источника >': 0,
+            '< тип источника >': 0,
+            '< название источника >': 0,
+            '< номер слоя >': 0,
+            '< номер слоя из >': 0,
+            '< номер слоя в >': 0,
+            '< амплитуда источинка в ближней зоне источника >': 0,
+            '< амплитуда источинка в дальней зоне источника >': 0,
+            '< спектр источника >': 0,
+            '< временная функция источинка >': 0,
+            '< запаздывание(0 - нет, 1 - есть) >': 0,
+            '< X-координата источника >': 0,
+            '< Y-координата источника >': 0,
+            '< Z-координата источника >': 0,
+            '< X-координата объекта >': 0,
+            '< Y-координата объекта >': 0,
+            '< Z-координата объекта >': 0,
+            '< полярный угол поворта локальной системы координат относительно глобальной >': None,
+            '< азимутальный угол поворта локальной системы координат относительно глобальной >': None,
+            '< X-компонента направляющего косинуса для расчета в дальней зоне >': None,
+            '< Y-компонента направляющего косинуса для расчета в дальней зоне >': None,
+            '< Z-компонента направляющего косинуса для расчета в дальней зоне >': None
+        }
+        self.gursa_out_dict = {}
+
         print(repr(self))
 
     def __repr__(self):
@@ -124,6 +159,7 @@ class FrameGen(tk.Frame):
         filemenu.add_command(label="Exit", command=self.onExit)
 
         menubar.add_cascade(label="Файл", menu=filemenu)
+        menubar.add_command(label="test", command=lambda: print(len(source_list)))
 
     def notebooks(self):
         nb.add(self, text=f"{self.name}")
@@ -242,10 +278,10 @@ class FrameGen(tk.Frame):
             self.delete_gursa_class_button.grid(row=11, column=4)
 
     def gursa_cw(self):
-        self.grab_release()
-        self.gursa_out_num.clear()
 
         self.x = Gursa(name=f'Gursa_{self.gursa_numeric}')
+        self.x.F = float(self.entry_f_val.get())
+
         self.wait_window(self.x)
 
         if self.x.calc_state == 1:
@@ -272,27 +308,25 @@ class FrameGen(tk.Frame):
 
             self.spectr = self.x.Spektr_output
 
-            try:
-                self.calculate_gursa()
+            self.calculate_gursa()
 
-                if self.x.spectr_type.get() == 1:
-                    type = 'DISCRETE'
-                    np.savetxt(f'{pr_dir}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
-                               self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
-                               comments='', delimiter='\t')
+            if self.x.spectr_type.get() == 1:
+                type = 'DISCRETE'
+                np.savetxt(f'{pr_dir}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
+                           self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
+                           comments='', delimiter='\t')
 
-                elif self.x.spectr_type.get() == 0:
-                    type = 'CONTINUOUS'
-                    np.savetxt(
-                        f'{pr_dir}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
-                        self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
-                        header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
+            elif self.x.spectr_type.get() == 0:
+                type = 'CONTINUOUS'
+                np.savetxt(
+                    f'{pr_dir}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
+                    self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
+                    header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
 
-                    time_func_dict.update({f'{self.x.name}': [f'time functions/Gursa/time_{self.x.name}.tf',
-                                                              f'time functions/Gursa/Spektr_output_{self.x.name}.txt']})
+            time_func_dict.update({f'{self.x.name}': [f'time functions/Gursa/time_{self.x.name}.tf',
+                                                      f'time functions/Gursa/Spektr_output_{self.x.name}.txt']})
 
-            except:
-                mb.showinfo('Inf', 'Что-то пошло не так =(')
+            self.output_dictionary()
 
     def koshi_nb(self):
         nb.add(self, text=f"{self.name}")
@@ -307,6 +341,12 @@ class FrameGen(tk.Frame):
 
     def regrid_gursa(self):
 
+
+        for i, ob in enumerate(source_list):
+            if ob.get('< название источника >') == self.gursa_combobox.get():
+                mb.showinfo('work', 'work')
+                source_list.pop(i)
+
         self.gursa_label_dict.get(self.gursa_combobox.get()).grid_forget()
 
         self.gursa_dict.pop(self.gursa_combobox.get())
@@ -314,14 +354,12 @@ class FrameGen(tk.Frame):
 
         self.gursa_label_dict.pop(self.gursa_combobox.get())
 
-        print(self.gursa_dict.values())
-
         self.gursa_count.clear()
         for val in self.gursa_dict.values():
             self.gursa_count.append(val)
 
         for i, label in enumerate(self.gursa_label_dict.values()):
-            print(label)
+            # print(label)
             label.grid_configure(row=12 + i)
 
         keys = []
@@ -403,14 +441,14 @@ class FrameGen(tk.Frame):
         with open(rf'{pr_dir}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
-        print(lines)
+        # print(lines)
 
         for word in lines[0].split():
             self.func_entry_vel.append(float(word))
         for word in lines[1].split():
             self.time_entry_vel.append(float(word))
-        print('func = ', self.func_entry_vel)
-        print('time = ', self.time_entry_vel)
+        # print('func = ', self.func_entry_vel)
+        # print('time = ', self.time_entry_vel)
 
         entr_utility_func = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         entr_utility_time = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
@@ -443,7 +481,6 @@ class FrameGen(tk.Frame):
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
-
 
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
@@ -513,7 +550,7 @@ class FrameGen(tk.Frame):
 
     def get(self):
 
-        print('get', type(self.func_entry_vel[0]))
+        # print('get', type(self.func_entry_vel[0]))
         self.func_list.clear()
         self.time_list.clear()
 
@@ -537,8 +574,8 @@ class FrameGen(tk.Frame):
         if self.name == 'Gursa':
             self.add_button_gursa.configure(state='normal')
 
-        print('time = ', self.time_list)
-        print('func = ', self.func_list)
+        # print('time = ', self.time_list)
+        # print('func = ', self.func_list)
 
     def time_save(self):
 
@@ -676,17 +713,17 @@ class FrameGen(tk.Frame):
         if 'Current' in self.name or 'Sigma' in self.name or 'Flu_e' in self.name:
 
             if len(self.spectr) == 0:
-                spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                                initialdir=f'{config_read()[0]}/pechs/spectr',
-                                                filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-                self.spectr = np.loadtxt(spectr_dir, skiprows=3)
+                self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
+                                                     initialdir=f'{config_read()[0]}/pechs/spectr',
+                                                     filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+                self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
 
             else:
                 answer = mb.askyesno(title="Spectr", message="Выбрать новый спектр?")
                 if answer is True:
-                    spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
-                                                    filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-                    self.spectr = np.loadtxt(spectr_dir, skiprows=3)
+                    self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
+                                                         filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+                    self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
 
             self.calculate_lay_pl()
 
@@ -715,6 +752,8 @@ class FrameGen(tk.Frame):
                    comments='')
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
 
+        self.output_dictionary()
+
         figure = plt.Figure(figsize=(6, 4), dpi=100)
         ax = figure.add_subplot(111)
         ax.plot(time_count, func_out, label='Пользовательская функция')
@@ -730,17 +769,17 @@ class FrameGen(tk.Frame):
     def calculate_external_field(self, key):
 
         if len(self.spectr) == 0:
-            spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                            initialdir=f'{config_read()[0]}/pechs/spectr',
-                                            filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-            self.spectr = np.loadtxt(spectr_dir, skiprows=3)
+            self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
+                                                 initialdir=f'{config_read()[0]}/pechs/spectr',
+                                                 filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+            self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
 
         else:
             answer = mb.askyesno(title="Spectr", message="Выбрать новый спектр?")
             if answer is True:
-                spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
-                                                filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-                self.spectr = np.loadtxt(spectr_dir, skiprows=3)
+                self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
+                                                     filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+                self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
 
         self.external_field_values_dict = {
             'Ex': self.some_x_val[0].get(),
@@ -768,6 +807,8 @@ class FrameGen(tk.Frame):
             time_func_dict.update({f'{self.name}': self.external_tf_num[0]})
         else:
             time_func_dict.update({f'{self.name}': self.external_tf_num})
+
+        self.output_dictionary()
 
         if self.graph_ext_checkbutton.get() == 1:
             plt.plot(time_count, func_out)
@@ -819,6 +860,225 @@ class FrameGen(tk.Frame):
             chart_type.get_tk_widget().grid(row=17, column=8, rowspan=15, columnspan=30, padx=10, pady=10)
             ax.set_title('Photon flux, $\mathdefault{1/cm^{2}}$')
             ax.legend()
+
+    def output_dictionary(self):
+
+        global source_number, source_list, gursa_dict
+
+        if 'Current' in self.name or 'Sigma' in self.name:
+
+            self.pr_dict.update({
+                '< номер источника >': source_number,
+                '< тип источника >': self.energy_type,
+                '< название источника >': self.name,
+                '< номер слоя >': self.name.split()[-1],
+                '< номер слоя из >': 0,
+                '< номер слоя в >': 0,
+                '< амплитуда источинка в ближней зоне источника >': 0,
+                '< амплитуда источинка в дальней зоне источника >': float(self.entry_f_val.get()),
+                '< спектр источника >': self.spectr_dir,
+                '< временная функция источинка >': time_func_dict.get(f'{self.name}'),
+                '< запаздывание(0 - нет, 1 - есть) >': 1,
+                '< X-координата источника >': 0,
+                '< Y-координата источника >': 0,
+                '< Z-координата источника >': 0,
+                '< X-координата объекта >': 0,
+                '< Y-координата объекта >': 0,
+                '< Z-координата объекта >': 0,
+                '< полярный угол поворта локальной системы координат относительно глобальной >': None,
+                '< азимутальный угол поворта локальной системы координат относительно глобальной >': None,
+                '< X-компонента направляющего косинуса для расчета в дальней зоне >': None,
+                '< Y-компонента направляющего косинуса для расчета в дальней зоне >': None,
+                '< Z-компонента направляющего косинуса для расчета в дальней зоне >': None
+            })
+
+            delete_keys = ['< номер слоя из >',
+                           '< номер слоя в >',
+                           '< X-координата источника >',
+                           '< Y-координата источника >',
+                           '< Z-координата источника >',
+                           '< X-координата объекта >',
+                           '< Y-координата объекта >',
+                           '< Z-координата объекта >',
+                           '< полярный угол поворта локальной системы координат относительно глобальной >',
+                           '< азимутальный угол поворта локальной системы координат относительно глобальной >',
+                           '< X-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< Y-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< Z-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< амплитуда источинка в ближней зоне источника >'
+                           ]
+
+            for key in delete_keys:
+                if key in self.pr_dict.keys():
+                    self.pr_dict.pop(key)
+
+            print('add current or sigma')
+            source_list.append(self.pr_dict)
+
+
+        if 'Flu' in self.name:
+            layers = []
+            [layers.append(i) for i in self.name]
+
+            self.pr_dict.update({
+                '< номер источника >': source_number,
+                '< тип источника >': self.energy_type,
+                '< название источника >': self.name,
+                '< номер слоя >': 0,
+                '< номер слоя из >': layers[-2],
+                '< номер слоя в >': layers[-1],
+                '< амплитуда источинка в ближней зоне источника >': 0,
+                '< амплитуда источинка в дальней зоне источника >': float(self.entry_f_val.get()),
+                '< спектр источника >': self.spectr_dir,
+                '< временная функция источинка >': time_func_dict.get(f'{self.name}'),
+                '< запаздывание(0 - нет, 1 - есть) >': 1,
+                '< X-координата источника >': 0,
+                '< Y-координата источника >': 0,
+                '< Z-координата источника >': 0,
+                '< X-координата объекта >': 0,
+                '< Y-координата объекта >': 0,
+                '< Z-координата объекта >': 0,
+                '< полярный угол поворта локальной системы координат относительно глобальной >': None,
+                '< азимутальный угол поворта локальной системы координат относительно глобальной >': None,
+                '< X-компонента направляющего косинуса для расчета в дальней зоне >': None,
+                '< Y-компонента направляющего косинуса для расчета в дальней зоне >': None,
+                '< Z-компонента направляющего косинуса для расчета в дальней зоне >': None
+            })
+
+            delete_keys = ['< номер слоя >',
+                           '< X-координата источника >',
+                           '< Y-координата источника >',
+                           '< Z-координата источника >',
+                           '< X-координата объекта >',
+                           '< Y-координата объекта >',
+                           '< Z-координата объекта >',
+                           '< полярный угол поворта локальной системы координат относительно глобальной >',
+                           '< азимутальный угол поворта локальной системы координат относительно глобальной >',
+                           '< X-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< Y-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< Z-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< амплитуда источинка в ближней зоне источника >'
+                           ]
+
+            for key in delete_keys:
+                if key in self.pr_dict.keys():
+                    self.pr_dict.pop(key)
+
+            print('flu')
+            source_list.append(self.pr_dict)
+
+            # with open(rf'output dicts/{self.name}_out.txt', 'w', encoding='utf-8') as file:
+            #     for item in self.pr_dict.items():
+            #         file.write(f'{item[0]}\n')
+            #         file.write(f'{item[1]}\n')
+
+        if 'Gursa' in self.name:
+
+            class_gursa = self.x
+            # for class_gursa in self.gursa_dict.values():
+
+            pr_dict={}
+            pr_dict.update({
+                '< номер источника >': source_number,
+                '< тип источника >': 'Gursa',
+                '< название источника >': class_gursa.name,
+                '< номер слоя >': 0,
+                '< номер слоя из >': 0,
+                '< номер слоя в >': 0,
+                '< амплитуда источинка в ближней зоне источника >': class_gursa.F,
+                '< амплитуда источинка в дальней зоне источника >': 0,
+                '< спектр источника >': time_func_dict.get(f'{class_gursa.name}')[1],
+                '< временная функция источинка >': time_func_dict.get(f'{class_gursa.name}')[0],
+                '< запаздывание(0 - нет, 1 - есть) >': 0,
+                '< X-координата источника >': class_gursa.M2[0],
+                '< Y-координата источника >': class_gursa.M2[1],
+                '< Z-координата источника >': class_gursa.M2[2],
+                '< X-координата объекта >': class_gursa.M1[0],
+                '< Y-координата объекта >': class_gursa.M1[1],
+                '< Z-координата объекта >': class_gursa.M1[2],
+                '< полярный угол поворта локальной системы координат относительно глобальной >': None,
+                '< азимутальный угол поворта локальной системы координат относительно глобальной >': None,
+                '< X-компонента направляющего косинуса для расчета в дальней зоне >': None,
+                '< Y-компонента направляющего косинуса для расчета в дальней зоне >': None,
+                '< Z-компонента направляющего косинуса для расчета в дальней зоне >': None
+            })
+
+            delete_keys = ['< номер слоя >',
+                           '< номер слоя из >',
+                           '< номер слоя в >',
+                           '< полярный угол поворта локальной системы координат относительно глобальной >',
+                           '< азимутальный угол поворта локальной системы координат относительно глобальной >',
+                           '< полярный угол поворта локальной системы координат относительно глобальной >',
+                           '< X-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< Y-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< Z-компонента направляющего косинуса для расчета в дальней зоне >',
+                           '< амплитуда источинка в дальней зоне источника >'
+                           ]
+
+            for key in delete_keys:
+                if key in pr_dict.keys():
+                    pr_dict.pop(key)
+
+            source_list.append(pr_dict)
+
+        # if 'External_field' in self.name:
+        #
+        #     self.pr_dict.update({
+        #         '< номер источника >': source_number,
+        #         '< тип источника >': self.energy_type,
+        #         '< название источника >': self.name,
+        #         '< номер слоя >': 0,
+        #         '< номер слоя из >': 0,
+        #         '< номер слоя в >': 0,
+        #         '< амплитуда источинка в ближней зоне источника >': 0,
+        #         '< амплитуда источинка в дальней зоне источника >': 0,
+        #         '< спектр источника >': self.spectr_dir,
+        #         '< временная функция источинка >': time_func_dict.get(f'{self.name}'),
+        #         '< запаздывание(0 - нет, 1 - есть) >': 1,
+        #         '< X-координата источника >': 0,
+        #         '< Y-координата источника >': 0,
+        #         '< Z-координата источника >': 0,
+        #         '< X-координата объекта >': 0,
+        #         '< Y-координата объекта >': 0,
+        #         '< Z-координата объекта >': 0,
+        #         '< полярный угол поворта локальной системы координат относительно глобальной >': None,
+        #         '< азимутальный угол поворта локальной системы координат относительно глобальной >': None,
+        #         '< X-компонента направляющего косинуса для расчета в дальней зоне >': None,
+        #         '< Y-компонента направляющего косинуса для расчета в дальней зоне >': None,
+        #         '< Z-компонента направляющего косинуса для расчета в дальней зоне >': None
+        #     })
+        #
+        #     delete_keys = ['< номер слоя из >',
+        #                    '< номер слоя >',
+        #                    '< номер слоя в >',
+        #                    '< X-координата источника >',
+        #                    '< Y-координата источника >',
+        #                    '< Z-координата источника >',
+        #                    '< X-координата объекта >',
+        #                    '< Y-координата объекта >',
+        #                    '< Z-координата объекта >',
+        #                    '< полярный угол поворта локальной системы координат относительно глобальной >',
+        #                    '< азимутальный угол поворта локальной системы координат относительно глобальной >',
+        #                    '< X-компонента направляющего косинуса для расчета в дальней зоне >',
+        #                    '< Y-компонента направляющего косинуса для расчета в дальней зоне >',
+        #                    '< Z-компонента направляющего косинуса для расчета в дальней зоне >',
+        #                    '< амплитуда источинка в ближней зоне источника >',
+        #                    '< амплитуда источинка в дальней зоне источника >'
+        #                    ]
+        #
+        #     for key in delete_keys:
+        #         if key in self.pr_dict.keys():
+        #             self.pr_dict.pop(key)
+        #
+        #     with open(rf'output dicts/{self.name}_out.txt', 'w', encoding='utf-8') as file:
+        #         for item in self.pr_dict.items():
+        #             file.write(f'{item[0]}\n')
+        #             file.write(f'{item[1]}\n')
+        #
+        #         for item in self.external_field_values_dict.items():
+        #             file.write(f'< {item[0]} >\n')
+        #             file.write(f'{item[1]}\n')
+        source_number += 1
 
     def reset(self):
 
@@ -930,7 +1190,7 @@ class Gursa(tk.Toplevel):
                         break
                     if i < 3: continue
                     if len(line.split()) < 2:
-                        print(type(s))
+                        # print(type(s))
                         line = line + '0'
                         s.append(line.split())
                     else:
@@ -971,12 +1231,12 @@ class Gursa(tk.Toplevel):
 
     def main(self):
 
-        M2 = self.koord(self.entry_koord_ist_val[0].get(),
-                        self.entry_koord_ist_val[1].get(),
-                        self.entry_koord_ist_val[2].get())
-        M1 = self.koord(self.entry_koord_obj_val[0].get(),
-                        self.entry_koord_obj_val[1].get(),
-                        self.entry_koord_obj_val[2].get())
+        self.M2 = self.koord(self.entry_koord_ist_val[0].get(),
+                             self.entry_koord_ist_val[1].get(),
+                             self.entry_koord_ist_val[2].get())
+        self.M1 = self.koord(self.entry_koord_obj_val[0].get(),
+                             self.entry_koord_obj_val[1].get(),
+                             self.entry_koord_obj_val[2].get())
         N = int(self.entry_grid_value.get())
 
         self.Energy0 = self.spectr[:, 0] * 10 ** -3  # энергия должна быть в МэВ
@@ -1002,15 +1262,16 @@ class Gursa(tk.Toplevel):
 
         for j in range(len(self.Energy0)):
 
-            Lx = M1[0] - M2[0]
-            Ly = M1[1] - M2[1]
-            Lz = M1[2] - M2[2]
+            Lx = self.M1[0] - self.M2[0]
+            Ly = self.M1[1] - self.M2[1]
+            Lz = self.M1[2] - self.M2[2]
             dx = Lx / N
             dy = Ly / N
             dz = Lz / N
             PT = np.linspace(0, 1, N)
 
-            R0 = ((M1[0] - M2[0]) ** 2 + (M1[1] - M2[1]) ** 2 + (M1[2] - M2[2]) ** 2) ** 0.5
+            R0 = ((self.M1[0] - self.M2[0]) ** 2 + (self.M1[1] - self.M2[1]) ** 2 + (
+                    self.M1[2] - self.M2[2]) ** 2) ** 0.5
 
             X = np.zeros(N, dtype=float)
             Y = np.zeros(N, dtype=float)
@@ -1019,20 +1280,20 @@ class Gursa(tk.Toplevel):
             ro = np.zeros(N, dtype=float)
 
             for i in range(len(X)):
-                X[i] = self.koord_param(M2[0], M1[0], PT[i])
-                Y[i] = self.koord_param(M2[1], M1[1], PT[i])
-                Z[i] = self.koord_param(M2[2], M1[2], PT[i])
+                X[i] = self.koord_param(self.M2[0], self.M1[0], PT[i])
+                Y[i] = self.koord_param(self.M2[1], self.M1[1], PT[i])
+                Z[i] = self.koord_param(self.M2[2], self.M1[2], PT[i])
                 pr_k = np.array((X[i], Y[i], Z[i]))
-                R[i] = self.delta_R(M2, pr_k)
+                R[i] = self.delta_R(self.M2, pr_k)
 
             for i in range(N):  # расчет плотности
                 if i == 0:
-                    ro[i] = self.ro_air(0, M2[2])
+                    ro[i] = self.ro_air(0, self.M2[2])
                 else:
-                    if M2[2] > M1[2]:
+                    if self.M2[2] > self.M1[2]:
                         ro[i] = self.ro_air(0, Z[i])
                     else:
-                        ro[i] = self.ro_air(Z[i] - Z[0], M2[2])
+                        ro[i] = self.ro_air(Z[i] - Z[0], self.M2[2])
 
             Energy_reduction = np.zeros(N, dtype=float)
             lam = np.zeros(N, dtype=float)
@@ -1069,9 +1330,9 @@ class Gursa(tk.Toplevel):
                 self.Spektr_output[i, 1] = self.Spektr_output[i - 1, 1]
 
         self.pe_source_graph = np.column_stack((R[1:], sum_dol_out[1:]))
-        print(self.pe_source_graph)
+
         self.calc_state = 1
-        print(f'self.calc_state = {self.calc_state}')
+
         self.destroy()
 
     # def name_transfer(self):
@@ -1209,7 +1470,10 @@ def checker():
 
 
 def main():
-    global nb, time_func_dict
+    global nb, time_func_dict, source_number, source_list, gursa_dict
+    source_list = []
+    gursa_dict = {}
+    source_number = 0
 
     time_func_dict = {}
 

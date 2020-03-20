@@ -699,6 +699,7 @@ class FrameGen(tk.Frame):
                 i.destroy()
             self.ini_f_labes_file.clear()
 
+        ask = mb.askyesno('?','Дать файлу уникальное имя?')
         if ask is True:
             self.name = tk.simpledialog.askstring('Введите имя файла', 'Func name')
             if len(self.name) == 0 or self.name == ' ':

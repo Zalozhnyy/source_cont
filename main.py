@@ -81,6 +81,18 @@ def timef_global_save():
                     file.write(f'{item[1]}\n')
 
 
+def tf_global_del():
+    dir = os.path.join(config_read()[0], 'time functions')
+    ask = mb.askyesno('Очистка папки', 'Вы уверены, что хотите удалить все time функции?')
+    if ask is True:
+
+        for files in os.walk(dir):
+            for file in files[2]:
+                if file.endswith('.tf') or file.endswith('.txt'):
+                    path = os.path.join(files[0], file)
+                    os.remove(path)
+
+
 class FrameGen(tk.Frame):
     # def __new__(cls, parent, name='Title', energy_type='Название типа энергии'):
     #     return super(FrameGen, cls).__new__(cls)
@@ -154,6 +166,7 @@ class FrameGen(tk.Frame):
         filemenu.add_command(label="Путь к PECHS", command=lambda: (tk.Frame.destroy(self), open_button()))
         filemenu.add_command(label="Reset", command=self.reset)
         filemenu.add_command(label="Global save", command=timef_global_save)
+        filemenu.add_command(label="Очистить timefunctions", command=tf_global_del)
         filemenu.add_command(label="Exit", command=self.onExit)
 
         menubar.add_cascade(label="Файл", menu=filemenu)
@@ -678,7 +691,7 @@ class FrameGen(tk.Frame):
         return func_out, time_count
 
     def save_Initial_field(self):
-        ask = mb.askyesno('?', 'Дать файлу уникальное название?')
+
         back = self.name
 
         if len(self.ini_f_labes_file) != 0:
@@ -1135,6 +1148,13 @@ class Gursa(tk.Toplevel):
         self.Spektr_output = []
         self.calc_state = 0
 
+        self.generate = 0
+        self.generate_val = tk.StringVar()
+        self.func_val = []
+        self.dol_val = []
+        self.entry_func = []
+        self.entry_dol = []
+
         self.grab_set()
         self.focus()
 
@@ -1180,54 +1200,98 @@ class Gursa(tk.Toplevel):
         self.button_browse_spectr = tk.Button(self, text='Browse',
                                               command=self.take_spectr, state='normal')
         self.button_browse_spectr.grid(row=1, column=5, padx=5)
-        self.button_rasch = tk.Button(self, text='Calc', command=self.main, state='normal')
+        self.button_rasch = tk.Button(self, text='Calc', command=self.main, state='disabled')
         self.button_rasch.grid(row=5, column=0)
+
+        self.button_generate = tk.Button(self, text='Сгенерировать', command=self.ent)
+        self.button_generate.grid(row=5, column=3, columnspan=3)
+        self.generate_entry = tk.Entry(self, textvariable=self.generate_val, width=5)
+        self.generate_entry.grid(row=5, column=2)
 
         self.spectr_type = tk.IntVar()
 
-        radio_cont = tk.Radiobutton(self, text='CONTINUOUS', variable=self.spectr_type, value=0)
-        radio_cont.grid(row=1, column=6, sticky="W")
+        self.radio_cont = tk.Radiobutton(self, text='CONTINUOUS', variable=self.spectr_type, value=0)
+        self.radio_cont.grid(row=1, column=6, sticky="W")
         radio_dis = tk.Radiobutton(self, text='DISCRETE', variable=self.spectr_type, value=1)
         radio_dis.grid(row=2, column=6, sticky="W")
         self.spectr_type.set(0)
 
     def take_spectr(self):
-        path = fd.askopenfilename(title='Выберите файл spectr',
-                                  filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-        # path = 'spectr_3_49_norm_na_1.txt'
-        with open(path, 'r') as file_handler:
-            i = 0
-            s = []
-            if self.spectr_type.get() == 0:
-                for line in file_handler:
-                    i += 1
-                    if 'SP_TYPE=DISCRETE' in line:
-                        mb.showerror('Spectr error', 'Выбран спектр DISCRETE')
-                        break
-                    if i < 3: continue
-                    if len(line.split()) < 2:
-                        # print(type(s))
-                        line = line + '0'
-                        s.append(line.split())
-                    else:
-                        s.append(line.split())
+        if self.generate == 0:
+            path = fd.askopenfilename(title='Выберите файл spectr',
+                                      filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+            # path = 'spectr_3_49_norm_na_1.txt'
+            with open(path, 'r') as file_handler:
+                i = 0
+                s = []
+                if self.spectr_type.get() == 0:
+                    for line in file_handler:
+                        i += 1
+                        if 'SP_TYPE=DISCRETE' in line:
+                            mb.showerror('Spectr error', 'Выбран спектр DISCRETE')
+                            break
+                        if i < 3: continue
+                        if len(line.split()) < 2:
+                            # print(type(s))
+                            line = line + '0'
+                            s.append(line.split())
+                        else:
+                            s.append(line.split())
 
-                out = np.array(s, dtype=float)
-                self.spectr_cont = np.copy(out)
-                for i in range(len(out) - 1):
-                    out[i, 0] = (out[i, 0] + out[i + 1, 0]) / 2
-                    out[i, 1] = out[i + 1, 1]
-                out = np.delete(out, np.s_[-1:], 0)
-            elif self.spectr_type.get() == 1:
-                for line in file_handler:
-                    if 'SP_TYPE=CONTINUOUS' in line:
-                        mb.showerror('Spectr error', 'Выбран спектр CONTINUOUS')
-                        break
-                out = np.loadtxt(path, skiprows=2)
+                    out = np.array(s, dtype=float)
+                    self.spectr_cont = np.copy(out)
+                    for i in range(len(out) - 1):
+                        out[i, 0] = (out[i, 0] + out[i + 1, 0]) / 2
+                        out[i, 1] = out[i + 1, 1]
+                    out = np.delete(out, np.s_[-1:], 0)
+                elif self.spectr_type.get() == 1:
+                    for line in file_handler:
+                        if 'SP_TYPE=CONTINUOUS' in line:
+                            mb.showerror('Spectr error', 'Выбран спектр CONTINUOUS')
+                            break
+                    out = np.loadtxt(path, skiprows=2)
+
+                self.button_rasch.configure(state='normal')
+                self.spectr = out
 
             self.button_rasch.configure(state='normal')
-            self.spectr = out
-        # print(self.spectr)
+            # print(self.spectr)
+
+    def ent(self):
+
+        if len(self.entry_func) > 0:
+            for ent in self.entry_func:
+                ent.destroy()
+            self.entry_func.clear()
+
+            for ent in self.entry_dol:
+                ent.destroy()
+            self.entry_dol.clear()
+
+        self.func_val.clear()
+        self.dol_val.clear()
+
+        tk.Label(self, text='Energy , кЭв').grid(row=6, column=1)
+        tk.Label(self, text='Доля').grid(row=6, column=2)
+        self.func_val = [tk.StringVar() for _ in range(int(self.generate_val.get()))]
+        self.dol_val = [tk.StringVar() for _ in range(int(self.generate_val.get()))]
+
+        for i in range(int(self.generate_val.get())):
+            self.entry_func.append(tk.Entry(self, width=9, textvariable=self.func_val[i], justify='center'))
+            self.entry_func[i].grid(row=8 + i, column=1, pady=2)
+            self.entry_dol.append(tk.Entry(self, width=9, textvariable=self.dol_val[i], justify='center'))
+            self.entry_dol[i].grid(row=8 + i, column=2, pady=2)
+
+        self.generate = 1
+
+        self.button_browse_spectr.configure(state='disabled')
+        self.button_rasch.configure(state='normal')
+
+        if len(self.entry_dol) == 1:
+            self.spectr_type.set(1)
+            self.radio_cont.configure(state='disabled')
+        else:
+            self.radio_cont.configure(state='normal')
 
     def delta_R(self, DOT0, DOT1):
         r = ((DOT0[0] - DOT1[0]) ** 2 + (DOT0[1] - DOT1[1]) ** 2 + (DOT0[2] - DOT1[2]) ** 2) ** 0.5
@@ -1254,16 +1318,46 @@ class Gursa(tk.Toplevel):
                              self.entry_koord_obj_val[1].get(),
                              self.entry_koord_obj_val[2].get())
         try:
-            if not self.M2.all() >= 0 and not self.M1.all() >= 0:
+            if any([val < 0 for val in self.M2]) or any([val < 0 for val in self.M1]):
                 mb.showerror('Koord error', 'Введите положительные значения')
-                raise Exception('Введите положительные значения')
+                raise Exception
         except Exception:
             print(self.M2)
             print(self.M1)
             return print('Введите положительные значения')
 
-
         N = int(self.entry_grid_value.get())
+
+        # Блок чтения ручной генерации
+        if self.generate == 1:
+
+            if self.spectr_type.get() == 1:
+
+                out = np.zeros((len(self.func_val), 2), dtype=float)
+                for i in range(len(self.func_val)):
+                    out[i, 0] = float(self.func_val[i].get())
+                    out[i, 1] = float(self.dol_val[i].get())
+
+                self.spectr = out
+
+            elif self.spectr_type.get() == 0:
+
+                out = np.zeros((len(self.func_val), 2), dtype=float)
+                for i in range(len(self.func_val)):
+                    out[i, 0] = float(self.func_val[i].get())
+                    out[i, 1] = float(self.dol_val[i].get())
+
+                self.spectr_cont = np.copy(out)
+
+                for i in range(len(out) - 1):
+                    out[i, 0] = (out[i, 0] + out[i + 1, 0]) / 2
+                    out[i, 1] = out[i + 1, 1]
+
+                out = np.delete(out, np.s_[-1:], 0)
+
+                self.spectr = out
+
+        # __________________________________
 
         self.Energy0 = self.spectr[:, 0] * 10 ** -3  # энергия должна быть в МэВ
         self.EnergyP = self.spectr[:, 1]
@@ -1348,7 +1442,7 @@ class Gursa(tk.Toplevel):
             type = 'CONTINUOUS'
 
         if self.spectr_type.get() == 1:
-            self.Spektr_output[:, 0] = self.Energy0
+            self.Spektr_output[:, 0] = self.Energy0 * 10 ** 3
 
         elif self.spectr_type.get() == 0:
             self.Spektr_output[:, 0] = self.spectr_cont[1:, 0]

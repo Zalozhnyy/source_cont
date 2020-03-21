@@ -1512,7 +1512,7 @@ class DataParcer:
         #         out_tok[1] = int(lines_tok[i + 1])
         #     if '<Тип задачи (0-Коши 1-Гурса>' in lines_tok[i]:
         #         out_tok[2] = int(lines_tok[i + 1])
-            # добавить тение строки гурса
+        # добавить тение строки гурса
         # print('.TOK  ', out_tok)
         return out_tok
 
@@ -1528,9 +1528,23 @@ class DataParcer:
 
         out_pl = np.array(out_pl, dtype=int)
 
+        # with open(rf'{self.path}', 'r', encoding='utf-8') as file:
+        #     lines_pl = file.readlines()
+        # for line in range(len(lines_pl)):
+        #     if '<Количество слоев>' in lines_pl[line]:
+        #         pl_numeric = int(lines_pl[line + 1])
+        #         out_pl = np.zeros((pl_numeric, pl_numeric), dtype=int)
+        #
+        #     if '<Частица номер>' in lines_pl[line]:
+        #         for i in range(pl_numeric):
+        #             for j in range(len(lines_pl[line + 2 + i].split())):
+        #                 out_pl[i, j] = int(lines_pl[line + 2 + i].split()[j])
+        #
+        # # print('.PL\n', out_pl)
+        # return out_pl
+
         # print('.PL\n', out_pl)
         return out_pl
-
 
 
     def grid_parcer(self):

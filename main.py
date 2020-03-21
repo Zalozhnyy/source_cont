@@ -43,7 +43,7 @@ def check_folder():
         if f.endswith(".PRJ") or f.endswith(".prj"):
             prj_name.append(f)
 
-    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r',encoding='utf-8') as file:
+    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r', encoding='utf-8') as file:
         lines = file.readlines()
 
     out = {}
@@ -699,7 +699,7 @@ class FrameGen(tk.Frame):
                 i.destroy()
             self.ini_f_labes_file.clear()
 
-        ask = mb.askyesno('?','Дать файлу уникальное имя?')
+        ask = mb.askyesno('?', 'Дать файлу уникальное имя?')
         if ask is True:
             self.name = tk.simpledialog.askstring('Введите имя файла', 'Func name')
             if len(self.name) == 0 or self.name == ' ':
@@ -1222,7 +1222,7 @@ class Gursa(tk.Toplevel):
             path = fd.askopenfilename(title='Выберите файл spectr',
                                       filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
             # path = 'spectr_3_49_norm_na_1.txt'
-            with open(path, 'r',encoding='utf-8') as file_handler:
+            with open(path, 'r', encoding='utf-8') as file_handler:
                 i = 0
                 s = []
                 if self.spectr_type.get() == 0:
@@ -1482,7 +1482,7 @@ class DataParcer:
 
     def lay_decoder(self):
         #### .LAY DECODER
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lay_numeric = int(lines[2])
         out_lay = np.zeros((lay_numeric, 3), dtype=int)
@@ -1498,7 +1498,7 @@ class DataParcer:
 
     def tok_decoder(self):
         #### .TOK DECODER
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r', encoding='utf-8') as file:
             lines_tok = file.readlines()
         out_tok = np.zeros(3, dtype=int)
         for i in range(len(lines_tok)):
@@ -1514,7 +1514,7 @@ class DataParcer:
 
     def pl_decoder(self):
         #### .PL DECODER
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r', encoding='utf-8') as file:
             lines_pl = file.readlines()
         for line in range(len(lines_pl)):
             if '<Количество слоев>' in lines_pl[line]:
@@ -1526,13 +1526,12 @@ class DataParcer:
                     for j in range(len(lines_pl[line + 2 + i].split())):
                         out_pl[i, j] = int(lines_pl[line + 2 + i].split()[j])
 
-
         # print('.PL\n', out_pl)
         return out_pl
 
     def grid_parcer(self):
         #### .PL DECODER
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         out = np.array(lines[15].split(), dtype=float)
         return out

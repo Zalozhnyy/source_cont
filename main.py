@@ -4,6 +4,7 @@ from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -1482,7 +1483,8 @@ class DataParcer:
 
     def lay_decoder(self):
         #### .LAY DECODER
-        with open(rf'{self.path}', 'r') as file:
+
+        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
             lines = file.readlines()
         lay_numeric = int(lines[2])
         out_lay = np.zeros((lay_numeric, 3), dtype=int)
@@ -1498,7 +1500,7 @@ class DataParcer:
 
     def tok_decoder(self):
         #### .TOK DECODER
-        with open(rf'{self.path}', 'r') as file:
+        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
             lines_tok = file.readlines()
         out_tok = np.zeros(3, dtype=int)
 
@@ -1518,7 +1520,7 @@ class DataParcer:
 
     def pl_decoder(self):
         #### .PL DECODER
-        with open(rf'{self.path}', 'r') as file:
+        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
             lines_pl = file.readlines()
 
         layers = int(lines_pl[6])

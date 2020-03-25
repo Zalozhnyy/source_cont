@@ -1,7 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox as mb
-import os
 
 from Gursa import Gursa
 from TOK import InitialField, ExternalField, Koshi
@@ -210,7 +208,6 @@ def main():
         tab.koshi_nb()
 
         tab_list.append(tab)
-
 
 
 if __name__ == '__main__':

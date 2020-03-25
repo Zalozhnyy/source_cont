@@ -1,14 +1,11 @@
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
-from tkinter import simpledialog
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 
-from Main_frame import FrameGen
-from utility import pr_dir, config_read, source_number, time_func_dict
+
+from utility import  config_read
 
 
 class PeSource(tk.Toplevel):
@@ -37,8 +34,6 @@ class PeSource(tk.Toplevel):
         self.child_window()
         print(repr(self))
 
-    # def __repr__(self):
-    #     return f'Gursa n{self.gursa_count}'
 
     def child_window(self):
         self.title('PE source')
@@ -131,7 +126,7 @@ class PeSource(tk.Toplevel):
                 self.spectr = out
 
             self.button_rasch.configure(state='normal')
-            print(self.spectr)
+            # print(self.spectr)
 
     def ent(self):
 
@@ -341,7 +336,7 @@ class PeSource(tk.Toplevel):
                 self.Spektr_output[i, 1] = self.Spektr_output[i - 1, 1]
 
         self.pe_source_graph = np.column_stack((R[1:], sum_dol_out[1:]))
-        print(self.pe_source_graph)
+        # print(self.pe_source_graph)
 
         self.calc_state = 1
 

@@ -416,12 +416,5 @@ class FrameGen(tk.Frame):
     def child_parcecer_grid(self):
         return DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
 
-    def reset(self, parent):
-
-        parent.destroy()
-        check_folder().clear()
-        time_func_dict.clear()
-        # main()
-
     def onExit(self):
         self.quit()

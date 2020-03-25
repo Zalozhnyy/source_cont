@@ -214,7 +214,6 @@ class ExternalField(FrameGen):
 class Koshi(FrameGen):
     def koshi_nb(self):
 
-
         rows = 0
         while rows < 100:
             self.rowconfigure(rows, weight=0, minsize=5)

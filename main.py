@@ -5,6 +5,7 @@ from tkinter import messagebox as mb
 from tkinter import simpledialog
 import os
 import sys
+import locale
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -553,11 +554,6 @@ class FrameGen(tk.Frame):
         self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
 
         self.button_calculate.configure(state='disabled')
-
-    # def del_entry(self):
-    #
-    #     self.func_entry_vel.pop()
-    #     self.time_entry_vel.pop()
 
     def get(self):
 
@@ -1480,11 +1476,13 @@ class Calculations:
 class DataParcer:
     def __init__(self, path):
         self.path = path
+        # self.decoding = locale.getpreferredencoding()
+        self.decoding = 'utf-8'
 
     def lay_decoder(self):
         #### .LAY DECODER
 
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r',encoding=f'{self.decoding}') as file:
             lines = file.readlines()
         lay_numeric = int(lines[2])
         out_lay = np.zeros((lay_numeric, 3), dtype=int)
@@ -1500,7 +1498,7 @@ class DataParcer:
 
     def tok_decoder(self):
         #### .TOK DECODER
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r',encoding=f'{self.decoding}') as file:
             lines_tok = file.readlines()
         out_tok = np.zeros(3, dtype=int)
 
@@ -1520,7 +1518,7 @@ class DataParcer:
 
     def pl_decoder(self):
         #### .PL DECODER
-        with open(rf'{self.path}', 'r',encoding='utf-8') as file:
+        with open(rf'{self.path}', 'r',encoding=f'{self.decoding}') as file:
             lines_pl = file.readlines()
 
         layers = int(lines_pl[6])

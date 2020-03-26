@@ -308,6 +308,7 @@ class FrameGen(tk.Frame):
 
         for j in self.func_entry_vel:
             self.func_list.append(j.get())
+
         for j in self.time_entry_vel:
             self.time_list.append(j.get())
 
@@ -334,9 +335,10 @@ class FrameGen(tk.Frame):
         self.value_check(func=self.func_list, time=self.time_list)
 
     def eval_transformation(self, arg, replace):
-        for x, i in enumerate(arg):
-            arg[x] = eval(i)
-            replace[x].set('{:.4g}'.format(eval(i)))
+        for x, i in enumerate(replace):
+
+            arg[x] = eval(i.get())
+            replace[x].set('{:.4g}'.format(eval(i.get())))
         return arg
 
     def time_save(self):

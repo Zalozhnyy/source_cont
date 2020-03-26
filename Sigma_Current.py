@@ -14,7 +14,8 @@ class Current(FrameGen):
     def notebooks(self):
         self._notebooks()
 
-        self.button_read_gen = tk.Button(self, width=10, text='Read', command=self.get, state='disabled')
+        self.button_read_gen = tk.Button(self, width=10, text='Read', command=lambda: (self.get(), self.button_states()),
+                                         state='disabled')
         self.button_read_gen.grid(row=6, column=2)
         self.button_calculate = tk.Button(self, width=10, text='Calculate', command=self.calculate, state='disabled')
         self.button_calculate.grid(row=1, column=5, padx=3)
@@ -25,18 +26,7 @@ class Current(FrameGen):
         entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
         entry_f.grid(row=2, column=6, padx=3)
 
-    def get(self):
-
-        # print('get', type(self.func_entry_vel[0]))
-        self.func_list.clear()
-        self.time_list.clear()
-
-        for i in self.func_entry_vel:
-            self.func_list.append(float(i.get()))
-        for i in self.time_entry_vel:
-            self.time_list.append(float(i.get()))
-
-        self.value_check(func=self.func_list, time=self.time_list)
+    def button_states(self):
         self.button_generate.configure(state='disabled')
         self.entry_generate_value.configure(state='disabled')
         self.button_save.configure(state='active')
@@ -45,8 +35,53 @@ class Current(FrameGen):
 
         self.button_calculate.configure(state='active')
 
-        # print('time = ', self.time_list)
-        # print('func = ', self.func_list)
+    # def get(self):
+    #
+    #     # print('get', type(self.func_entry_vel[0]))
+    #     self.func_list.clear()
+    #     self.time_list.clear()
+    #
+    #     for j in self.func_entry_vel:
+    #         self.func_list.append(j.get())
+    #     for j in self.time_entry_vel:
+    #         self.time_list.append(j.get())
+    #
+    #     exeption_list = ['exp', '(', ')', '*', '**', '/']
+    #
+    #     for x, i in enumerate(self.func_list):
+    #         if any([e in i for e in exeption_list]):
+    #             self.func_list = self.eval_transformation(self.func_list, self.func_entry_vel)
+    #             print(i)
+    #             break
+    #         else:
+    #             self.func_list[x] = eval(self.func_entry_vel[x].get())
+    #
+    #     for x, i in enumerate(self.time_list):
+    #         if any([e in i for e in exeption_list]):
+    #             self.time_list = self.eval_transformation(self.time_list, self.time_entry_vel)
+    #
+    #             break
+    #         else:
+    #             self.time_list[x] = eval(self.time_entry_vel[x].get())
+    #
+    #     # print('time = ', self.time_list)
+    #     # print('func = ', self.func_list)
+    #
+    #     self.value_check(func=self.func_list, time=self.time_list)
+    #     self.button_generate.configure(state='disabled')
+    #     self.entry_generate_value.configure(state='disabled')
+    #     self.button_save.configure(state='active')
+    #     self.button_save_def.configure(state='active')
+    #     self.button_browse.configure(state='disabled')
+    #
+    #     self.button_calculate.configure(state='active')
+    #
+    #
+    # def eval_transformation(self, arg, replace):
+    #     for x, i in enumerate(arg):
+    #         arg[x] = eval(i)
+    #         replace[x].set('{:.4g}'.format(eval(i)))
+    #     return arg
 
     def calculate(self):
 
@@ -62,7 +97,7 @@ class Current(FrameGen):
                 self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
                                                      filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
                 self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
-                
+
         self.calculate_lay_pl()
 
     def calculate_lay_pl(self):
@@ -107,8 +142,6 @@ class Current(FrameGen):
         chart_type.get_tk_widget().grid(row=2, column=8, rowspan=40, columnspan=20, padx=10)
         ax.set_title(f'{self.name}')
         ax.legend()
-
-
 
     def output_dictionary_current(self):
         self.pr_dict.update({

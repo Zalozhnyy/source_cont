@@ -25,29 +25,6 @@ class Flu(FrameGen):
         entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
         entry_f.grid(row=2, column=6, padx=3)
 
-    def get(self):
-
-        # print('get', type(self.func_entry_vel[0]))
-        self.func_list.clear()
-        self.time_list.clear()
-
-        for i in self.func_entry_vel:
-            self.func_list.append(float(i.get()))
-        for i in self.time_entry_vel:
-            self.time_list.append(float(i.get()))
-
-        self.value_check(func=self.func_list, time=self.time_list)
-        self.button_generate.configure(state='disabled')
-        self.entry_generate_value.configure(state='disabled')
-        self.button_save.configure(state='active')
-        self.button_save_def.configure(state='active')
-        self.button_browse.configure(state='disabled')
-
-        self.button_calculate.configure(state='active')
-
-        # print('time = ', self.time_list)
-        # print('func = ', self.func_list)
-
     def calculate(self):
 
         if len(self.spectr) == 0:

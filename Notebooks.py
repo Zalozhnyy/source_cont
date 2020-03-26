@@ -27,13 +27,16 @@ def checker(parent):
         else:
             parent.destroy()
 
-    dir = pr_dir()
+
 
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')
         open_button()
         print('dir not exist ', f' {cur_dir[0]}')
         cur_dir = config_read()
+
+    dir = pr_dir()
+
 
     if not os.path.exists(rf'{dir}/time functions'):
         os.mkdir(f'{dir}/time functions')
@@ -60,39 +63,6 @@ def checker(parent):
     # check_folder()
 
     return cur_dir
-
-
-def timef_global_save():
-    # global time_func_dict
-    with open(f'{pr_dir}/time functions/time functions list.txt', 'w', encoding='utf-8') as file:
-
-        for item in time_func_dict.items():
-            if type(item) is not list:
-                file.write(f'{item[0]} = {item[1]}\n')
-            else:
-                for i in item:
-                    file.write(f'{i[0]} = {i[1]}\n')
-
-        mb.showinfo('Save', 'Сохранено в time functions list.txt')
-
-        for out_dict in source_list:
-            name = out_dict.get('<название источника>')
-            with open(rf'{pr_dir}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
-                for item in out_dict.items():
-                    file.write(f'{item[0]}\n')
-                    file.write(f'{item[1]}\n')
-
-
-def tf_global_del():
-    dir = os.path.join(config_read()[0], 'time functions')
-    ask = mb.askyesno('Очистка папки', 'Вы уверены, что хотите удалить все time функции?')
-    if ask is True:
-
-        for files in os.walk(dir):
-            for file in files[2]:
-                if file.endswith('.tf') or file.endswith('.txt'):
-                    path = os.path.join(files[0], file)
-                    os.remove(path)
 
 
 def reset(parent):

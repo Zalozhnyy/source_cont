@@ -4,6 +4,8 @@ from tkinter import messagebox as mb
 
 import os
 import numpy as np
+from numpy import exp,sin,cos,tan,log10
+from numpy import log as ln
 
 
 from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict
@@ -297,6 +299,45 @@ class FrameGen(tk.Frame):
         self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
 
         self.button_calculate.configure(state='disabled')
+
+    def get(self):
+
+        # print('get', type(self.func_entry_vel[0]))
+        self.func_list.clear()
+        self.time_list.clear()
+
+        for j in self.func_entry_vel:
+            self.func_list.append(j.get())
+        for j in self.time_entry_vel:
+            self.time_list.append(j.get())
+
+        exeption_list = ['exp', '(', ')', '*', '**', '/']
+
+        for x, i in enumerate(self.func_list):
+            if any([e in i for e in exeption_list]):
+                self.func_list = self.eval_transformation(self.func_list, self.func_entry_vel)
+                print(i)
+                break
+            else:
+                self.func_list[x] = eval(self.func_entry_vel[x].get())
+
+        for x, i in enumerate(self.time_list):
+            if any([e in i for e in exeption_list]):
+                self.time_list = self.eval_transformation(self.time_list, self.time_entry_vel)
+
+                break
+            else:
+                self.time_list[x] = eval(self.time_entry_vel[x].get())
+        # print('time = ', self.time_list)
+        # print('func = ', self.func_list)
+
+        self.value_check(func=self.func_list, time=self.time_list)
+
+    def eval_transformation(self, arg, replace):
+        for x, i in enumerate(arg):
+            arg[x] = eval(i)
+            replace[x].set('{:.4g}'.format(eval(i)))
+        return arg
 
     def time_save(self):
 

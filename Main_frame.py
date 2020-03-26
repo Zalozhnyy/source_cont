@@ -236,7 +236,6 @@ class FrameGen(tk.Frame):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
 
-
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
         self.button_browse_def.configure(state='disabled')
@@ -304,11 +303,16 @@ class FrameGen(tk.Frame):
         self.func_list.clear()
         self.time_list.clear()
 
-        for j in self.func_entry_vel:
-            self.func_list.append(j.get())
-
         for j in self.time_entry_vel:
             self.time_list.append(j.get())
+
+        for x, j in enumerate(self.func_entry_vel):
+            if 't' in j.get():      # если есть t в строке, то заменяем это t на значение entry time с тем же индексом
+                string = j.get()
+                fixed_string = string.replace('t', f'{self.time_list[x]}')
+                self.func_list.append(fixed_string)
+            else:
+                self.func_list.append(j.get())
 
         exeption_list = ['exp', '(', ')', '*', '**', '/']
 
@@ -320,7 +324,7 @@ class FrameGen(tk.Frame):
                 try:
                     self.func_list[x] = float(self.func_entry_vel[x].get())
                 except ValueError:
-                    mb.showerror('Value error',f'{self.func_entry_vel[x].get()} не является числом')
+                    mb.showerror('Value error', f'{self.func_entry_vel[x].get()} не является числом')
                     return print(f'{self.func_entry_vel[x].get()} не является числом')
 
         for x, i in enumerate(self.time_list):
@@ -331,17 +335,23 @@ class FrameGen(tk.Frame):
                 try:
                     self.time_list[x] = float(self.time_entry_vel[x].get())
                 except ValueError:
-                    mb.showerror('Value error',f'{self.time_entry_vel[x].get()} не является числом')
+                    mb.showerror('Value error', f'{self.time_entry_vel[x].get()} не является числом')
                     return print(f'{self.time_entry_vel[x].get()} не является числом')
-        # print('time = ', self.time_list)
-        # print('func = ', self.func_list)
+        print('time = ', self.time_list)
+        print('func = ', self.func_list)
 
         self.value_check(func=self.func_list, time=self.time_list)
 
     def eval_transformation(self, arg, replace):
         for x, i in enumerate(replace):
-            arg[x] = eval(i.get())
-            replace[x].set('{:.4g}'.format(eval(i.get())))
+            if 't' in i.get():
+                string = i.get()
+                fixed_string = string.replace('t', f'{self.time_list[x]}')
+                arg[x] = eval(fixed_string)
+                replace[x].set('{:.4g}'.format(eval(fixed_string)))
+            else:
+                arg[x] = eval(i.get())
+                replace[x].set('{:.4g}'.format(eval(i.get())))
         return arg
 
     def time_save(self):

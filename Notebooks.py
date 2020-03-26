@@ -110,6 +110,10 @@ def main():
     main_frame.filemenu.add_command(label="Reset", command=lambda: reset(tab_list))
     main_frame.filemenu.add_command(label="Exit", command=main_frame.onExit)
 
+    u_tab = FrameGen(root)
+    u_tab.notebook_tab = nb.add(u_tab, text=f"the United Tabs of Layers (UTL)")
+
+
     for i in range(LAY.shape[0]):
         if LAY[i, 1] == 1:
             energy_type = 'Current'

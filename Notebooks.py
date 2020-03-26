@@ -27,8 +27,6 @@ def checker(parent):
         else:
             parent.destroy()
 
-
-
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')
         open_button()
@@ -36,7 +34,6 @@ def checker(parent):
         cur_dir = config_read()
 
     dir = pr_dir()
-
 
     if not os.path.exists(rf'{dir}/time functions'):
         os.mkdir(f'{dir}/time functions')
@@ -110,7 +107,7 @@ def main():
     main_frame = FrameGen(root)
     main_frame._konstr()
     main_frame.filemenu.add_command(label="Путь к PECHS", command=lambda: change_path(tab_list))
-    main_frame.filemenu.add_command(label="Reset",command=lambda: reset(tab_list))
+    main_frame.filemenu.add_command(label="Reset", command=lambda: reset(tab_list))
     main_frame.filemenu.add_command(label="Exit", command=main_frame.onExit)
 
     for i in range(LAY.shape[0]):

@@ -4,15 +4,20 @@ from tkinter import messagebox as mb
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import os
 
 from Pe_source import PeSource
 from Main_frame import FrameGen
-from utility import pr_dir, source_number, time_func_dict, source_list
+from utility import pr_dir, source_number, time_func_dict, source_list, check_folder, config_read
+from Project_reader import DataParcer
 
 
 class Gursa(FrameGen):
     def notebooks(self):
         self._notebooks()
+
+        path = os.path.join(config_read()[0], check_folder().get('PAR'))
+        self.max_gursa_count = int(DataParcer(path).par_decoder().get('<Количество типов частиц>'))
 
         self.button_read_gen = tk.Button(self, width=10, text='Read',
                                          command=lambda: (self.get(), self.button_states()),
@@ -34,6 +39,20 @@ class Gursa(FrameGen):
         self.delete_gursa_class_button = tk.Button(self, text='Delete obj', command=self.regrid_gursa, width=8)
         self.delete_gursa_class_button.grid(row=11, column=4)
 
+        ###Полярные\Азимутальные углы
+        self.polar_angle_val = tk.StringVar()
+        self.polar_angle_val.set('0')
+        tk.Label(self, text='Полярный угол поворота').grid(row=5, column=3, columnspan=3)
+        self.polar_angle = tk.Entry(self, textvariable=self.polar_angle_val, width=4)
+        self.polar_angle.grid(row=5, column=6)
+
+        self.azi_angle_val = tk.StringVar()
+        self.azi_angle_val.set('0')
+        tk.Label(self, text='Азимутальный угол поворота').grid(row=6, column=3, columnspan=3)
+        self.azi_angle = tk.Entry(self, textvariable=self.azi_angle_val, width=4)
+        self.azi_angle.grid(row=6, column=6)
+        # _________________________
+
         self.entry_f_val.set(1.)
         label_f = tk.Label(self, text='F')
         label_f.grid(row=2, column=5, padx=3, sticky='E')
@@ -42,7 +61,14 @@ class Gursa(FrameGen):
 
     def gursa_cw(self):
 
-        self.x = PeSource(self.parent, name=f'Gursa_{self.gursa_numeric}')
+        try:
+            if self.gursa_numeric >= self.max_gursa_count:
+                raise Exception
+        except Exception:
+            mb.showerror('Max limit', f'Максимальное количество источников = {self.max_gursa_count}')
+            return print(f'Максимальное количество источников = {self.max_gursa_count}')
+
+        self.x = PeSource(self.parent, name=f'Gursa_{self.gursa_numeric + 1}')
         self.x.F = float(self.entry_f_val.get())
 
         self.wait_window(self.x)
@@ -169,6 +195,8 @@ class Gursa(FrameGen):
             keys.append(i)
         self.gursa_combobox.configure(values=keys)
 
+        self.gursa_numeric -= 1
+
     def button_states(self):
         self.button_generate.configure(state='disabled')
         self.entry_generate_value.configure(state='disabled')
@@ -200,8 +228,8 @@ class Gursa(FrameGen):
             '<X-координата объекта>': class_gursa.M1[0],
             '<Y-координата объекта>': class_gursa.M1[1],
             '<Z-координата объекта>': class_gursa.M1[2],
-            '<полярный угол поворта локальной системы координат относительно глобальной>': None,
-            '<азимутальный угол поворта локальной системы координат относительно глобальной>': None,
+            '<полярный угол поворта локальной системы координат относительно глобальной>': eval(self.polar_angle_val.get()),
+            '<азимутальный угол поворта локальной системы координат относительно глобальной>': eval(self.azi_angle_val.get()),
             '<X-компонента направляющего косинуса для расчета в дальней зоне>': None,
             '<Y-компонента направляющего косинуса для расчета в дальней зоне>': None,
             '<Z-компонента направляющего косинуса для расчета в дальней зоне>': None
@@ -210,9 +238,6 @@ class Gursa(FrameGen):
         delete_keys = ['<номер слоя>',
                        '<номер слоя из>',
                        '<номер слоя в>',
-                       '<полярный угол поворта локальной системы координат относительно глобальной>',
-                       '<азимутальный угол поворта локальной системы координат относительно глобальной>',
-                       '<полярный угол поворта локальной системы координат относительно глобальной>',
                        '<X-компонента направляющего косинуса для расчета в дальней зоне>',
                        '<Y-компонента направляющего косинуса для расчета в дальней зоне>',
                        '<Z-компонента направляющего косинуса для расчета в дальней зоне>',

@@ -4,9 +4,8 @@ from tkinter import messagebox as mb
 
 import os
 import numpy as np
-from numpy import exp,sin,cos,tan,log10
+from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
-
 
 from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict
 from Project_reader import DataParcer
@@ -51,7 +50,6 @@ class FrameGen(tk.Frame):
         self.parent = parent
         self.name = name
         self.energy_type = energy_type
-
 
         self.entry_func = []
         self.entry_time = []
@@ -158,7 +156,6 @@ class FrameGen(tk.Frame):
         self.filemenu.add_command(label="Global save", command=timef_global_save)
         self.filemenu.add_command(label="Очистить timefunctions", command=tf_global_del)
 
-
         menubar.add_cascade(label="Файл", menu=self.filemenu)
         # menubar.add_command(label="test", command=lambda: print(len(source_list)))
 
@@ -171,10 +168,10 @@ class FrameGen(tk.Frame):
         self.func_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
         self.time_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
         for i in range(int(self.cell_numeric.get())):
-            self.entry_time.append(tk.Entry(self, width=9, textvariable=self.time_entry_vel[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3)
-            self.entry_func.append(tk.Entry(self, width=9, textvariable=self.func_entry_vel[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3)
+            self.entry_time.append(tk.Entry(self, width=15, textvariable=self.time_entry_vel[i], justify='center'))
+            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
+            self.entry_func.append(tk.Entry(self, width=15, textvariable=self.func_entry_vel[i], justify='center'))
+            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
 
         a, A = self.time_grid()
 
@@ -211,13 +208,13 @@ class FrameGen(tk.Frame):
         entr_utility_func = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         entr_utility_time = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         for i in range(len(self.func_entry_vel)):
-            self.entry_time.append(tk.Entry(self, width=9, textvariable=entr_utility_time[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3)
+            self.entry_time.append(tk.Entry(self, width=15, textvariable=entr_utility_time[i], justify='center'))
+            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
             entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
             self.time_entry_vel[i] = entr_utility_time[i]
 
-            self.entry_func.append(tk.Entry(self, width=9, textvariable=entr_utility_func[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3)
+            self.entry_func.append(tk.Entry(self, width=15, textvariable=entr_utility_func[i], justify='center'))
+            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
             entr_utility_func[i].set('{:.4g}'.format(self.func_entry_vel[i]))
             self.func_entry_vel[i] = entr_utility_func[i]
             # print(f'{i} ', type(entr_utility_func[i]), entr_utility_func[i])
@@ -238,6 +235,7 @@ class FrameGen(tk.Frame):
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
             self.onExit()
+
 
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
@@ -317,18 +315,24 @@ class FrameGen(tk.Frame):
         for x, i in enumerate(self.func_list):
             if any([e in i for e in exeption_list]):
                 self.func_list = self.eval_transformation(self.func_list, self.func_entry_vel)
-                print(i)
                 break
             else:
-                self.func_list[x] = eval(self.func_entry_vel[x].get())
+                try:
+                    self.func_list[x] = float(self.func_entry_vel[x].get())
+                except ValueError:
+                    mb.showerror('Value error',f'{self.func_entry_vel[x].get()} не является числом')
+                    return print(f'{self.func_entry_vel[x].get()} не является числом')
 
         for x, i in enumerate(self.time_list):
             if any([e in i for e in exeption_list]):
                 self.time_list = self.eval_transformation(self.time_list, self.time_entry_vel)
-
                 break
             else:
-                self.time_list[x] = eval(self.time_entry_vel[x].get())
+                try:
+                    self.time_list[x] = float(self.time_entry_vel[x].get())
+                except ValueError:
+                    mb.showerror('Value error',f'{self.time_entry_vel[x].get()} не является числом')
+                    return print(f'{self.time_entry_vel[x].get()} не является числом')
         # print('time = ', self.time_list)
         # print('func = ', self.func_list)
 
@@ -336,7 +340,6 @@ class FrameGen(tk.Frame):
 
     def eval_transformation(self, arg, replace):
         for x, i in enumerate(replace):
-
             arg[x] = eval(i.get())
             replace[x].set('{:.4g}'.format(eval(i.get())))
         return arg

@@ -81,3 +81,9 @@ class DataParcer:
             lines = file.readlines()
         out = np.array(lines[15].split(), dtype=float)
         return out
+
+    def par_decoder(self):
+        with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+            lines = file.readlines()
+        dictionary = {'<Количество типов частиц>': lines[2]}
+        return dictionary

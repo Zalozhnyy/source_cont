@@ -342,9 +342,3 @@ class PeSource(tk.Toplevel):
 
         self.destroy()
 
-    # def name_transfer(self):
-    #     if self.spectr_type.get() == 1:
-    #         type = 'DISCRETE'
-    #     elif self.spectr_type.get() == 0:
-    #         type = 'CONTINUOUS'
-    #     return type

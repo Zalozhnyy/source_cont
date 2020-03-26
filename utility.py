@@ -49,6 +49,8 @@ def check_folder():
             out.setdefault('LAY', lines[i + 1].strip())
         if '<Particles-Layers name>' in lines[i]:
             out.setdefault('PL', lines[i + 1].strip())
+        if '<Particles name>' in lines[i]:
+            out.setdefault('PAR', lines[i + 1].strip())
 
     return out
 

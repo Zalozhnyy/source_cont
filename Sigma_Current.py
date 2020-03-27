@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
+from scipy import integrate
 
 from utility import config_read, source_number, time_func_dict, pr_dir, source_list
 from Main_frame import FrameGen
@@ -35,53 +36,6 @@ class Current(FrameGen):
 
         self.button_calculate.configure(state='active')
 
-    # def get(self):
-    #
-    #     # print('get', type(self.func_entry_vel[0]))
-    #     self.func_list.clear()
-    #     self.time_list.clear()
-    #
-    #     for j in self.func_entry_vel:
-    #         self.func_list.append(j.get())
-    #     for j in self.time_entry_vel:
-    #         self.time_list.append(j.get())
-    #
-    #     exeption_list = ['exp', '(', ')', '*', '**', '/']
-    #
-    #     for x, i in enumerate(self.func_list):
-    #         if any([e in i for e in exeption_list]):
-    #             self.func_list = self.eval_transformation(self.func_list, self.func_entry_vel)
-    #             print(i)
-    #             break
-    #         else:
-    #             self.func_list[x] = eval(self.func_entry_vel[x].get())
-    #
-    #     for x, i in enumerate(self.time_list):
-    #         if any([e in i for e in exeption_list]):
-    #             self.time_list = self.eval_transformation(self.time_list, self.time_entry_vel)
-    #
-    #             break
-    #         else:
-    #             self.time_list[x] = eval(self.time_entry_vel[x].get())
-    #
-    #     # print('time = ', self.time_list)
-    #     # print('func = ', self.func_list)
-    #
-    #     self.value_check(func=self.func_list, time=self.time_list)
-    #     self.button_generate.configure(state='disabled')
-    #     self.entry_generate_value.configure(state='disabled')
-    #     self.button_save.configure(state='active')
-    #     self.button_save_def.configure(state='active')
-    #     self.button_browse.configure(state='disabled')
-    #
-    #     self.button_calculate.configure(state='active')
-    #
-    #
-    # def eval_transformation(self, arg, replace):
-    #     for x, i in enumerate(arg):
-    #         arg[x] = eval(i)
-    #         replace[x].set('{:.4g}'.format(eval(i)))
-    #     return arg
 
     def calculate(self):
 
@@ -108,12 +62,12 @@ class Current(FrameGen):
         output_matrix = np.column_stack((time_count, func_out))
 
         # integrate
-        # E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
+        E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
 
         F = float(self.entry_f_val.get())
-        # intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
+        intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
-        # koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
 
         file_name = f'time functions/time_{self.name}.tf'
         # np.savetxt(f'{pr_dir()}/time functions/time_{self.name}.tf', output_matrix, fmt='%-8.4g',

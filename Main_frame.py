@@ -258,10 +258,10 @@ class FrameGen(tk.Frame):
         self.time_entry_vel.append(new_t)
 
         for i in range(len(self.time_entry_vel)):
-            self.entry_func.append(tk.Entry(self, width=9, textvariable=self.func_entry_vel[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3)
-            self.entry_time.append(tk.Entry(self, width=9, textvariable=self.time_entry_vel[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3)
+            self.entry_func.append(tk.Entry(self, width=15, textvariable=self.func_entry_vel[i], justify='center'))
+            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
+            self.entry_time.append(tk.Entry(self, width=15, textvariable=self.time_entry_vel[i], justify='center'))
+            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
 
         self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
         self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
@@ -284,10 +284,10 @@ class FrameGen(tk.Frame):
         self.time_entry_vel.pop()
 
         for i in range(len(self.time_entry_vel)):
-            self.entry_func.append(tk.Entry(self, width=9, textvariable=self.func_entry_vel[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3)
-            self.entry_time.append(tk.Entry(self, width=9, textvariable=self.time_entry_vel[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3)
+            self.entry_func.append(tk.Entry(self, width=15, textvariable=self.func_entry_vel[i], justify='center'))
+            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
+            self.entry_time.append(tk.Entry(self, width=15, textvariable=self.time_entry_vel[i], justify='center'))
+            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
 
         self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
         self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)

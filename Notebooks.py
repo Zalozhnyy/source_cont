@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from United_Layers import UnitedLayers
 from Gursa import Gursa
 from TOK import InitialField, ExternalField, Koshi
 from Flu import Flu
@@ -95,13 +96,7 @@ def main():
 
     file_dict = check_folder()
 
-    lay_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('LAY')))
-    pl_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('PL')))
     tok_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('TOK')))
-    grid_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('GRD')))
-
-    LAY = DataParcer(lay_dir).lay_decoder()
-    PL = DataParcer(pl_dir).pl_decoder()
     TOK = DataParcer(tok_dir).tok_decoder()
 
     main_frame = FrameGen(root)
@@ -110,40 +105,18 @@ def main():
     main_frame.filemenu.add_command(label="Reset", command=lambda: reset(tab_list))
     main_frame.filemenu.add_command(label="Exit", command=main_frame.onExit)
 
-    u_tab = FrameGen(root)
+    # Класс рассчте Current,Sigma,Flu
+    u_tab = UnitedLayers(root)
+
+    u_tab.lay_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('LAY')))
+    u_tab.pl_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('PL')))
+
     u_tab.notebook_tab = nb.add(u_tab, text=f"the United Tabs of Layers (UTL)")
+    u_tab.notebooks()
+
+    tab_list.append(u_tab)
 
 
-    for i in range(LAY.shape[0]):
-        if LAY[i, 1] == 1:
-            energy_type = 'Current'
-
-            tab = Current(root, f'{energy_type}_layer {i}', 'Current')
-            tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
-            tab.notebooks()
-
-            tab_list.append(tab)
-
-        if LAY[i, 2] == 1:
-            energy_type = 'Sigma'
-
-            tab = Current(root, f'{energy_type}_layer {i}', 'Sigma')
-            tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
-            tab.notebooks()
-
-            tab_list.append(tab)
-
-    for i in range(PL.shape[0]):
-        for j in range(1, PL.shape[1]):
-            if PL[i, j] == 1:
-                tab = Flu(root, f'Flu_e{j}{i}', f'Источник электронов из {j}го в {i}й')
-                tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
-                tab.notebooks()
-
-                tab_list.append(tab)
-
-    if PL[:, 0].any() == 1:
-        mb.showinfo('ERROR', 'Частицы в нулевом слое!')
 
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
@@ -178,7 +151,7 @@ def main():
         tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
         tab.koshi_nb()
 
-        tab_list.append(tab)
+
 
 
 if __name__ == '__main__':
@@ -186,7 +159,7 @@ if __name__ == '__main__':
     root.geometry('1200x600')
 
     nb = ttk.Notebook(root)
-    nb.grid(sticky='nwse')
+    nb.grid()
 
     main()
 

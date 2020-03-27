@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
+from scipy import integrate
 
 from Pe_source import PeSource
 from Main_frame import FrameGen
@@ -26,38 +27,39 @@ class Gursa(FrameGen):
 
         self.add_button_gursa = tk.Button(self, text='Add source', width=10, command=self.gursa_cw,
                                           state='disabled')
-        self.add_button_gursa.grid(row=10, column=2)
+        self.add_button_gursa.grid(row=8, column=2)
 
         self.gursa_graphs_checkbutton_val = tk.BooleanVar()
         self.gursa_graphs_checkbutton_val.set(0)
         gursa_graphs_checkbutton = tk.Checkbutton(self, text='Построение графиков',
                                                   variable=self.gursa_graphs_checkbutton_val, onvalue=1, offvalue=0)
-        gursa_graphs_checkbutton.grid(row=1, column=7, columnspan=2)
+        gursa_graphs_checkbutton.grid(row=1, column=8, columnspan=2)
 
-        self.gursa_combobox = ttk.Combobox(self, values=self.gursa_dict.keys(), width=8)
-        self.gursa_combobox.grid(row=10, column=4)
-        self.delete_gursa_class_button = tk.Button(self, text='Delete obj', command=self.regrid_gursa, width=8)
-        self.delete_gursa_class_button.grid(row=11, column=4)
+        self.gursa_combobox = ttk.Combobox(self, values=self.gursa_dict.keys(), width=8, state='disabled')
+        self.gursa_combobox.grid(row=11, column=2, pady=3)
+        self.delete_gursa_class_button = tk.Button(self, text='Delete obj', command=self.regrid_gursa,
+                                                   width=8, state='disabled')
+        self.delete_gursa_class_button.grid(row=10, column=2)
 
         ###Полярные\Азимутальные углы
         self.polar_angle_val = tk.StringVar()
         self.polar_angle_val.set('0')
-        tk.Label(self, text='Полярный угол поворота').grid(row=5, column=3, columnspan=3)
-        self.polar_angle = tk.Entry(self, textvariable=self.polar_angle_val, width=4)
-        self.polar_angle.grid(row=5, column=6)
+        tk.Label(self, text='Полярный угол поворота', width=25).grid(row=1, column=5)
+        self.polar_angle = tk.Entry(self, textvariable=self.polar_angle_val, width=5)
+        self.polar_angle.grid(row=1, column=6)
 
         self.azi_angle_val = tk.StringVar()
         self.azi_angle_val.set('0')
-        tk.Label(self, text='Азимутальный угол поворота').grid(row=6, column=3, columnspan=3)
-        self.azi_angle = tk.Entry(self, textvariable=self.azi_angle_val, width=4)
-        self.azi_angle.grid(row=6, column=6)
+        tk.Label(self, text='Азимутальный угол поворота', width=25).grid(row=2, column=5)
+        self.azi_angle = tk.Entry(self, textvariable=self.azi_angle_val, width=5)
+        self.azi_angle.grid(row=2, column=6)
         # _________________________
 
         self.entry_f_val.set(1.)
-        label_f = tk.Label(self, text='F')
-        label_f.grid(row=2, column=5, padx=3, sticky='E')
-        entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
-        entry_f.grid(row=2, column=6, padx=3)
+        label_f = tk.Label(self, text='F , кал/см\u00b2', width=25)
+        label_f.grid(row=3, column=5, padx=3)
+        entry_f = tk.Entry(self, width=5, textvariable=self.entry_f_val)
+        entry_f.grid(row=3, column=6)
 
     def gursa_cw(self):
 
@@ -124,12 +126,12 @@ class Gursa(FrameGen):
         output_matrix = np.column_stack((time_count, func_out))
 
         # integrate
-        # E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
+        E_cp = np.sum(self.spectr[:, 0] * self.spectr[:, 1]) / np.sum(self.spectr[:, 1])
 
         F = float(self.entry_f_val.get())
-        # intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
+        intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
-        # koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        self.koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
 
         file_name = f'time functions/Gursa/time_{self.x.name}.tf'
         # np.savetxt(f'{pr_dir()}/time functions/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
@@ -217,7 +219,7 @@ class Gursa(FrameGen):
             '<номер слоя>': 0,
             '<номер слоя из>': 0,
             '<номер слоя в>': 0,
-            '<амплитуда источинка в ближней зоне источника>': class_gursa.F,
+            '<амплитуда источинка в ближней зоне источника>': self.koef,
             '<амплитуда источинка в дальней зоне источника>': 0,
             '<спектр источника>': time_func_dict.get(f'{class_gursa.name}')[1],
             '<временная функция источинка>': time_func_dict.get(f'{class_gursa.name}')[0],
@@ -228,8 +230,10 @@ class Gursa(FrameGen):
             '<X-координата объекта>': class_gursa.M1[0],
             '<Y-координата объекта>': class_gursa.M1[1],
             '<Z-координата объекта>': class_gursa.M1[2],
-            '<полярный угол поворта локальной системы координат относительно глобальной>': eval(self.polar_angle_val.get()),
-            '<азимутальный угол поворта локальной системы координат относительно глобальной>': eval(self.azi_angle_val.get()),
+            '<полярный угол поворта локальной системы координат относительно глобальной>': eval(
+                self.polar_angle_val.get()),
+            '<азимутальный угол поворта локальной системы координат относительно глобальной>': eval(
+                self.azi_angle_val.get()),
             '<X-компонента направляющего косинуса для расчета в дальней зоне>': None,
             '<Y-компонента направляющего косинуса для расчета в дальней зоне>': None,
             '<Z-компонента направляющего косинуса для расчета в дальней зоне>': None

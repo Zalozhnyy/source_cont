@@ -16,50 +16,62 @@ from Project_reader import DataParcer
 class Gursa(FrameGen):
     def notebooks(self):
         self._notebooks()
+        self.constants_frame()
+        self.gursa_frame()
+
+        self.button_calculate.destroy()
+
+        self.gursa_numeric = 0
 
         path = os.path.join(config_read()[0], check_folder().get('PAR'))
-        self.max_gursa_count = int(DataParcer(path).par_decoder().get('<Количество типов частиц>'))
-
-        self.button_read_gen = tk.Button(self, width=10, text='Read',
-                                         command=lambda: (self.get(), self.button_states()),
-                                         state='disabled')
-        self.button_read_gen.grid(row=6, column=2)
-
-        self.add_button_gursa = tk.Button(self, text='Add source', width=10, command=self.gursa_cw,
-                                          state='disabled')
-        self.add_button_gursa.grid(row=8, column=2)
+        self.max_gursa_count, numbers_convert = DataParcer(path).par_decoder()
+        self.gursa_numbers = {}
+        for x, i in enumerate(numbers_convert):
+            self.gursa_numbers.update({f'{x}': i})
 
         self.gursa_graphs_checkbutton_val = tk.BooleanVar()
         self.gursa_graphs_checkbutton_val.set(0)
         gursa_graphs_checkbutton = tk.Checkbutton(self, text='Построение графиков',
                                                   variable=self.gursa_graphs_checkbutton_val, onvalue=1, offvalue=0)
-        gursa_graphs_checkbutton.grid(row=1, column=8, columnspan=2)
+        gursa_graphs_checkbutton.grid(row=3, column=2, columnspan=2)
 
-        self.gursa_combobox = ttk.Combobox(self, values=self.gursa_dict.keys(), width=8, state='disabled')
-        self.gursa_combobox.grid(row=11, column=2, pady=3)
-        self.delete_gursa_class_button = tk.Button(self, text='Delete obj', command=self.regrid_gursa,
-                                                   width=8, state='disabled')
-        self.delete_gursa_class_button.grid(row=10, column=2)
+    def constants_frame(self):
+        self.constants_fr = tk.LabelFrame(self, text='Константы', width=20)
+        self.constants_fr.grid(row=1, column=2, sticky='NWSE', padx=5, rowspan=2, columnspan=3)
+
+        self.entry_f_val.set(1.)
+        label_f = tk.Label(self.constants_fr, text='F , кал/см\u00b2')
+        label_f.grid(row=0, column=0, padx=3, sticky='E')
+        entry_f = tk.Entry(self.constants_fr, width=5, textvariable=self.entry_f_val)
+        entry_f.grid(row=0, column=2, padx=3)
 
         ###Полярные\Азимутальные углы
         self.polar_angle_val = tk.StringVar()
         self.polar_angle_val.set('0')
-        tk.Label(self, text='Полярный угол поворота', width=25).grid(row=1, column=5)
-        self.polar_angle = tk.Entry(self, textvariable=self.polar_angle_val, width=5)
-        self.polar_angle.grid(row=1, column=6)
+        tk.Label(self.constants_fr, text='Полярный угол поворота', width=25).grid(row=1, column=0, columnspan=2)
+        self.polar_angle = tk.Entry(self.constants_fr, textvariable=self.polar_angle_val, width=5)
+        self.polar_angle.grid(row=1, column=2, padx=3)
 
         self.azi_angle_val = tk.StringVar()
         self.azi_angle_val.set('0')
-        tk.Label(self, text='Азимутальный угол поворота', width=25).grid(row=2, column=5)
-        self.azi_angle = tk.Entry(self, textvariable=self.azi_angle_val, width=5)
-        self.azi_angle.grid(row=2, column=6)
+        tk.Label(self.constants_fr, text='Азимутальный угол поворота', width=25).grid(row=2, column=0, columnspan=2)
+        self.azi_angle = tk.Entry(self.constants_fr, textvariable=self.azi_angle_val, width=5)
+        self.azi_angle.grid(row=2, column=2, padx=3)
         # _________________________
 
-        self.entry_f_val.set(1.)
-        label_f = tk.Label(self, text='F , кал/см\u00b2', width=25)
-        label_f.grid(row=3, column=5, padx=3)
-        entry_f = tk.Entry(self, width=5, textvariable=self.entry_f_val)
-        entry_f.grid(row=3, column=6)
+    def gursa_frame(self):
+        self.gursa_fr = tk.LabelFrame(self, text='Гурса')
+        self.gursa_fr.grid(row=4, column=3, sticky='NE', padx=5, rowspan=10, columnspan=3)
+
+        self.gursa_combobox = ttk.Combobox(self.gursa_fr, values=self.gursa_dict.keys(), width=10, state='disabled')
+        self.gursa_combobox.grid(row=0, column=2, pady=3, padx=3)
+        self.delete_gursa_class_button = tk.Button(self.gursa_fr, text='Delete obj', command=self.regrid_gursa,
+                                                   width=8, state='disabled')
+        self.delete_gursa_class_button.grid(row=0, column=1, padx=3, pady=3)
+
+        self.add_button_gursa = tk.Button(self.gursa_fr, text='Add source', width=10, command=self.gursa_cw,
+                                          state='disabled')
+        self.add_button_gursa.grid(row=0, column=0, padx=3, pady=3)
 
     def gursa_cw(self):
 
@@ -70,7 +82,7 @@ class Gursa(FrameGen):
             mb.showerror('Max limit', f'Максимальное количество источников = {self.max_gursa_count}')
             return print(f'Максимальное количество источников = {self.max_gursa_count}')
 
-        self.x = PeSource(self.parent, name=f'Gursa_{self.gursa_numeric + 1}')
+        self.x = PeSource(self.parent, name=f'Gursa_{self.gursa_numeric}')
         self.x.F = float(self.entry_f_val.get())
 
         self.wait_window(self.x)
@@ -85,10 +97,10 @@ class Gursa(FrameGen):
 
             for i in range(len(self.gursa_dict.keys())):
                 self.gursa_label_dict.update(
-                    {f'{self.gursa_count[i].name}': tk.Label(self, text=f'{self.gursa_count[i].name}')})
+                    {f'{self.gursa_count[i].name}': tk.Label(self.gursa_fr, text=f'{self.gursa_count[i].name}')})
 
             for i, label in enumerate(self.gursa_label_dict.values()):
-                label.grid(row=12 + i, column=2)
+                label.grid(row=1 + i, column=0, pady=3)
 
             keys = []
             for i in self.gursa_dict.keys():
@@ -100,6 +112,8 @@ class Gursa(FrameGen):
             self.spectr = self.x.Spektr_output
 
             self.calculate_gursa()
+            self.delete_gursa_class_button.configure(state='active')
+            self.gursa_combobox.configure(state='active')
 
             if self.x.spectr_type.get() == 1:
                 type = 'DISCRETE'
@@ -190,7 +204,7 @@ class Gursa(FrameGen):
 
         for i, label in enumerate(self.gursa_label_dict.values()):
             # print(label)
-            label.grid_configure(row=12 + i)
+            label.grid_configure(row=1 + i)
 
         keys = []
         for i in self.gursa_dict.keys():
@@ -200,12 +214,15 @@ class Gursa(FrameGen):
         self.gursa_numeric -= 1
 
     def button_states(self):
-        self.button_generate.configure(state='disabled')
-        self.entry_generate_value.configure(state='disabled')
-        self.button_save.configure(state='active')
-        self.button_save_def.configure(state='active')
-        self.button_browse.configure(state='disabled')
         self.add_button_gursa.configure(state='active')
+
+    def local_get(self):
+        self.get()
+        self.button_states()
+
+    def local_get_row(self):
+        self.row_get()
+        self.button_states()
 
     def output_dictionary_gursa(self):
         class_gursa = self.x

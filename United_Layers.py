@@ -10,26 +10,21 @@ from Main_frame import FrameGen
 from utility import *
 
 
-
 class UnitedLayers(FrameGen):
 
     def notebooks(self):
         self._notebooks()
+        self.constants_frame()
 
-        self.button_read_gen = tk.Button(self, width=10, text='Read',
-                                         command=lambda: (self.get(), self.button_states()),
-                                         state='disabled')
-        self.button_read_gen.grid(row=6, column=2)
-        self.button_calculate = tk.Button(self, width=10, text='Calculate', state='disabled',
-                                          command=self.stectr_choice)
-        self.button_calculate.grid(row=1, column=5, padx=3)
+    def local_get(self):
+        self.get()
+        self.button_states()
+        self.button_calculate.configure(command=self.stectr_choice)
 
-        self.entry_f_val.set(1.)
-        label_f = tk.Label(self, text='F')
-        label_f.grid(row=2, column=5, padx=3, sticky='E')
-        entry_f = tk.Entry(self, width=3, textvariable=self.entry_f_val)
-        entry_f.grid(row=2, column=6, padx=3)
-
+    def local_get_row(self):
+        self.row_get()
+        self.button_states()
+        self.button_calculate.configure(command=self.stectr_choice)
 
     def stectr_choice(self):
         self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
@@ -44,12 +39,6 @@ class UnitedLayers(FrameGen):
         self.project_checker()
 
     def button_states(self):
-        self.button_generate.configure(state='disabled')
-        self.entry_generate_value.configure(state='disabled')
-        self.button_save.configure(state='active')
-        self.button_save_def.configure(state='active')
-        self.button_browse.configure(state='disabled')
-
         self.button_calculate.configure(state='active')
 
     def project_checker(self):
@@ -61,6 +50,8 @@ class UnitedLayers(FrameGen):
 
         self.calculate()
 
+        self.source_labels = tk.LabelFrame(self,text='Источники')
+        self.source_labels.grid(row=7,column=3,rowspan=10)
         global source_number
         for i in range(LAY.shape[0]):
             if LAY[i, 1] == 1:
@@ -69,7 +60,7 @@ class UnitedLayers(FrameGen):
                 self.output_dictionary_current(name, energy_type)
                 source_number += 1
 
-                lay_label = tk.Label(self,text=f'{name}')
+                lay_label = tk.Label(self.source_labels,text=f'{name}')
                 lay_label.grid(row=7 + self.label_num,column=3)
                 self.layers_label_list.append(lay_label)
                 self.label_num += 1
@@ -80,7 +71,7 @@ class UnitedLayers(FrameGen):
                 self.output_dictionary_current(name, energy_type)
                 source_number += 1
 
-                lay_label = tk.Label(self, text=f'{name}')
+                lay_label = tk.Label(self.source_labels, text=f'{name}')
                 lay_label.grid(row=7 + self.label_num, column=3)
                 self.layers_label_list.append(lay_label)
                 self.label_num += 1
@@ -93,7 +84,7 @@ class UnitedLayers(FrameGen):
                     self.output_dictionary_flu(name, energy_type)
                     source_number += 1
 
-                    lay_label = tk.Label(self, text=f'{name}')
+                    lay_label = tk.Label(self.source_labels, text=f'{name}')
                     lay_label.grid(row=7 + self.label_num, column=3)
                     self.layers_label_list.append(lay_label)
                     self.label_num += 1

@@ -85,5 +85,25 @@ class DataParcer:
     def par_decoder(self):
         with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
             lines = file.readlines()
-        dictionary = {'<Количество типов частиц>': lines[2]}
-        return dictionary
+
+        # L[0] '<Количество типов частиц>'
+        L = []
+        L.append(int(lines[2].strip()))
+
+        string_num = 6
+        for numbers in range(L[0]):
+            L.append(int(lines[string_num+1].split()[0]))
+            string_num += 4  #<Количество процессов>
+            string_num += 2 * int(lines[string_num + 1].strip()) + 1
+            string_num += 4  # переход к следующему кластеру
+
+        return L[0], L[1:]
+
+
+# if __name__ == '__main__':
+    # x = DataParcer(r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.PAR').par_decoder()
+    # print(x)
+
+    # a = [2,3,4]
+    # a.pop(a.index(3))
+    # print(a)

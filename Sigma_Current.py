@@ -15,6 +15,8 @@ class Current(FrameGen):
     def notebooks(self):
         self._notebooks()
 
+
+
         self.button_read_gen = tk.Button(self, width=10, text='Read', command=lambda: (self.get(), self.button_states()),
                                          state='disabled')
         self.button_read_gen.grid(row=6, column=2)

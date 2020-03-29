@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
+from tkinter import simpledialog
 
 import os
 import numpy as np
@@ -66,7 +67,7 @@ class FrameGen(tk.Frame):
         self.path = os.path.normpath(config_read()[0])
         self.dir_name = config_read()[0].split('/')[-1]
         self.gursa_count = []
-        self.gursa_numeric = 0
+
         self.existe_gursa_label = []
         self.gursa_dict = {}
         self.gursa_label_dict = {}
@@ -110,42 +111,120 @@ class FrameGen(tk.Frame):
 
         rows = 0
         while rows < 100:
-            self.rowconfigure(rows, weight=0, minsize=5)
-            self.columnconfigure(rows, weight=0, minsize=5)
+            self.rowconfigure(rows, weight=1, minsize=10)
+            self.columnconfigure(rows, weight=1, minsize=10)
             rows += 1
 
-        label_name_energy = tk.Label(self, text=f'{self.energy_type}')
-        label_name_energy.grid(row=5, column=0, columnspan=2)
-        label_func = tk.Label(self, text='value', width=8)
-        label_func.grid(row=6, column=1, padx=2, pady=2)
-        label_time = tk.Label(self, text='time', width=8)
-        label_time.grid(row=6, column=0, padx=2, pady=2)
+        self.button_change_method = tk.Button(self)
+        self.button_change_method.grid(row=3, column=0, padx=5, pady=5, sticky='WN', columnspan=2)
 
-        self.button_browse = tk.Button(self, width=10, text='Load', state='active',
+        self.load_save_frame()
+        self.entry_func_frame()
+
+        self.button_calculate = tk.Button(self, width=10, text='Calculate', state='disabled')
+        self.button_calculate.grid(row=1, column=5, padx=3)
+
+        self.a, self.A = self.time_grid()
+
+    def load_save_frame(self):
+        self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
+        self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
+
+        self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
                                        command=lambda: self.ent_load(
                                            fd.askopenfilename(
                                                initialdir=rf'{pr_dir()}/time functions/user configuration').split(
                                                '/')[-1]))
-        self.button_browse.grid(row=1, column=2, padx=3)
-        self.button_browse_def = tk.Button(self, width=10, text='Load default', state='active',
+        self.button_browse.grid(row=0, column=0, padx=3, pady=3)
+        self.button_browse_def = tk.Button(self.load_safe_fr, width=10, text='Load default', state='active',
                                            command=lambda: self.ent_load('default.dtf'))
-        self.button_browse_def.grid(row=1, column=3, padx=3)
-        self.button_save = tk.Button(self, width=10, text='Save as', state='disabled', command=self.time_save)
-        self.button_save.grid(row=2, column=2, padx=3)
-        self.button_save_def = tk.Button(self, width=10, text='Save as default', command=self.time_save_def,
+        self.button_browse_def.grid(row=0, column=1, padx=3, pady=3)
+        self.button_save = tk.Button(self.load_safe_fr, width=10, text='Save as', state='disabled',
+                                     command=self.time_save)
+        self.button_save.grid(row=1, column=0, padx=3, pady=3)
+        self.button_save_def = tk.Button(self.load_safe_fr, width=10, text='Save as default',
+                                         command=self.time_save_def,
                                          state='disabled')
-        self.button_save_def.grid(row=2, column=3, padx=3)
-        self.entry_generate_value = tk.Entry(self, width=5, textvariable=self.cell_numeric, state='normal')
-        self.entry_generate_value.grid(row=5, column=3)
-        self.button_generate = tk.Button(self, width=10, text='Generate', command=self.ent, state='active')
-        self.button_generate.grid(row=5, column=2, padx=3)
+        self.button_save_def.grid(row=1, column=1, padx=3, pady=3)
 
-        self.add_button = tk.Button(self, width=6, text='add cell', state='disabled',
+    def entry_func_frame(self):
+
+        self.entry_func_fr = tk.LabelFrame(self, text='Блок ввода данных временной функции', width=30)
+        self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5)
+
+        self.button_read_gen = tk.Button(self.entry_func_fr, width=9, text='Read', state='disabled',
+                                         command=self.local_get)
+        self.button_read_gen.grid(row=0, column=2, padx=3, pady=3)
+        self.button_generate = tk.Button(self.entry_func_fr, width=9, text='Generate', command=self.ent,
+                                         state='active')
+        self.button_generate.grid(row=1, column=2, padx=3, pady=3)
+
+        label_name_energy = tk.Label(self.entry_func_fr, text=f'{self.energy_type}')
+        label_name_energy.grid(row=2, column=0, columnspan=2)
+        label_func = tk.Label(self.entry_func_fr, text='value', width=15)
+        label_func.grid(row=3, column=1, padx=2, pady=2)
+        label_time = tk.Label(self.entry_func_fr, text='time', width=15)
+        label_time.grid(row=3, column=0, padx=2, pady=2)
+
+        self.add_button = tk.Button(self.entry_func_fr, width=6, text='add cell', state='disabled',
                                     command=lambda: self.add_entry())
-        self.del_button = tk.Button(self, width=6, text='del cell', state='disabled',
+        self.del_button = tk.Button(self.entry_func_fr, width=6, text='del cell', state='disabled',
                                     command=lambda: self.delete_entry())
-        self.add_button.grid(row=1, column=0, sticky='WS')
-        self.del_button.grid(row=1, column=1, sticky='WS')
+        self.add_button.grid(row=0, column=0, sticky='e', padx=3)
+        self.del_button.grid(row=0, column=1, sticky='w', padx=3)
+
+        self.button_change_method.configure(text='Строчный ввод', command=self.rows_metod, width=15)
+
+    def constants_frame(self):
+        self.constants_fr = tk.LabelFrame(self, text='Константы', width=20)
+        self.constants_fr.grid(row=1, column=2, sticky='NWSE', padx=5)
+
+        self.entry_f_val.set(1.)
+        label_f = tk.Label(self.constants_fr, text='F , кал/см\u00b2')
+        label_f.grid(row=0, column=0, padx=3, sticky='E')
+        entry_f = tk.Entry(self.constants_fr, width=5, textvariable=self.entry_f_val)
+        entry_f.grid(row=0, column=2, padx=3)
+
+    def rows_metod(self):
+        self.entry_func_fr.destroy()
+        self.entry_func_fr = tk.LabelFrame(self, text='Блок ввода данных временной функции')
+        self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, sticky='NWE')
+
+        self.func_entry_vel.clear()
+        self.time_entry_vel.clear()
+
+        self.entry_func_vel = tk.StringVar()
+        self.entry_time_vel = tk.StringVar()
+
+        tk.Label(self.entry_func_fr, text='time').grid(row=0, column=0, pady=3, padx=2)
+        self.entry_time = tk.Entry(self.entry_func_fr, width=35, textvariable=self.entry_time_vel, justify='left')
+        self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7)
+
+        tk.Label(self.entry_func_fr, text='value').grid(row=1, column=0, pady=3, padx=2)
+        self.entry_time = tk.Entry(self.entry_func_fr, width=35, textvariable=self.entry_func_vel, justify='left')
+        self.entry_time.grid(row=1, column=1, pady=3, padx=2, columnspan=7)
+
+        self.button_read_gen = tk.Button(self.entry_func_fr, width=10, text='Read', state='normal',
+                                         command=self.local_get_row)
+        self.button_read_gen.grid(row=5, column=1, padx=3, pady=3)
+
+        tk.Label(self.entry_func_fr, text='Огр времени').grid(row=2, column=0)
+        self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{self.a}')
+        self.entry_time_label.grid(row=2, column=1)
+        tk.Label(self.entry_func_fr, text='Огр функции').grid(row=3, column=0)
+        self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
+        self.entry_func_label.grid(row=3, column=1)
+
+        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв tf')
+        self.obriv_tf_lavel.grid(row=4, column=0)
+        self.entry_time_fix_val.set(f'{self.A[-1]}')
+        self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=6)
+        self.entry_time_fix.grid(row=4, column=1)
+
+        self.button_save_def.configure(state='disabled')
+        self.button_save.configure(state='disabled')
+        self.button_change_method.configure(text='Дискретный метод', width=15,
+                                            command=lambda: (self.entry_func_fr.destroy(), self.entry_func_frame()))
 
     def _konstr(self):
         self.parent.title("Sources")
@@ -160,31 +239,35 @@ class FrameGen(tk.Frame):
         # menubar.add_command(label="test", command=lambda: print(len(source_list)))
 
     def ent(self):
-        self.entry_func.clear()
-        self.entry_time.clear()
+        self.entry_func = []
+        self.entry_time = []
         self.func_entry_vel.clear()
         self.time_entry_vel.clear()
 
-        self.func_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
-        self.time_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric.get()))]
-        for i in range(int(self.cell_numeric.get())):
-            self.entry_time.append(tk.Entry(self, width=15, textvariable=self.time_entry_vel[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
-            self.entry_func.append(tk.Entry(self, width=15, textvariable=self.func_entry_vel[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
+        self.cell_numeric = simpledialog.askinteger('Введите число ячеек.', 'Число ячеек = ')
+
+        self.func_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric))]
+        self.time_entry_vel = [tk.StringVar() for _ in range(int(self.cell_numeric))]
+        for i in range(int(self.cell_numeric)):
+            self.entry_time.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
+            self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
+            self.entry_func.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
+            self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
 
         a, A = self.time_grid()
 
-        self.entry_time_label = tk.Label(self, text=f'{a}')
-        self.entry_time_label.grid(row=7 + int(self.cell_numeric.get()) + 1, column=0)
-        self.entry_func_label = tk.Label(self, text='[0 : 1]')
-        self.entry_func_label.grid(row=7 + int(self.cell_numeric.get()) + 1, column=1)
+        self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{a}')
+        self.entry_time_label.grid(row=5 + int(self.cell_numeric) + 1, column=0)
+        self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
+        self.entry_func_label.grid(row=5 + int(self.cell_numeric) + 1, column=1)
 
-        self.obriv_tf_label = tk.Label(self, text='Обрыв tf')
-        self.obriv_tf_label.grid(row=8 + int(self.cell_numeric.get()) + 1, column=0)
+        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв tf')
+        self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel) + 1, column=0)
         self.entry_time_fix_val.set(f'{A[-1]}')
-        self.entry_time_fix = tk.Entry(self, textvariable=self.entry_time_fix_val, width=6)
-        self.entry_time_fix.grid(row=8 + int(self.cell_numeric.get()) + 1, column=1)
+        self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=6)
+        self.entry_time_fix.grid(row=6 + len(self.func_entry_vel) + 1, column=1)
 
         self.button_browse.configure(state='disabled')
         self.button_browse_def.configure(state='disabled')
@@ -197,6 +280,16 @@ class FrameGen(tk.Frame):
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         # print(lines)
+        if type(self.entry_time) is list:
+            self.entry_time.clear()
+            self.entry_func.clear()
+        else:
+            self.entry_time = []
+            self.entry_func = []
+        self.entry_func_fr.destroy()
+        self.entry_func_frame()
+        self.func_entry_vel.clear()
+        self.time_entry_vel.clear()
 
         for word in lines[0].split():
             self.func_entry_vel.append(float(word))
@@ -208,29 +301,31 @@ class FrameGen(tk.Frame):
         entr_utility_func = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         entr_utility_time = [tk.StringVar() for _ in range(len(self.func_entry_vel))]
         for i in range(len(self.func_entry_vel)):
-            self.entry_time.append(tk.Entry(self, width=15, textvariable=entr_utility_time[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
+            self.entry_time.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=entr_utility_time[i], justify='center'))
+            self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
             entr_utility_time[i].set('{:.4g}'.format(self.time_entry_vel[i]))
             self.time_entry_vel[i] = entr_utility_time[i]
 
-            self.entry_func.append(tk.Entry(self, width=15, textvariable=entr_utility_func[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
+            self.entry_func.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=entr_utility_func[i], justify='center'))
+            self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
             entr_utility_func[i].set('{:.4g}'.format(self.func_entry_vel[i]))
             self.func_entry_vel[i] = entr_utility_func[i]
             # print(f'{i} ', type(entr_utility_func[i]), entr_utility_func[i])
 
         a, A = self.time_grid()
 
-        self.entry_time_label = tk.Label(self, width=9, text=f'{a}')
-        self.entry_time_label.grid(row=7 + len(self.time_entry_vel) + 1, column=0)
-        self.entry_func_label = tk.Label(self, width=9, text='[0 : 1]')
-        self.entry_func_label.grid(row=7 + len(self.func_entry_vel) + 1, column=1)
+        self.entry_time_label = tk.Label(self.entry_func_fr, width=9, text=f'{a}')
+        self.entry_time_label.grid(row=5 + len(self.time_entry_vel) + 1, column=0)
+        self.entry_func_label = tk.Label(self.entry_func_fr, width=9, text='[0 : 1]')
+        self.entry_func_label.grid(row=5 + len(self.func_entry_vel) + 1, column=1)
 
-        self.obriv_tf_lavel = tk.Label(self, text='Обрыв tf')
-        self.obriv_tf_lavel.grid(row=8 + len(self.func_entry_vel) + 1, column=0)
+        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв tf')
+        self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel) + 1, column=0)
         self.entry_time_fix_val.set(f'{A[-1]}')
-        self.entry_time_fix = tk.Entry(self, textvariable=self.entry_time_fix_val, width=6)
-        self.entry_time_fix.grid(row=8 + len(self.func_entry_vel) + 1, column=1)
+        self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=6)
+        self.entry_time_fix.grid(row=6 + len(self.func_entry_vel) + 1, column=1)
 
         if len(self.func_entry_vel) != len(self.time_entry_vel):
             mb.showerror('Load error', 'Размерности не совпадают')
@@ -238,8 +333,6 @@ class FrameGen(tk.Frame):
 
         self.button_read_gen.configure(state='normal')
         self.button_generate.configure(state='disabled')
-        self.button_browse_def.configure(state='disabled')
-        self.button_browse.configure(state='disabled')
         self.add_button.configure(state='normal')
         self.del_button.configure(state='normal')
 
@@ -258,16 +351,18 @@ class FrameGen(tk.Frame):
         self.time_entry_vel.append(new_t)
 
         for i in range(len(self.time_entry_vel)):
-            self.entry_func.append(tk.Entry(self, width=15, textvariable=self.func_entry_vel[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
-            self.entry_time.append(tk.Entry(self, width=15, textvariable=self.time_entry_vel[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
+            self.entry_func.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
+            self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
+            self.entry_time.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
+            self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
 
-        self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
-        self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
+        self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
+        self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
 
-        self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
-        self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
+        self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 2 + 5)
+        self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 5)
 
         self.button_calculate.configure(state='disabled')
 
@@ -284,18 +379,51 @@ class FrameGen(tk.Frame):
         self.time_entry_vel.pop()
 
         for i in range(len(self.time_entry_vel)):
-            self.entry_func.append(tk.Entry(self, width=15, textvariable=self.func_entry_vel[i], justify='center'))
-            self.entry_func[i].grid(row=7 + i, column=1, pady=3, padx=2)
-            self.entry_time.append(tk.Entry(self, width=15, textvariable=self.time_entry_vel[i], justify='center'))
-            self.entry_time[i].grid(row=7 + i, column=0, pady=3, padx=2)
+            self.entry_func.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
+            self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
+            self.entry_time.append(
+                tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
+            self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
 
-        self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
-        self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 7)
+        self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
+        self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
 
-        self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
-        self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 8)
+        self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 2 + 5)
+        self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 5)
 
         self.button_calculate.configure(state='disabled')
+
+    def row_get(self):
+        for i in self.entry_time_vel.get().split():
+            try:
+                self.time_list.append(float(i))
+            except ValueError:
+                print(f'{i} не может быть преобразовано в float')
+                mb.showerror('Value error', f'{i} не может быть преобразовано в float')
+                return 0
+
+        func_string = self.entry_func_vel.get()
+        if '(' in func_string:
+            for i in range(len(self.time_list)):
+                calc = func_string.replace('t', f'{self.time_list[i]}')
+                self.func_list.append(eval(calc))
+        else:
+            for i in self.entry_func_vel.get().split():
+                try:
+                    self.func_list.append(eval(i))
+                except ValueError:
+                    print(f'{i} не может быть преобразовано в float')
+                    mb.showerror('Value error', f'{i} не может быть преобразовано в float')
+                    return 0
+
+        if len(self.func_list) != len(self.time_list):
+            print('Размерности не совпадают!')
+            mb.showerror('Index error', 'Размерности не совпадают!')
+            return 0
+
+        self.button_save.configure(state='disabled')
+        self.button_save_def.configure(state='disabled')
 
     def get(self):
 
@@ -307,7 +435,7 @@ class FrameGen(tk.Frame):
             self.time_list.append(j.get())
 
         for x, j in enumerate(self.func_entry_vel):
-            if 't' in j.get():      # если есть t в строке, то заменяем это t на значение entry time с тем же индексом
+            if 't' in j.get():  # если есть t в строке, то заменяем это t на значение entry time с тем же индексом
                 string = j.get()
                 fixed_string = string.replace('t', f'{self.time_list[x]}')
                 self.func_list.append(fixed_string)
@@ -341,6 +469,9 @@ class FrameGen(tk.Frame):
         print('func = ', self.func_list)
 
         self.value_check(func=self.func_list, time=self.time_list)
+
+        self.button_save.configure(state='normal')
+        self.button_save_def.configure(state='normal')
 
     def eval_transformation(self, arg, replace):
         for x, i in enumerate(replace):

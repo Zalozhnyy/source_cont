@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import os
 
 from Main_frame import FrameGen
-from utility import pr_dir, config_read, source_number,time_func_dict
+from utility import pr_dir, config_read, source_number, time_func_dict
 
 
 class InitialField(FrameGen):
@@ -75,22 +75,24 @@ class ExternalField(FrameGen):
     def notebooks(self):
         self._notebooks()
 
-        self.button_read_gen = tk.Button(self, width=10, text='Read', command=lambda: (self.get(), self.button_states())
-                                         , state='disabled')
-        self.button_read_gen.grid(row=6, column=2)
-
-        tk.Label(self, text='Ex').grid(row=2, column=5, sticky='E', padx=3)
-        tk.Label(self, text='Ey').grid(row=3, column=5, sticky='E', padx=3)
-        tk.Label(self, text='Ez').grid(row=4, column=5, sticky='E', padx=3)
-        tk.Label(self, text='hx').grid(row=5, column=5, sticky='E', padx=3)
-        tk.Label(self, text='hy').grid(row=6, column=5, sticky='E', padx=3)
-        tk.Label(self, text='hz').grid(row=7, column=5, sticky='E', padx=3)
-
-
         self.graph_ext_checkbutton = tk.BooleanVar()
         self.graph_ext_checkbutton.set(0)
         ttk.Checkbutton(self, text='Построение графика', variable=self.graph_ext_checkbutton,
-                        onvalue=1, offvalue=0).grid(row=1, column=7, columnspan=2)
+                        onvalue=1, offvalue=0).grid(row=1, column=2, columnspan=2)
+        self.button_calculate.destroy()
+
+        self.ext_frame()
+
+    def ext_frame(self):
+        self.ext_fr = tk.LabelFrame(self, text='Компоненты')
+        self.ext_fr.grid(row=1, column=5, columnspan=3, rowspan=6,sticky='N')
+
+        tk.Label(self.ext_fr, text='Ex').grid(row=0, column=0, sticky='E', padx=3)
+        tk.Label(self.ext_fr, text='Ey').grid(row=1, column=0, sticky='E', padx=3)
+        tk.Label(self.ext_fr, text='Ez').grid(row=2, column=0, sticky='E', padx=3)
+        tk.Label(self.ext_fr, text='hx').grid(row=3, column=0, sticky='E', padx=3)
+        tk.Label(self.ext_fr, text='hy').grid(row=4, column=0, sticky='E', padx=3)
+        tk.Label(self.ext_fr, text='hz').grid(row=5, column=0, sticky='E', padx=3)
 
         self.external_field_values_dict = {
             'Ex': 0,
@@ -106,16 +108,16 @@ class ExternalField(FrameGen):
         for i in self.some_x_val:
             i.set('0')
         for i in range(6):
-            some_x = tk.Entry(self, textvariable=self.some_x_val[i], width=4)
-            some_x.grid(row=2 + i, column=6)
+            some_x = tk.Entry(self.ext_fr, textvariable=self.some_x_val[i], width=4)
+            some_x.grid(row=0 + i, column=1)
 
         keys = []
         [keys.append(i) for i in self.external_field_values_dict.keys()]
 
         for i in range(len(keys)):
-            self.ext_load_tf_button.append(tk.Button(self, text=f'calc {keys[i]} tf', overrelief='ridge',
+            self.ext_load_tf_button.append(tk.Button(self.ext_fr, text=f'calc {keys[i]} tf', overrelief='ridge',
                                                      width=9, state='disabled'))
-            self.ext_load_tf_button[i].grid(row=2 + i, column=7, padx=3)
+            self.ext_load_tf_button[i].grid(row=0 + i, column=2, padx=3, pady=2)
 
         self.ext_load_tf_button[0].configure(command=lambda: self.calculate_external_field(keys[0]))
         self.ext_load_tf_button[1].configure(command=lambda: self.calculate_external_field(keys[1]))
@@ -126,8 +128,6 @@ class ExternalField(FrameGen):
 
     def button_states(self):
 
-        self.button_generate.configure(state='disabled')
-        self.entry_generate_value.configure(state='disabled')
         self.button_save.configure(state='active')
         self.button_save_def.configure(state='active')
         self.button_browse.configure(state='disabled')
@@ -135,6 +135,13 @@ class ExternalField(FrameGen):
         for button in self.ext_load_tf_button:
             button.configure(state='normal')
 
+    def local_get(self):
+        self.get()
+        self.button_states()
+
+    def local_get_row(self):
+        self.row_get()
+        self.button_states()
 
     def calculate_external_field(self, key):
 
@@ -189,7 +196,6 @@ class ExternalField(FrameGen):
         else:
             time_func_dict.update({f'{self.name}': self.external_tf_num})
 
-
         if self.graph_ext_checkbutton.get() == 1:
             plt.plot(time_count, func_out)
             plt.title(f'{key} = {self.external_field_values_dict.get(key)}')
@@ -200,7 +206,6 @@ class ExternalField(FrameGen):
 
 class Koshi(FrameGen):
     def koshi_nb(self):
-
         rows = 0
         while rows < 100:
             self.rowconfigure(rows, weight=0, minsize=5)

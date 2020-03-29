@@ -1,4 +1,3 @@
-import locale
 import numpy as np
 
 

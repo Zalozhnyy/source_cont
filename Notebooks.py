@@ -4,8 +4,6 @@ from tkinter import ttk
 from United_Layers import UnitedLayers
 from Gursa import Gursa
 from TOK import InitialField, ExternalField, Koshi
-from Flu import Flu
-from Sigma_Current import Current
 from Project_reader import DataParcer
 from Main_frame import FrameGen
 from utility import *

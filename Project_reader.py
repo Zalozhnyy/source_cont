@@ -1,17 +1,21 @@
 import numpy as np
-
+import locale
 
 class DataParcer:
     def __init__(self, path):
         self.path = path
-        # self.decoding = locale.getpreferredencoding()
+        self.decoding_def = locale.getpreferredencoding()
         self.decoding = 'utf-8'
 
     def lay_decoder(self):
         #### .LAY DECODER
+        try:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                lines = file.readlines()
+        except UnicodeDecodeError:
 
-        with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-            lines = file.readlines()
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                lines = file.readlines()
         lay_numeric = int(lines[2])
         out_lay = np.zeros((lay_numeric, 3), dtype=int)
         j = 0
@@ -26,8 +30,13 @@ class DataParcer:
 
     def tok_decoder(self):
         #### .TOK DECODER
-        with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-            lines_tok = file.readlines()
+        try:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                lines_tok = file.readlines()
+        except UnicodeDecodeError:
+
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                lines_tok = file.readlines()
         out_tok = np.zeros(3, dtype=int)
 
         out_tok[0] = lines_tok[2].strip()
@@ -46,9 +55,13 @@ class DataParcer:
 
     def pl_decoder(self):
         #### .PL DECODER
-        with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-            lines_pl = file.readlines()
+        try:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                lines_pl = file.readlines()
+        except UnicodeDecodeError:
 
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                lines_pl = file.readlines()
         layers = int(lines_pl[6])
         out_pl = []
         for i in range(layers):
@@ -76,14 +89,24 @@ class DataParcer:
 
     def grid_parcer(self):
         #### .PL DECODER
-        with open(rf'{self.path}', 'r', encoding='utf-8') as file:
-            lines = file.readlines()
+        try:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                lines = file.readlines()
+        except UnicodeDecodeError:
+
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                lines = file.readlines()
         out = np.array(lines[15].split(), dtype=float)
         return out
 
     def par_decoder(self):
-        with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-            lines = file.readlines()
+        try:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                lines = file.readlines()
+        except UnicodeDecodeError:
+
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                lines = file.readlines()
 
         # L[0] '<Количество типов частиц>'
         L = []
@@ -100,9 +123,9 @@ class DataParcer:
 
 
 # if __name__ == '__main__':
-    # x = DataParcer(r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.PAR').par_decoder()
-    # print(x)
-
-    # a = [2,3,4]
-    # a.pop(a.index(3))
-    # print(a)
+#     x = DataParcer(r'C:\work\tzp_8\KUVSH.PAR').par_decoder()
+#     print(x)
+#
+#     a = [2,3,4]
+#     a.pop(a.index(3))
+#     print(a)

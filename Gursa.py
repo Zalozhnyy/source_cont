@@ -23,11 +23,12 @@ class Gursa(FrameGen):
 
         self.gursa_numeric = 0
 
+        # отслеживание отрисованных источников
         path = os.path.join(config_read()[0], check_folder().get('PAR'))
         self.max_gursa_count, numbers_convert = DataParcer(path).par_decoder()
         self.gursa_numbers = {}
-        for x, i in enumerate(numbers_convert):
-            self.gursa_numbers.update({f'{x}': i})
+        for i in numbers_convert:
+            self.gursa_numbers.update({f'Gursa_{i}': False})  # Хранит отрисован ли данный источник
 
         self.gursa_graphs_checkbutton_val = tk.BooleanVar()
         self.gursa_graphs_checkbutton_val.set(0)
@@ -168,7 +169,7 @@ class Gursa(FrameGen):
             ax.set_ylabel('Function', fontsize=12)
             chart_type = FigureCanvasTkAgg(figure, self)
 
-            chart_type.get_tk_widget().grid(row=2, column=8, rowspan=15, columnspan=30, padx=10)
+            chart_type.get_tk_widget().grid(row=1, column=6, rowspan=4, columnspan=30, padx=5)
             ax.set_title(f'{self.x.name}')
             ax.legend()
 
@@ -180,7 +181,7 @@ class Gursa(FrameGen):
             ax.set_ylabel('Energy part', fontsize=12)
             chart_type = FigureCanvasTkAgg(figure1, self)
 
-            chart_type.get_tk_widget().grid(row=17, column=8, rowspan=15, columnspan=30, padx=10, pady=10)
+            chart_type.get_tk_widget().grid(row=5, column=6, rowspan=4, columnspan=30, padx=10, pady=5)
             ax.set_title('Photon flux, $\mathdefault{1/cm^{2}}$')
             ax.legend()
 

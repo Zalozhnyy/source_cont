@@ -114,8 +114,6 @@ def main():
 
     tab_list.append(u_tab)
 
-
-
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
         tab = InitialField(root, 'Initial_field', f'{energy_type}')
@@ -148,8 +146,6 @@ def main():
         tab = Koshi(root, 'Koshi', f'{energy_type}')
         tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
         tab.koshi_nb()
-
-
 
 
 if __name__ == '__main__':

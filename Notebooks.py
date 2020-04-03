@@ -7,6 +7,7 @@ from TOK import InitialField, ExternalField, Koshi
 from Project_reader import DataParcer
 from Main_frame import FrameGen
 from utility import *
+import sys
 
 
 def checker(parent):
@@ -24,7 +25,7 @@ def checker(parent):
             open_button()
             cur_dir = config_read()
         else:
-            parent.destroy()
+            sys.exit(parent)
 
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')

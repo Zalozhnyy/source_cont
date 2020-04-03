@@ -50,8 +50,8 @@ class UnitedLayers(FrameGen):
 
         self.calculate()
 
-        self.source_labels = tk.LabelFrame(self,text='Источники')
-        self.source_labels.grid(row=7,column=3,rowspan=10)
+        self.source_labels = tk.LabelFrame(self, text='Источники')
+        self.source_labels.grid(row=4, column=3, rowspan=10)
         global source_number
         for i in range(LAY.shape[0]):
             if LAY[i, 1] == 1:
@@ -60,8 +60,8 @@ class UnitedLayers(FrameGen):
                 self.output_dictionary_current(name, energy_type)
                 source_number += 1
 
-                lay_label = tk.Label(self.source_labels,text=f'{name}')
-                lay_label.grid(row=7 + self.label_num,column=3)
+                lay_label = tk.Label(self.source_labels, text=f'{name}')
+                lay_label.grid(row=7 + self.label_num, column=3)
                 self.layers_label_list.append(lay_label)
                 self.label_num += 1
 
@@ -115,7 +115,7 @@ class UnitedLayers(FrameGen):
         ax.set_ylabel('Function', fontsize=14)
         chart_type = FigureCanvasTkAgg(figure, self)
 
-        chart_type.get_tk_widget().grid(row=2, column=8, rowspan=40, columnspan=20, padx=10)
+        chart_type.get_tk_widget().grid(row=1, column=6, rowspan=20, columnspan=20, padx=10)
         ax.set_title(f'{self.name}')
         ax.legend()
 
@@ -138,7 +138,7 @@ class UnitedLayers(FrameGen):
 
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
 
-        pr_dict={}
+        pr_dict = {}
         pr_dict.update({
             '<номер источника>': source_number,
             '<тип источника>': self.energy_type,
@@ -208,7 +208,7 @@ class UnitedLayers(FrameGen):
         layers = []
         [layers.append(i) for i in self.name]
 
-        pr_dict={}
+        pr_dict = {}
         pr_dict.update({
             '<номер источника>': source_number,
             '<тип источника>': self.energy_type,

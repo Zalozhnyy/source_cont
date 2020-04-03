@@ -23,11 +23,12 @@ class Gursa(FrameGen):
 
         self.gursa_numeric = 0
 
+        # отслеживание отрисованных источников
         path = os.path.join(config_read()[0], check_folder().get('PAR'))
         self.max_gursa_count, numbers_convert = DataParcer(path).par_decoder()
         self.gursa_numbers = {}
-        for x, i in enumerate(numbers_convert):
-            self.gursa_numbers.update({f'{x}': i})
+        for i in numbers_convert:
+            self.gursa_numbers.update({f'Gursa_{i}': False})  # Хранит отрисован ли данный источник
 
         self.gursa_graphs_checkbutton_val = tk.BooleanVar()
         self.gursa_graphs_checkbutton_val.set(0)
@@ -42,7 +43,7 @@ class Gursa(FrameGen):
         self.entry_f_val.set(1.)
         label_f = tk.Label(self.constants_fr, text='F , кал/см\u00b2')
         label_f.grid(row=0, column=0, padx=3, sticky='E')
-        entry_f = tk.Entry(self.constants_fr, width=5, textvariable=self.entry_f_val)
+        entry_f = tk.Entry(self.constants_fr, width=8, textvariable=self.entry_f_val)
         entry_f.grid(row=0, column=2, padx=3)
 
         ###Полярные\Азимутальные углы
@@ -107,8 +108,6 @@ class Gursa(FrameGen):
                 keys.append(i)
             self.gursa_combobox.configure(values=keys)
 
-            self.gursa_numeric += 1
-
             self.spectr = self.x.Spektr_output
 
             self.calculate_gursa()
@@ -121,12 +120,67 @@ class Gursa(FrameGen):
                            self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
                            comments='', delimiter='\t')
 
+                self.Spektr_output_2 = np.copy(self.x.Spektr_output)
+                for i in range(self.Spektr_output_2.shape[0]):
+                    if self.Spektr_output_2[i, 0] >= 100:
+                        self.Spektr_output_2[i, 0] = self.Spektr_output_2[i, 0] / 2
+                self.Spektr_output_2[:, 0] = self.x.Spektr_output[:, 0] * 10 ** -3
+                self.Spektr_output_2 = np.insert(self.Spektr_output_2, 1, np.zeros(self.Spektr_output_2.shape[0]
+                                                                                   , dtype=int), axis=1)
+                self.Spektr_output_2 = np.insert(self.Spektr_output_2, 1, np.zeros(self.Spektr_output_2.shape[0]
+                                                                                   , dtype=int), axis=1)
+
+
+                np.savetxt(f'{pr_dir()}/time functions/Gursa/IL_{self.x.name}.txt', self.Spektr_output_2,
+                           fmt='%-6.3g', comments='', delimiter='\t',
+                           header='Пример фиксированного спектра\n'
+                                  'Номер спектра (номер частицы)\n'
+                                  f'{self.gursa_numeric}\n'
+                                  f'Мощность спектра (шт). Пользователь задает его задает.\n'
+                                  f'{self.x.F}\n'
+                                  f'Тип спектра\n'
+                                  f'0\n'
+                                  f'Число частиц (количество энергий в спектре)\n'
+                                  f'{self.x.Spektr_output.shape[0]}\n'
+                                  f'Количество запусков одинаковых частиц\n'
+                                  f'1\n'
+                                  f'Количество элементов в таблице(ниже)\n'
+                                  f'{self.x.Spektr_output.shape[0]}\n'
+                                  f'№,  Энергия (MeВ), TETA(град.), FI(град.), Доля')
+
             elif self.x.spectr_type.get() == 0:
                 type = 'CONTINUOUS'
                 np.savetxt(
                     f'{pr_dir()}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
                     self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                     header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
+
+                out_sp = np.copy(self.x.Spektr_output)
+                for i in range(out_sp.shape[0]):
+                    if out_sp[i, 0] >= 100:
+                        out_sp[i, 0] = out_sp[i, 0] / 2
+                out_sp[:, 0] = self.x.spectr_cont_half[:] * 10 ** -3
+                out_sp = np.insert(out_sp, 1, np.zeros(out_sp.shape[0], dtype=int), axis=1)
+                out_sp = np.insert(out_sp, 1, np.zeros(out_sp.shape[0], dtype=int), axis=1)
+
+                np.savetxt(f'{pr_dir()}/time functions/Gursa/IL_{self.x.name}.txt', out_sp,
+                           fmt='%-6.3g', comments='', delimiter='\t',
+                           header='Пример фиксированного спектра\n'
+                                  'Номер спектра (номер частицы)\n'
+                                  f'{self.gursa_numeric}\n'
+                                  f'Мощность спектра (шт). Пользователь задает его задает.\n'
+                                  f'{self.x.F}\n'
+                                  f'Тип спектра\n'
+                                  f'0\n'
+                                  f'Число частиц (количество энергий в спектре)\n'
+                                  f'{out_sp.shape[0]}\n'
+                                  f'Количество запусков одинаковых частиц\n'
+                                  f'1\n'
+                                  f'Количество элементов в таблице(ниже)\n'
+                                  f'{out_sp.shape[0]}\n'
+                                  f'№,  Энергия (MeВ), TETA(град.), FI(град.), Доля')
+
+            self.gursa_numeric += 1
 
             time_func_dict.update({f'{self.x.name}': [f'time functions/Gursa/time_{self.x.name}.tf',
                                                       f'time functions/Gursa/Spektr_output_{self.x.name}.txt']})
@@ -168,7 +222,7 @@ class Gursa(FrameGen):
             ax.set_ylabel('Function', fontsize=12)
             chart_type = FigureCanvasTkAgg(figure, self)
 
-            chart_type.get_tk_widget().grid(row=2, column=8, rowspan=15, columnspan=30, padx=10)
+            chart_type.get_tk_widget().grid(row=1, column=6, rowspan=4, columnspan=30, padx=5)
             ax.set_title(f'{self.x.name}')
             ax.legend()
 
@@ -180,7 +234,7 @@ class Gursa(FrameGen):
             ax.set_ylabel('Energy part', fontsize=12)
             chart_type = FigureCanvasTkAgg(figure1, self)
 
-            chart_type.get_tk_widget().grid(row=17, column=8, rowspan=15, columnspan=30, padx=10, pady=10)
+            chart_type.get_tk_widget().grid(row=5, column=6, rowspan=4, columnspan=30, padx=10, pady=5)
             ax.set_title('Photon flux, $\mathdefault{1/cm^{2}}$')
             ax.legend()
 

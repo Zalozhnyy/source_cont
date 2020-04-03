@@ -8,9 +8,11 @@ import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
+
+
+
 from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict
 from Project_reader import DataParcer
-
 
 def timef_global_save():
     # global time_func_dict
@@ -182,7 +184,7 @@ class FrameGen(tk.Frame):
         self.entry_f_val.set(1.)
         label_f = tk.Label(self.constants_fr, text='F , кал/см\u00b2')
         label_f.grid(row=0, column=0, padx=3, sticky='E')
-        entry_f = tk.Entry(self.constants_fr, width=5, textvariable=self.entry_f_val)
+        entry_f = tk.Entry(self.constants_fr, width=8, textvariable=self.entry_f_val)
         entry_f.grid(row=0, column=2, padx=3)
 
     def rows_metod(self):

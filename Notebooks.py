@@ -7,6 +7,7 @@ from TOK import InitialField, ExternalField, Koshi
 from Project_reader import DataParcer
 from Main_frame import FrameGen
 from utility import *
+import sys
 
 
 def checker(parent):
@@ -24,7 +25,7 @@ def checker(parent):
             open_button()
             cur_dir = config_read()
         else:
-            parent.destroy()
+            sys.exit(parent)
 
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')
@@ -114,8 +115,6 @@ def main():
 
     tab_list.append(u_tab)
 
-
-
     if TOK[0] == 1:
         energy_type = 'Начальное поле'
         tab = InitialField(root, 'Initial_field', f'{energy_type}')
@@ -148,8 +147,6 @@ def main():
         tab = Koshi(root, 'Koshi', f'{energy_type}')
         tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
         tab.koshi_nb()
-
-
 
 
 if __name__ == '__main__':

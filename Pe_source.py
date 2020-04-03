@@ -229,7 +229,7 @@ class PeSource(tk.Toplevel):
                 self.spectr = out
 
         # __________________________________
-
+        self.spectr_cont_half = self.spectr[:, 0]
         self.Energy0 = self.spectr[:, 0] * 10 ** -3  # энергия должна быть в МэВ
         self.EnergyP = self.spectr[:, 1]
 

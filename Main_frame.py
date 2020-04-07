@@ -134,7 +134,7 @@ class FrameGen(tk.Frame):
 
         self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
                                        command=lambda: self.ent_load(
-                                           fd.askopenfilename(
+                                           fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
                                                initialdir=rf'{pr_dir()}/time functions/user configuration').split(
                                                '/')[-1]))
         self.button_browse.grid(row=0, column=0, padx=3, pady=3)

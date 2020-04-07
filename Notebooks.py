@@ -25,7 +25,8 @@ def checker(parent):
             open_button()
             cur_dir = config_read()
         else:
-            sys.exit(parent)
+            parent.destroy()
+            return
 
     if not os.path.exists(rf"{cur_dir[0]}"):
         mb.showerror('Dir error', 'Директория не существует. Укажите путь к PECHS.')

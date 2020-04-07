@@ -1,6 +1,7 @@
 import numpy as np
 import locale
 
+
 class DataParcer:
     def __init__(self, path):
         self.path = path
@@ -62,12 +63,25 @@ class DataParcer:
 
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines_pl = file.readlines()
-        layers = int(lines_pl[6])
-        out_pl = []
-        for i in range(layers):
-            out_pl.append(lines_pl[16 + i].split())
 
-        out_pl = np.array(out_pl, dtype=int)
+        particle_count = int(lines_pl[2])
+        layers = int(lines_pl[6])
+        line = 9  # <Движение частицы в слое (вертикаль-слои, горизонталь-частицы) 0-нет/1-да>
+        line += 2 * (particle_count + 1)  # <Объемный источник (вертикаль-слои, горизонталь-частицы) 0-нет/1-да>
+        line += 2  # <Частица номер> + 1
+
+        out_pl = {}
+        lay_number = int(lines_pl[line].strip())
+        line += 1
+        for i in range(particle_count):
+            key_list = []
+            for j in range(layers):
+                key_list.append(lines_pl[line].split())
+                line += 1
+
+            key_list = np.array(key_list, dtype=int)
+            out_pl.update({lay_number: key_list})
+            line += 2
 
         # with open(rf'{self.path}', 'r', encoding='utf-8') as file:
         #     lines_pl = file.readlines()
@@ -83,7 +97,6 @@ class DataParcer:
         #
         # # print('.PL\n', out_pl)
         # return out_pl
-
         # print('.PL\n', out_pl)
         return out_pl
 
@@ -114,18 +127,16 @@ class DataParcer:
 
         string_num = 6
         for numbers in range(L[0]):
-            L.append(int(lines[string_num+1].split()[0]))
-            string_num += 4  #<Количество процессов>
+            L.append(int(lines[string_num + 1].split()[0]))
+            string_num += 4  # <Количество процессов>
             string_num += 2 * int(lines[string_num + 1].strip()) + 1
             string_num += 4  # переход к следующему кластеру
 
         return L[0], L[1:]
 
 
-# if __name__ == '__main__':
-#     x = DataParcer(r'C:\work\tzp_8\KUVSH.PAR').par_decoder()
-#     print(x)
-#
-#     a = [2,3,4]
-#     a.pop(a.index(3))
-#     print(a)
+if __name__ == '__main__':
+    x = DataParcer(r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.PL').pl_decoder()
+
+    for key in x.keys():
+        print(x.get(key))

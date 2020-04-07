@@ -76,21 +76,23 @@ class UnitedLayers(FrameGen):
                 self.layers_label_list.append(lay_label)
                 self.label_num += 1
 
-        for i in range(PL.shape[0]):
-            for j in range(1, PL.shape[1]):
-                if PL[i, j] == 1:
-                    energy_type = f'Источник электронов из {j}го в {i}й'
-                    name = f'Flu_e{j}{i}'
-                    self.output_dictionary_flu(name, energy_type)
-                    source_number += 1
+        for key in PL.keys():
+            ar = PL.get(key)
+            for i in range(ar.shape[0]):
+                for j in range(1, ar.shape[1]):
+                    if ar[i, j] == 1:
+                        energy_type = f'Источник электронов №{key} из {j}го в {i}й'
+                        name = f'Flu_e_{key}_{j}{i}'
+                        self.output_dictionary_flu(name, energy_type)
+                        source_number += 1
 
-                    lay_label = tk.Label(self.source_labels, text=f'{name}')
-                    lay_label.grid(row=7 + self.label_num, column=3)
-                    self.layers_label_list.append(lay_label)
-                    self.label_num += 1
+                        lay_label = tk.Label(self.source_labels, text=f'{name}')
+                        lay_label.grid(row=7 + self.label_num, column=3)
+                        self.layers_label_list.append(lay_label)
+                        self.label_num += 1
 
-        if PL[:, 0].any() == 1:
-            mb.showinfo('ERROR', 'Частицы в нулевом слое!')
+            if ar[:, 0].any() == 1:
+                mb.showinfo('ERROR', 'Частицы в нулевом слое!')
 
     def calculate(self):
         func_out, time_count = self.interpolate_user_time()

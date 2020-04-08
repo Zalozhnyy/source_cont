@@ -8,11 +8,9 @@ import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
-
-
-
 from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict
 from Project_reader import DataParcer
+
 
 def timef_global_save():
     # global time_func_dict
@@ -133,9 +131,9 @@ class FrameGen(tk.Frame):
         self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
 
         self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
-                                       command=lambda: self.ent_load(
+                                        command=lambda: self.ent_load(
                                            fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
-                                               initialdir=rf'{pr_dir()}/time functions/user configuration').split(
+                                                              initialdir=rf'{pr_dir()}/time functions/user configuration').split(
                                                '/')[-1]))
         self.button_browse.grid(row=0, column=0, padx=3, pady=3)
         self.button_browse_def = tk.Button(self.load_safe_fr, width=10, text='Load default', state='active',

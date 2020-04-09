@@ -43,6 +43,7 @@ class FluTab(FrameGen):
         func_out, time_count = self.interpolate_user_time()
         func_out = np.array(func_out)
         time_count = np.array(time_count)
+
         self.output_matrix = np.column_stack((time_count, func_out))
 
         # integrate
@@ -79,10 +80,25 @@ class FluTab(FrameGen):
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
 
-        time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
-
         layers = []
         [layers.append(i) for i in self.name]
+
+        time_for_dict, func_for_dict,_ = self.data_control()
+
+        remp_sources_dict_val = {'source_type': self.energy_type,
+                                 'source_name': self.name,
+                                 'layer_index_from': layers[-2],
+                                 'layer_index_in': layers[-1],
+                                 'amplitude': self.koef,
+                                 'len_tf': len(time_for_dict),
+                                 'time': time_for_dict,
+                                 'value': func_for_dict,
+                                 'lag': 1,
+                                 'koord_ist': None,
+                                 'distribution': None}
+        remp_sourses_dict.update({self.name: remp_sources_dict_val})
+
+        time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
 
         pr_dict = {}
         pr_dict.update({
@@ -129,6 +145,3 @@ class FluTab(FrameGen):
                 pr_dict.pop(key)
 
         source_list.append(pr_dict)
-
-
-

@@ -8,8 +8,9 @@ import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
-from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict
+from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict, remp_sourses_dict
 from Project_reader import DataParcer
+from Save_for_remp import Save_remp
 
 
 def timef_global_save():
@@ -126,12 +127,24 @@ class FrameGen(tk.Frame):
 
         self.a, self.A = self.time_grid()
 
+    def _konstr(self):
+        self.parent.title("Sources")
+        menubar = tk.Menu(self.parent)
+        self.parent.config(menu=menubar)
+        self.filemenu = tk.Menu(menubar, tearoff=0)
+        # self.filemenu.add_command(label="Reset", command=lambda: self.reset(self.parent))
+        self.filemenu.add_command(label="Global save", command=timef_global_save)
+        self.filemenu.add_command(label="Очистить timefunctions", command=tf_global_del)
+
+        menubar.add_cascade(label="Файл", menu=self.filemenu)
+        menubar.add_command(label="remp save", command=self.save_remp)
+
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
         self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
 
         self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
-                                        command=lambda: self.ent_load(
+                                       command=lambda: self.ent_load(
                                            fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
                                                               initialdir=rf'{pr_dir()}/time functions/user configuration').split(
                                                '/')[-1]))
@@ -225,18 +238,6 @@ class FrameGen(tk.Frame):
         self.button_save.configure(state='disabled')
         self.button_change_method.configure(text='Дискретный метод', width=15,
                                             command=lambda: (self.entry_func_fr.destroy(), self.entry_func_frame()))
-
-    def _konstr(self):
-        self.parent.title("Sources")
-        menubar = tk.Menu(self.parent)
-        self.parent.config(menu=menubar)
-        self.filemenu = tk.Menu(menubar, tearoff=0)
-        # self.filemenu.add_command(label="Reset", command=lambda: self.reset(self.parent))
-        self.filemenu.add_command(label="Global save", command=timef_global_save)
-        self.filemenu.add_command(label="Очистить timefunctions", command=tf_global_del)
-
-        menubar.add_cascade(label="Файл", menu=self.filemenu)
-        # menubar.add_command(label="test", command=lambda: print(len(source_list)))
 
     def ent(self):
         self.entry_func = []
@@ -514,6 +515,47 @@ class FrameGen(tk.Frame):
         return f'[{a[0]} : {a[-1]}]', a
 
     def interpolate_user_time(self):
+
+        entry_t, entry_f, time_cell = self.data_control()
+        time_count = []
+        func_out = []
+        for i in range(len(entry_t) - 1):
+            k, b = Calculations().linear_dif(entry_f[i], entry_t[i], entry_f[i + 1], entry_t[i + 1])
+            # print(f'k = {k} , b = {b}')
+            # print(np.extract((time_cell == entry_t[i]),time_cell))
+            dt = time_cell[1] - time_cell[0]
+            left_side = np.where(time_cell == entry_t[i])[0]
+            right_side = np.where(time_cell == entry_t[i + 1])[0]
+
+            if len(left_side) != 1:
+                left_side = np.where(abs(time_cell - entry_t[i]) <= dt / 2)[0]
+            if len(right_side) != 1:
+                right_side = np.where(abs(time_cell - entry_t[i + 1]) <= dt / 2)[0]
+
+            # print(type(left_side), time_cell[left_side])
+            # print(type(right_side), time_cell[right_side][0], time_cell[100])
+            # (f'{time_cell[left_side]} - {time_cell[right_side]}')
+            if i != len(entry_t) - 2:
+
+                for j in time_cell[left_side[0]:right_side[0]]:
+                    if j == time_cell[right_side[0]]:
+                        print(j)
+                        print(f'curent f len = {len(func_out)}')
+                        print('')
+                    func_out.append(Calculations().solve(j, k, b))
+                    time_count.append(j)
+            else:
+                for j in time_cell[left_side[0]:right_side[0] + 1]:
+                    func_out.append(Calculations().solve(j, k, b))
+                    time_count.append(j)
+
+        # print(len(func_out))
+        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
+        # print('по факту = ', len(time_count), time_count[-1])
+
+        return func_out, time_count
+
+    def data_control(self):
         self.grd_def = self.child_parcecer_grid()
         self.user_timeset = float(self.entry_time_fix_val.get())
 
@@ -554,43 +596,7 @@ class FrameGen(tk.Frame):
             if entry_t[i] > entry_t[i + 1]:
                 print(f'Value error время уменьшается на одном из отрезков {i}')
 
-        time_count = []
-        func_out = []
-        for i in range(len(entry_t) - 1):
-            k, b = Calculations().linear_dif(entry_f[i], entry_t[i], entry_f[i + 1], entry_t[i + 1])
-            # print(f'k = {k} , b = {b}')
-            # print(np.extract((time_cell == entry_t[i]),time_cell))
-            dt = time_cell[1] - time_cell[0]
-            left_side = np.where(time_cell == entry_t[i])[0]
-            right_side = np.where(time_cell == entry_t[i + 1])[0]
-
-            if len(left_side) != 1:
-                left_side = np.where(abs(time_cell - entry_t[i]) <= dt / 2)[0]
-            if len(right_side) != 1:
-                right_side = np.where(abs(time_cell - entry_t[i + 1]) <= dt / 2)[0]
-
-            # print(type(left_side), time_cell[left_side])
-            # print(type(right_side), time_cell[right_side][0], time_cell[100])
-            # (f'{time_cell[left_side]} - {time_cell[right_side]}')
-            if i != len(entry_t) - 2:
-
-                for j in time_cell[left_side[0]:right_side[0]]:
-                    if j == time_cell[right_side[0]]:
-                        print(j)
-                        print(f'curent f len = {len(func_out)}')
-                        print('')
-                    func_out.append(Calculations().solve(j, k, b))
-                    time_count.append(j)
-            else:
-                for j in time_cell[left_side[0]:right_side[0] + 1]:
-                    func_out.append(Calculations().solve(j, k, b))
-                    time_count.append(j)
-
-        # print(len(func_out))
-        # print('заданныйэ = ', time_cell.shape, time_cell[-1])
-        # print('по факту = ', len(time_count), time_count[-1])
-
-        return func_out, time_count
+        return entry_t, entry_f, time_cell
 
     def value_check(self, func, time):
         for item in func:
@@ -602,6 +608,10 @@ class FrameGen(tk.Frame):
 
     def child_parcecer_grid(self):
         return DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
+
+    def save_remp(self):
+        save = Save_remp(self, data=remp_sourses_dict)
+        self.wait_window(save)
 
     def onExit(self):
         self.quit()

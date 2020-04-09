@@ -59,6 +59,9 @@ def pr_dir():
     pr_dir = os.path.abspath(config_read()[0])
     return pr_dir
 
+def remp_save():
+    out = f''
+
 
 class Calculations:
 
@@ -77,5 +80,7 @@ gursa_dict = {}
 source_number = 1
 
 time_func_dict = {}
+
+remp_sourses_dict = {}
 
 tab_list = []

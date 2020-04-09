@@ -9,7 +9,7 @@ from scipy import integrate
 
 from Pe_source import PeSource
 from Main_frame import FrameGen
-from utility import pr_dir, source_number, time_func_dict, source_list, check_folder, config_read
+from utility import *
 from Project_reader import DataParcer
 
 
@@ -21,7 +21,7 @@ class Gursa(FrameGen):
 
         self.button_calculate.destroy()
 
-        self.gursa_numeric = 0
+        self.gursa_numeric = 1
 
         # отслеживание отрисованных источников
         path = os.path.join(config_read()[0], check_folder().get('PAR'))
@@ -281,6 +281,20 @@ class Gursa(FrameGen):
     def output_dictionary_gursa(self):
         class_gursa = self.x
         # for class_gursa in self.gursa_dict.values():
+
+        time_for_dict, func_for_dict, _ = self.data_control()
+
+        remp_sources_dict_val = {'source_type': self.energy_type,
+                                 'source_name': self.name,
+                                 'layer_index': self.name.split('_')[-1],
+                                 'amplitude': self.koef,
+                                 'len_tf': len(time_for_dict),
+                                 'time': time_for_dict,
+                                 'value': func_for_dict,
+                                 'lag': 1,
+                                 'koord_ist': f'{class_gursa.M1[0]} {class_gursa.M1[1]} {class_gursa.M1[2]}',
+                                 'distribution': None}
+        remp_sourses_dict.update({self.name: remp_sources_dict_val})
 
         pr_dict = {}
         pr_dict.update({

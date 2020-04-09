@@ -45,9 +45,7 @@ class UnitedLayers(FrameGen):
         self.label_num = 0
         self.layers_label_list = []
 
-
         LAY = DataParcer(self.lay_dir).lay_decoder()
-        PL = DataParcer(self.pl_dir).pl_decoder()
 
         self.calculate()
 
@@ -57,7 +55,7 @@ class UnitedLayers(FrameGen):
         for i in range(LAY.shape[0]):
             if LAY[i, 1] == 1:
                 energy_type = 'Current'
-                name = f'{energy_type}_layer {i}'
+                name = f'{energy_type}_layer_{i}'
                 self.output_dictionary_current(name, energy_type)
                 source_number += 1
 
@@ -68,7 +66,7 @@ class UnitedLayers(FrameGen):
 
             if LAY[i, 2] == 1:
                 energy_type = 'Sigma'
-                name = f'{energy_type}_layer {i}'
+                name = f'{energy_type}_layer_{i}'
                 self.output_dictionary_current(name, energy_type)
                 source_number += 1
 
@@ -139,6 +137,20 @@ class UnitedLayers(FrameGen):
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
 
+        time_for_dict, func_for_dict,_ = self.data_control()
+
+        remp_sources_dict_val = {'source_type': self.energy_type,
+                                 'source_name': self.name,
+                                 'layer_index': self.name.split('_')[-1],
+                                 'amplitude': self.koef,
+                                 'len_tf': len(time_for_dict),
+                                 'time': time_for_dict,
+                                 'value': func_for_dict,
+                                 'lag': 1,
+                                 'koord_ist': None,
+                                 'distribution': None}
+        remp_sourses_dict.update({self.name: remp_sources_dict_val})
+
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
 
         pr_dict = {}
@@ -146,7 +158,7 @@ class UnitedLayers(FrameGen):
             '<номер источника>': source_number,
             '<тип источника>': self.energy_type,
             '<название источника>': self.name,
-            '<номер слоя>': self.name.split()[-1],
+            '<номер слоя>': self.name.split('_')[-1],
             '<номер слоя из>': 0,
             '<номер слоя в>': 0,
             '<амплитуда источинка в ближней зоне источника>': 0,
@@ -188,4 +200,3 @@ class UnitedLayers(FrameGen):
                 pr_dict.pop(key)
 
         source_list.append(pr_dict)
-

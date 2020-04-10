@@ -285,8 +285,8 @@ class Gursa(FrameGen):
         time_for_dict, func_for_dict, _ = self.data_control()
 
         remp_sources_dict_val = {'source_type': self.energy_type,
-                                 'source_name': self.name,
-                                 'layer_index': self.name.split('_')[-1],
+                                 'source_name': class_gursa.name,
+                                 'layer_index': class_gursa.name.split('_')[-1],
                                  'amplitude': self.koef,
                                  'len_tf': len(time_for_dict),
                                  'time': time_for_dict,

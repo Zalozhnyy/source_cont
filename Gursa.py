@@ -41,7 +41,7 @@ class Gursa(FrameGen):
         self.constants_fr.grid(row=1, column=2, sticky='NWSE', padx=5, rowspan=2, columnspan=3)
 
         self.entry_f_val.set(1.)
-        label_f = tk.Label(self.constants_fr, text='F , кал/см\u00b2')
+        label_f = tk.Label(self.constants_fr, text='F , квант')
         label_f.grid(row=0, column=0, padx=3, sticky='E')
         entry_f = tk.Entry(self.constants_fr, width=8, textvariable=self.entry_f_val)
         entry_f.grid(row=0, column=2, padx=3)

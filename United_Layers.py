@@ -137,7 +137,7 @@ class UnitedLayers(FrameGen):
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
 
-        time_for_dict, func_for_dict,_ = self.data_control()
+        time_for_dict, func_for_dict, _ = self.data_control()
 
         remp_sources_dict_val = {'source_type': self.energy_type,
                                  'source_name': self.name,

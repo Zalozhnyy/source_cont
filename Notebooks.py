@@ -5,6 +5,7 @@ from United_Layers import UnitedLayers
 from Gursa import Gursa
 from TOK import InitialField, ExternalField, Koshi
 from Flu import FluTab
+from plane_wave import PlaneWave
 from Project_reader import DataParcer
 from Main_frame import FrameGen
 from utility import *
@@ -175,6 +176,13 @@ def main():
         tab = Koshi(root, 'PECHS', f'{energy_type}')
         tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
         tab.koshi_nb()
+        tab_list.append(tab)
+
+    plane_check = True
+    if plane_check is True:
+        tab = PlaneWave(root, 'PlaneWave', 'Плоская волна')
+        tab.notebook_tab = nb.add(tab, text=f"{tab.name}")
+        tab.notebooks()
         tab_list.append(tab)
 
 

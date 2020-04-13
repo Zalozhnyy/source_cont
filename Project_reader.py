@@ -136,7 +136,8 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    x = DataParcer(r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.PL').pl_decoder()
+    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.PL'
+    x = DataParcer(test_file).pl_decoder()
 
     for key in x.keys():
         print(x.get(key))

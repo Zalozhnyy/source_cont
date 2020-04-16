@@ -59,8 +59,6 @@ def pr_dir():
     pr_dir = os.path.abspath(config_read()[0])
     return pr_dir
 
-def remp_save():
-    out = f''
 
 
 class Calculations:

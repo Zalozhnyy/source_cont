@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Project_reader import DataParcer
 from Main_frame import FrameGen
 from utility import *
+from Exceptions import *
 
 
 class UnitedLayers(FrameGen):
@@ -27,15 +28,13 @@ class UnitedLayers(FrameGen):
         self.button_calculate.configure(command=self.stectr_choice)
 
     def stectr_choice(self):
-        self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                             initialdir=f'{config_read()[0]}/pechs/spectr',
-                                             filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
 
-        try:
-            self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
-        except Exception:
-            print('Чтение невозможно выбирете правильный файл')
+        self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+
+        self.spectr = self.spectr_choice_opener()
+        if type(self.spectr) is int:
             return
+
         self.project_checker()
 
     def button_states(self):

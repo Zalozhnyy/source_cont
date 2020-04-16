@@ -135,6 +135,7 @@ class ExternalField(FrameGen):
         for button in self.ext_load_tf_button:
             button.configure(state='normal')
 
+
     def local_get(self):
         self.get()
         self.button_states()
@@ -146,17 +147,20 @@ class ExternalField(FrameGen):
     def calculate_external_field(self, key):
 
         if len(self.spectr) == 0:
-            self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                                 initialdir=f'{config_read()[0]}/pechs/spectr',
-                                                 filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-            self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
+            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+
+            self.spectr = self.spectr_choice_opener()
+            if type(self.spectr) is int:
+                return
 
         else:
             answer = mb.askyesno(title="Spectr", message="Выбрать новый спектр?")
             if answer is True:
-                self.spectr_dir = fd.askopenfilename(title='Выберите файл spectr', initialdir=f'{config_read()[0]}',
-                                                     filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-                self.spectr = np.loadtxt(self.spectr_dir, skiprows=3)
+                self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+
+                self.spectr = self.spectr_choice_opener()
+                if type(self.spectr) is int:
+                    return
 
         self.external_field_values_dict = {
             'Ex': self.some_x_val[0].get(),
@@ -188,6 +192,8 @@ class ExternalField(FrameGen):
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
         self.external_tf_num.append(file_name)
+
+        print(f'{key}  рассчитан')
 
         if self.name in time_func_dict.keys():
             time_func_dict.popitem()

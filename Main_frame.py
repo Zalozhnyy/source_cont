@@ -11,6 +11,7 @@ from numpy import log as ln
 from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict, remp_sourses_dict
 from Project_reader import DataParcer
 from Save_for_remp import Save_remp
+from Exceptions import *
 
 
 def timef_global_save():
@@ -102,6 +103,9 @@ class FrameGen(tk.Frame):
             '<Z-компонента направляющего косинуса для расчета в дальней зоне>': None
         }
         self.gursa_out_dict = {}
+
+        self.spectr_dir = ''
+        self.spectr_type = ''
 
         print(repr(self))
 
@@ -513,6 +517,38 @@ class FrameGen(tk.Frame):
     def time_grid(self):
         a = DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
         return f'[{a[0]} : {a[-1]}]', a
+
+    def spectr_choice_classifier(self):
+        spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
+                                        initialdir=f'{config_read()[0]}/pechs/spectr',
+                                        filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+
+        with open(spectr_dir, 'r', encoding='utf-8') as file:
+            strings = []
+            spectr_type = ''
+            for string in range(5):
+                strings.append(file.readline().strip())
+
+        if any(['CONTINUOUS' in line for line in strings]):
+            spectr_type = 'CONTINUOUS'
+        elif any(['DISCRETE' in line for line in strings]):
+            spectr_type = 'DISCRETE'
+        else:
+            print('Тип спектра не распознан')
+            return
+        return spectr_dir, spectr_type
+
+    def spectr_choice_opener(self):
+
+        try:
+            if self.spectr_type == 'CONTINUOUS':
+                spectr = np.loadtxt(self.spectr_dir, skiprows=3)
+            elif self.spectr_type == 'DISCRETE':
+                spectr = np.loadtxt(self.spectr_dir, skiprows=2)
+            return spectr
+        except Exception:
+            main_spectr_ex_example()
+            return 1
 
     def interpolate_user_time(self):
 

@@ -13,8 +13,7 @@ def config_read():
 
 
 def open_button():
-    filename = fd.askdirectory(title='Укажите путь к проекту REMP',
-                               initialdir=os.getcwd())
+    filename = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=os.getcwd())
     handle = open(r"config.txt", "w", encoding='utf-8')
     handle.write(f'{filename}')
     handle.close()

@@ -8,6 +8,27 @@ class DataParcer:
         self.decoding_def = locale.getpreferredencoding()
         self.decoding = 'utf-8'
 
+    # def lay_decoder_old(self):
+    #     #### .LAY DECODER
+    #     try:
+    #         with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+    #             lines = file.readlines()
+    #     except UnicodeDecodeError:
+    #
+    #         with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+    #             lines = file.readlines()
+    #     lay_numeric = int(lines[2])
+    #     out_lay = np.zeros((lay_numeric, 3), dtype=int)
+    #     j = 0
+    #     for i in range(len(lines)):
+    #         if '<Номер, название слоя>' in lines[i]:  # 0 - номер слоя  1 - стороннй ток  2 - стро. ист.
+    #             out_lay[j, 0] = int(lines[i + 1].split()[0])
+    #             out_lay[j, 1] = int(lines[i + 3].split()[2])
+    #             out_lay[j, 2] = int(lines[i + 3].split()[3])
+    #             j += 1
+    #     # print('.LAY  ', out_lay)
+    #     return out_lay
+
     def lay_decoder(self):
         #### .LAY DECODER
         try:
@@ -17,16 +38,37 @@ class DataParcer:
 
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
-        lay_numeric = int(lines[2])
+
+        line = 2  # <Количество слоев> + 1 строка
+        lay_numeric = int(lines[line])
         out_lay = np.zeros((lay_numeric, 3), dtype=int)
-        j = 0
-        for i in range(len(lines)):
-            if '<Номер, название слоя>' in lines[i]:  # 0 - номер слоя  1 - стороннй ток  2 - стро. ист.
-                out_lay[j, 0] = int(lines[i + 1].split()[0])
-                out_lay[j, 1] = int(lines[i + 3].split()[2])
-                out_lay[j, 2] = int(lines[i + 3].split()[3])
-                j += 1
-        # print('.LAY  ', out_lay)
+        print(f'<Количество слоев> + 1 строка     {lines[line]}')
+
+        line += 2  # <Номер, название слоя>
+        print(f'<Номер, название слоя>     {lines[line]}')
+
+        for layer in range(lay_numeric):
+            line += 1  # <Номер, название слоя> + 1 строка
+            print(f'<Номер, название слоя> + 1 строка     {lines[line]}')
+
+            out_lay[layer, 0] = int(lines[line].split()[0])  # 0 - номер слоя
+
+            line += 2  # <газ(0)/не газ(1), и тд + 1 строка
+            out_lay[layer, 1] = int(lines[line].split()[2])  # 1 - стороннй ток
+            out_lay[layer, 2] = int(lines[line].split()[3])  # 2 - стро. ист.
+
+            extended = False
+            if int(lines[line].split()[-1]) == 1:
+                extended = True
+
+            line += 2  # <давление в слое(атм.), плотн.(г/см3), + 1 строка
+            if extended is False:
+                line += 2  # следущая частица    <Номер, название слоя>
+            elif extended is True:
+                line += 2  # <молекулярный вес[г/моль] + 1 строка
+
+                line += 2  # следущая частица    <Номер, название слоя>
+
         return out_lay
 
     def tok_decoder(self):
@@ -136,8 +178,7 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.PL'
-    x = DataParcer(test_file).pl_decoder()
+    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.LAY'
+    x = DataParcer(test_file).lay_decoder_new()
 
-    for key in x.keys():
-        print(x.get(key))
+    print(x)

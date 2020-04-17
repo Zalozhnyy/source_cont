@@ -17,6 +17,8 @@ class PlaneWave(FrameGen):
         self.constants_frame()
         self.plane_wave_const_frame()
 
+
+
     def plane_wave_const_frame(self):
         self.plane_wave_fr = tk.LabelFrame(self, text='Плоская волна', width=20)
         self.plane_wave_fr.grid(row=1, column=4, sticky='NWSE', padx=5, columnspan=2, rowspan=3)
@@ -44,10 +46,23 @@ class PlaneWave(FrameGen):
         self.bind_class(self.wave_direction_combobox, "<<ComboboxSelected>>",
                         self.cdirection_react)  # react на щелчки мышью
 
+        self.react_dict = {'X': [23, 32], '-X': [23, 32],
+                           'Y': [13, 31], '-Y': [13, 31],
+                           'Z': [21, 12], '-Z': [21, 12]}
+
         self.sub_wave_direction_combobox_value = []
-        self.sub_wave_direction_combobox = ttk.Combobox(self.plane_wave_fr, width=3, state='disabled',
-                                                        value=[key for key in self.wave_direction.keys()])
+        self.sub_wave_direction_combobox = ttk.Combobox(self.plane_wave_fr, width=3)
         self.sub_wave_direction_combobox.grid(row=4, column=1, padx=3, rowspan=1)
+
+        current_axe = self.wave_direction_combobox.get()
+        vals_for_combobox = []
+        for val in self.react_dict.get(current_axe):
+            vals_for_combobox.append(val)
+
+        self.sub_wave_direction_combobox.configure(value=[val for val in vals_for_combobox], state='normal')
+        self.sub_wave_direction_combobox.set(vals_for_combobox[0])
+
+
 
     def constants_frame(self):
         self.constants_fr = tk.LabelFrame(self, text='Константы', width=20)
@@ -61,13 +76,9 @@ class PlaneWave(FrameGen):
 
     def cdirection_react(self, event):
 
-        react_dict = {'X': [23, 32], '-X': [23, 32],
-                      'Y': [13, 31], '-Y': [13, 31],
-                      'Z': [21, 12], '-Z': [21, 12]}
-
         current_axe = self.wave_direction_combobox.get()
         vals_for_combobox = []
-        for val in react_dict.get(current_axe):
+        for val in self.react_dict.get(current_axe):
             vals_for_combobox.append(val)
 
         self.sub_wave_direction_combobox.configure(value=[val for val in vals_for_combobox], state='normal')
@@ -85,11 +96,16 @@ class PlaneWave(FrameGen):
         self.button_calculate.configure(state='active', command=self.stectr_choice)
 
     def stectr_choice(self):
-
-        self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
-
-        self.spectr = self.spectr_choice_opener()
-        if type(self.spectr) is int:
+        try:
+            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+            self.spectr = self.spectr_choice_opener()
+            if type(self.spectr) is int:
+                raise Exception('Чтение файла вызвало ошибку')
+        except FileNotFoundError:
+            print('Файл не выбран')
+            return
+        except Exception:
+            print('stectr_choice unknown error')
             return
 
         self.calculate()
@@ -133,7 +149,6 @@ class PlaneWave(FrameGen):
                           f'time_{self.name}.tf\n'
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
-
 
         time_for_dict, func_for_dict, _ = self.data_control()
 

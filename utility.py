@@ -1,4 +1,5 @@
 import os
+import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 
@@ -60,6 +61,13 @@ def pr_dir():
     return pr_dir
 
 
+def file_dialog(title=None, initialdir=None, filetypes=None):
+
+    directory = fd.askopenfilename(title=title, initialdir=initialdir, filetypes=filetypes)
+    if os.path.exists(directory):
+        print('dir =' ,directory)
+        return directory
+
 
 class Calculations:
 
@@ -82,3 +90,13 @@ time_func_dict = {}
 remp_sourses_dict = {}
 
 tab_list = []
+
+
+if __name__ =='__main__':
+    test = tk.Tk()
+
+    tk.Button(test, text='123',command=lambda : file_dialog(title='Выберите файл spectr',
+                                                 initialdir=f'{config_read()[0]}/pechs/spectr',
+                                                 filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))).pack()
+
+    test.mainloop()

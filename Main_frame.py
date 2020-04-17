@@ -8,7 +8,7 @@ import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
-from utility import config_read, check_folder, pr_dir, Calculations, source_list, time_func_dict, remp_sourses_dict
+from utility import *
 from Project_reader import DataParcer
 from Save_for_remp import Save_remp
 from Exceptions import *
@@ -525,7 +525,6 @@ class FrameGen(tk.Frame):
 
         with open(spectr_dir, 'r', encoding='utf-8') as file:
             strings = []
-            spectr_type = ''
             for string in range(5):
                 strings.append(file.readline().strip())
 
@@ -549,6 +548,8 @@ class FrameGen(tk.Frame):
         except Exception:
             main_spectr_ex_example()
             return 1
+
+
 
     def interpolate_user_time(self):
 

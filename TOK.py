@@ -135,7 +135,6 @@ class ExternalField(FrameGen):
         for button in self.ext_load_tf_button:
             button.configure(state='normal')
 
-
     def local_get(self):
         self.get()
         self.button_states()
@@ -147,12 +146,17 @@ class ExternalField(FrameGen):
     def calculate_external_field(self, key):
 
         if len(self.spectr) == 0:
-            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
-
-            self.spectr = self.spectr_choice_opener()
-            if type(self.spectr) is int:
+            try:
+                self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+                self.spectr = self.spectr_choice_opener()
+                if type(self.spectr) is int:
+                    raise Exception('Чтение файла вызвало ошибку')
+            except FileNotFoundError:
+                print('Файл не выбран')
                 return
-
+            except Exception:
+                print('stectr_choice unknown error')
+                return
         else:
             answer = mb.askyesno(title="Spectr", message="Выбрать новый спектр?")
             if answer is True:

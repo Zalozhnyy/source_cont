@@ -29,10 +29,16 @@ class UnitedLayers(FrameGen):
 
     def stectr_choice(self):
 
-        self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
-
-        self.spectr = self.spectr_choice_opener()
-        if type(self.spectr) is int:
+        try:
+            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+            self.spectr = self.spectr_choice_opener()
+            if type(self.spectr) is int:
+                raise Exception('Чтение файла вызвало ошибку')
+        except FileNotFoundError:
+            print('Файл не выбран')
+            return
+        except Exception:
+            print('stectr_choice unknown error')
             return
 
         self.project_checker()

@@ -178,7 +178,7 @@ def main():
         tab.koshi_nb()
         tab_list.append(tab)
 
-    plane_check = True
+    plane_check = True #затычка перед нормальной проверкой на наличие в проекте
     if plane_check is True:
         tab = PlaneWave(root, 'PlaneWave', 'Плоская волна')
         tab.notebook_tab = nb.add(tab, text=f"{tab.name}")

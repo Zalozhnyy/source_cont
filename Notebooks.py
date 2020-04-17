@@ -11,6 +11,8 @@ from Main_frame import FrameGen
 from utility import *
 import sys
 
+sys.path.append(os.path.dirname(__file__))
+os.chdir(os.path.dirname(__file__))
 
 def checker(parent):
     if os.path.exists(r"config.txt"):
@@ -187,6 +189,8 @@ def main():
 
 
 if __name__ == '__main__':
+
+
     root = tk.Tk()
     root.geometry('1200x600')
 

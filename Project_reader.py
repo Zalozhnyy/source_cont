@@ -171,10 +171,10 @@ class DataParcer:
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
                 lines = file.readlines()
         except UnicodeDecodeError:
-
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
 
+        try:
             # L[0] '<Количество типов частиц>'
             L = []
             L.append(int(lines[2].strip()))
@@ -187,6 +187,7 @@ class DataParcer:
                 string_num += 4  # переход к следующему кластеру
 
             return L[0], L[1:]
+
         except Exception:
             print('Ошибка в чтении файла .PL')
             return

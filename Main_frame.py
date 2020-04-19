@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import os
 import numpy as np
@@ -107,13 +109,14 @@ class FrameGen(tk.Frame):
         self.spectr_dir = ''
         self.spectr_type = ''
 
+        self.graph_frame_exist = 0
+
         print(repr(self))
 
     def __repr__(self):
         return f'{self.name}'
 
     def _notebooks(self):
-
         rows = 0
         while rows < 100:
             self.rowconfigure(rows, weight=1, minsize=10)
@@ -126,8 +129,8 @@ class FrameGen(tk.Frame):
         self.load_save_frame()
         self.entry_func_frame()
 
-        self.button_calculate = tk.Button(self, width=10, text='Calculate', state='disabled')
-        self.button_calculate.grid(row=1, column=5, padx=3)
+        self.button_calculate = tk.Button(self, width=15, text='Рассчёт', state='disabled')
+        self.button_calculate.grid(row=1, column=3, padx=3)
 
         self.a, self.A = self.time_grid()
 
@@ -549,8 +552,6 @@ class FrameGen(tk.Frame):
             main_spectr_ex_example()
             return 1
 
-
-
     def interpolate_user_time(self):
 
         entry_t, entry_f, time_cell = self.data_control()
@@ -591,6 +592,20 @@ class FrameGen(tk.Frame):
         # print('по факту = ', len(time_count), time_count[-1])
 
         return func_out, time_count
+
+    def graph_painter(self, time_count, func_out, widget, dpi=85):
+
+        figure = plt.Figure(figsize=(6, 4), dpi=dpi)
+        ax = figure.add_subplot(111)
+        ax.plot(time_count, func_out, label='Пользовательская функция')
+
+        ax.set_xlabel('Time , s', fontsize=14)
+        ax.set_ylabel('Function', fontsize=14)
+        chart_type = FigureCanvasTkAgg(figure, widget)
+
+        chart_type.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        ax.set_title(f'{self.name}')
+        ax.legend()
 
     def data_control(self):
         self.grd_def = self.child_parcecer_grid()

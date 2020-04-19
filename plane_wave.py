@@ -17,6 +17,7 @@ class PlaneWave(FrameGen):
         self.constants_frame()
         self.plane_wave_const_frame()
 
+        self.button_calculate.grid_configure(pady=5)
 
 
     def plane_wave_const_frame(self):
@@ -52,7 +53,7 @@ class PlaneWave(FrameGen):
 
         self.sub_wave_direction_combobox_value = []
         self.sub_wave_direction_combobox = ttk.Combobox(self.plane_wave_fr, width=3)
-        self.sub_wave_direction_combobox.grid(row=4, column=1, padx=3, rowspan=1)
+        self.sub_wave_direction_combobox.grid(row=4, column=1, padx=3, rowspan=1,pady=5)
 
         current_axe = self.wave_direction_combobox.get()
         vals_for_combobox = []
@@ -63,13 +64,12 @@ class PlaneWave(FrameGen):
         self.sub_wave_direction_combobox.set(vals_for_combobox[0])
 
 
-
     def constants_frame(self):
         self.constants_fr = tk.LabelFrame(self, text='Константы', width=20)
         self.constants_fr.grid(row=1, column=2, sticky='NWSE', padx=5, columnspan=2)
 
         self.entry_f_val.set(1.)
-        label_f = tk.Label(self.constants_fr, text='F , кал/см\u00b2')
+        label_f = tk.Label(self.constants_fr, text='F , ед.сгс')
         label_f.grid(row=0, column=0, padx=3, sticky='E')
         entry_f = tk.Entry(self.constants_fr, width=8, textvariable=self.entry_f_val)
         entry_f.grid(row=0, column=2, padx=3)
@@ -127,17 +127,14 @@ class PlaneWave(FrameGen):
 
         self.output_dictionary_plane()
 
-        figure = plt.Figure(figsize=(6, 4), dpi=100)
-        ax = figure.add_subplot(111)
-        ax.plot(time_count, func_out, label='Пользовательская функция')
+        # построение графиков
+        if self.graph_frame_exist == 1:
+            self.graph_fr.destroy()
 
-        ax.set_xlabel('Time , s', fontsize=14)
-        ax.set_ylabel('Function', fontsize=14)
-        chart_type = FigureCanvasTkAgg(figure, self)
-
-        chart_type.get_tk_widget().grid(row=1, column=6, rowspan=20, columnspan=20, padx=10)
-        ax.set_title(f'{self.name}')
-        ax.legend()
+        self.graph_fr = tk.LabelFrame(self, text='График', width=30)
+        self.graph_fr.grid(row=1, column=6, padx=10, rowspan=6, columnspan=20, sticky='N')
+        self.graph_painter(time_count, func_out, self.graph_fr)
+        self.graph_frame_exist = 1
 
     def output_dictionary_plane(self):
 

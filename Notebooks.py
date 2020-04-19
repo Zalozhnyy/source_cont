@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+import numpy as np
+import locale
 
 from United_Layers import UnitedLayers
 from Gursa import Gursa
@@ -11,8 +13,10 @@ from Main_frame import FrameGen
 from utility import *
 import sys
 
+locale.setlocale(locale.LC_ALL,'ru')
 sys.path.append(os.path.dirname(__file__))
 os.chdir(os.path.dirname(__file__))
+
 
 def checker(parent):
     if os.path.exists(r"config.txt"):
@@ -76,6 +80,7 @@ def reset(parent):
     source_list.clear()
     time_func_dict.clear()
     gursa_dict.clear()
+    remp_sourses_dict.clear()
     source_number = 1
     main()
 
@@ -102,9 +107,11 @@ def main():
 
     tok_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('TOK')))
     pl_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('PL')))
+    lay_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('LAY')))
 
     TOK = DataParcer(tok_dir).tok_decoder()
     PL = DataParcer(pl_dir).pl_decoder()
+    LAY = DataParcer(lay_dir).lay_decoder()
 
     main_frame = FrameGen(root)
     main_frame._konstr()
@@ -112,16 +119,17 @@ def main():
     main_frame.filemenu.add_command(label="Reset", command=lambda: reset(tab_list))
     main_frame.filemenu.add_command(label="Exit", command=main_frame.onExit)
 
-    # Класс рассчте Current,Sigma,Flu
-    u_tab = UnitedLayers(root, energy_type='Current and Sigma')
+    if np.any(LAY[:, 1:] == 1):
+        # Класс рассчте Current,Sigma
+        u_tab = UnitedLayers(root, energy_type='Current and Sigma')
 
-    u_tab.lay_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('LAY')))
-    u_tab.pl_dir = os.path.normpath(os.path.join(cur_dir[0], file_dict.get('PL')))
+        u_tab.lay_dir = lay_dir
+        u_tab.pl_dir = pl_dir
 
-    u_tab.notebook_tab = nb.add(u_tab, text=f"Current and Sigma")
-    u_tab.notebooks()
+        u_tab.notebook_tab = nb.add(u_tab, text=f"Current and Sigma")
+        u_tab.notebooks()
 
-    tab_list.append(u_tab)
+        tab_list.append(u_tab)
 
     for key in PL.keys():
         ar = PL.get(key)
@@ -189,8 +197,6 @@ def main():
 
 
 if __name__ == '__main__':
-
-
     root = tk.Tk()
     root.geometry('1200x600')
 

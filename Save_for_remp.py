@@ -45,8 +45,11 @@ class Save_remp(tk.Toplevel):
         self.save_file = tk.Button(self.buttons_fr, text='Создать txt', command=self.save_txt, width=13, )
         self.save_file.grid(row=5, column=0, pady=3, padx=3)
 
-        self.button_delete_save = tk.Button(self.buttons_fr,text='Удалить',command=self.delete_from_txt, width=13)
+        self.button_delete_save = tk.Button(self.buttons_fr, text='Удалить', command=self.delete_from_txt, width=13)
         self.button_delete_save.grid(row=1, column=0, pady=3, padx=3)
+
+        self.choice_func.set(list(self.data.keys())[0])
+        self.param_creator(data=self.get_choice_func())
 
     def get_choice_func(self):
         print(self.choice_func.get())
@@ -80,13 +83,13 @@ class Save_remp(tk.Toplevel):
 
                 if key == 'distribution':
                     self.destr_cmb = ttk.Combobox(self.current_set_fr, values=[i for i in self.distribution_list],
-                                                  width=10,state='normal')
-                    self.destr_cmb.grid(row=j, column=4, pady=3, padx=3,sticky='')
+                                                  width=10, state='normal')
+                    self.destr_cmb.grid(row=j, column=4, pady=3, padx=3, sticky='')
                     j += 1
                     continue
 
                 self.exist_entry.append(tk.Entry(self.current_set_fr, textvariable=self.entry_vals[i]))
-                self.exist_entry[j].grid(row=j, column=4,pady=3, padx=3)
+                self.exist_entry[j].grid(row=j, column=4, pady=3, padx=3)
                 j += 1
 
     def delete_from_txt(self):
@@ -114,9 +117,7 @@ class Save_remp(tk.Toplevel):
         for i in value:
             value_fix += str(i) + ' '
 
-        out = f'SOURCE\n' \
-              f'<source type>\n' \
-              f'{source_type}\n' \
+        out = f'{source_type}\n' \
               f'<source name>\n' \
               f'{source_name}\n' \
               f'<layer index>\n' \
@@ -128,8 +129,7 @@ class Save_remp(tk.Toplevel):
               f'{time_fix}\n' \
               f'{value_fix}\n' \
               f'<lag (1 - PLANE, 2 - SPHERE), parameters km>\n' \
-              f'{lag}\n' \
-              f'{koord_ist}\n' \
+              f'{lag} {koord_ist}\n' \
               f'<distribution>\n' \
               f'{distribution}\n\n'
         return out
@@ -182,6 +182,21 @@ class Save_remp(tk.Toplevel):
                                                     lag=ldict.get('lag'),
                                                     koord_ist=ldict.get('koord_ist'),
                                                     distribution=ldict.get('distribution')))
+
+                elif 'Current' in item[0]:
+                    axes = ['x', 'y', 'z']
+                    distr = ['JX', 'JY', 'JZ']
+                    for i in range(len(axes)):
+                        file.write(self.output_file(source_type=ldict.get('source_type') + f'_{axes[i]}',
+                                                    source_name=ldict.get('source_name'),
+                                                    layer_index=ldict.get('layer_index'),
+                                                    amplitude=ldict.get('amplitude'),
+                                                    len_tf=ldict.get('len_tf'),
+                                                    time=ldict.get('time'),
+                                                    value=ldict.get('value'),
+                                                    lag=ldict.get('lag'),
+                                                    koord_ist=ldict.get('koord_ist'),
+                                                    distribution=f'{distr[i]}'))
                 else:
                     file.write(self.output_file(source_type=ldict.get('source_type'),
                                                 source_name=ldict.get('source_name'),

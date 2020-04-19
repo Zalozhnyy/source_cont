@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import os
 
 from Main_frame import FrameGen
-from utility import pr_dir, config_read, source_number, time_func_dict
+from utility import *
 
 
 class InitialField(FrameGen):
@@ -78,14 +78,14 @@ class ExternalField(FrameGen):
         self.graph_ext_checkbutton = tk.BooleanVar()
         self.graph_ext_checkbutton.set(0)
         ttk.Checkbutton(self, text='Построение графика', variable=self.graph_ext_checkbutton,
-                        onvalue=1, offvalue=0).grid(row=1, column=2, columnspan=2)
+                        onvalue=1, offvalue=0).grid(row=1, column=6, columnspan=2,padx=10,sticky='N')
         self.button_calculate.destroy()
 
         self.ext_frame()
 
     def ext_frame(self):
         self.ext_fr = tk.LabelFrame(self, text='Компоненты')
-        self.ext_fr.grid(row=1, column=5, columnspan=3, rowspan=6,sticky='N')
+        self.ext_fr.grid(row=1, column=3, columnspan=3, rowspan=6,sticky='N')
 
         tk.Label(self.ext_fr, text='Ex').grid(row=0, column=0, sticky='E', padx=3)
         tk.Label(self.ext_fr, text='Ey').grid(row=1, column=0, sticky='E', padx=3)
@@ -199,6 +199,22 @@ class ExternalField(FrameGen):
 
         print(f'{key}  рассчитан')
 
+        time_for_dict, func_for_dict, _ = self.data_control()
+
+        remp_sources_dict_val = {'source_type': self.energy_type,
+                                 'source_name': self.name,
+                                 'layer_index': self.name.split('_')[-1],
+                                 'amplitude': None,
+                                 'len_tf': len(time_for_dict),
+                                 'time': time_for_dict,
+                                 'value': func_for_dict,
+                                 'lag': 0,
+                                 'koord_ist': '',
+                                 'distribution': None}
+        remp_sourses_dict.update({f'{self.name}_{key}': remp_sources_dict_val})
+
+        time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
+
         if self.name in time_func_dict.keys():
             time_func_dict.popitem()
         if len(self.external_tf_num) == 1:
@@ -207,11 +223,14 @@ class ExternalField(FrameGen):
             time_func_dict.update({f'{self.name}': self.external_tf_num})
 
         if self.graph_ext_checkbutton.get() == 1:
-            plt.plot(time_count, func_out)
-            plt.title(f'{key} = {self.external_field_values_dict.get(key)}')
-            plt.xlabel('Time , s', fontsize=14)
-            plt.ylabel('Function', fontsize=14)
-            plt.show()
+            # построение графиков
+            if self.graph_frame_exist == 1:
+                self.graph_fr.destroy()
+
+            self.graph_fr = tk.LabelFrame(self, text='График', width=30)
+            self.graph_fr.grid(row=2, column=6, padx=10, pady=10, rowspan=6, columnspan=20, sticky='N')
+            self.graph_painter(time_count, func_out, self.graph_fr)
+            self.graph_frame_exist = 1
 
 
 class Koshi(FrameGen):

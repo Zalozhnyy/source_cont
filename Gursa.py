@@ -31,10 +31,10 @@ class Gursa(FrameGen):
             self.gursa_numbers.update({f'Gursa_{i}': False})  # Хранит отрисован ли данный источник
 
         self.gursa_graphs_checkbutton_val = tk.BooleanVar()
-        self.gursa_graphs_checkbutton_val.set(0)
+        self.gursa_graphs_checkbutton_val.set(1)
         gursa_graphs_checkbutton = tk.Checkbutton(self, text='Построение графиков',
                                                   variable=self.gursa_graphs_checkbutton_val, onvalue=1, offvalue=0)
-        gursa_graphs_checkbutton.grid(row=3, column=2, columnspan=2)
+        gursa_graphs_checkbutton.grid(row=1, column=6, columnspan=2)
 
     def constants_frame(self):
         self.constants_fr = tk.LabelFrame(self, text='Константы', width=20)
@@ -130,7 +130,6 @@ class Gursa(FrameGen):
                 self.Spektr_output_2 = np.insert(self.Spektr_output_2, 1, np.zeros(self.Spektr_output_2.shape[0]
                                                                                    , dtype=int), axis=1)
 
-
                 np.savetxt(f'{pr_dir()}/time functions/Gursa/IL_{self.x.name}.txt', self.Spektr_output_2,
                            fmt='%-6.3g', comments='', delimiter='\t',
                            header='Пример фиксированного спектра\n'
@@ -214,29 +213,27 @@ class Gursa(FrameGen):
                    delimiter='\t', comments='')
 
         if self.gursa_graphs_checkbutton_val.get() is True:
-            figure = plt.Figure(figsize=(8, 4.5), dpi=65)
-            ax = figure.add_subplot(111)
-            ax.plot(time_count, func_out, label='Пользовательская функция')
+            # построение графиков
+            if self.graph_frame_exist == 1:
+                self.graph_fr.destroy()
 
-            ax.set_xlabel('Time , s', fontsize=12)
-            ax.set_ylabel('Function', fontsize=12)
-            chart_type = FigureCanvasTkAgg(figure, self)
+            self.graph_fr = tk.LabelFrame(self, text='График', width=30)
+            self.graph_fr.grid(row=2, column=6, padx=10, pady=10, rowspan=15, columnspan=10, sticky='N')
+            self.graph_painter(time_count, func_out, self.graph_fr, dpi=70)
+            self.graph_frame_exist = 1
 
-            chart_type.get_tk_widget().grid(row=1, column=6, rowspan=4, columnspan=30, padx=5)
-            ax.set_title(f'{self.x.name}')
-            ax.legend()
-
-            figure1 = plt.Figure(figsize=(8, 4.5), dpi=65)
+            figure1 = plt.Figure(figsize=(6, 4), dpi=70)
             ax = figure1.add_subplot(111)
             ax.semilogy(self.x.pe_source_graph[:, 0], self.x.pe_source_graph[:, 1])
 
             ax.set_xlabel('Radius between objects, km', fontsize=12)
             ax.set_ylabel('Energy part', fontsize=12)
-            chart_type = FigureCanvasTkAgg(figure1, self)
+            chart_type = FigureCanvasTkAgg(figure1, self.graph_fr)
 
-            chart_type.get_tk_widget().grid(row=5, column=6, rowspan=4, columnspan=30, padx=10, pady=5)
+            chart_type.get_tk_widget().grid(row=5, column=0, padx=5, pady=5, sticky='N')
             ax.set_title('Photon flux, $\mathdefault{1/cm^{2}}$')
             ax.legend()
+            self.graph_frame_exist = 1
 
     def regrid_gursa(self):
 

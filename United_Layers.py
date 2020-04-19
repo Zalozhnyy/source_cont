@@ -2,8 +2,6 @@ import numpy as np
 import tkinter as tk
 from scipy import integrate
 import os
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from Project_reader import DataParcer
 from Main_frame import FrameGen
@@ -113,17 +111,14 @@ class UnitedLayers(FrameGen):
 
         self.koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
 
-        figure = plt.Figure(figsize=(6, 4), dpi=100)
-        ax = figure.add_subplot(111)
-        ax.plot(time_count, func_out, label='Пользовательская функция')
+        # построение графиков
+        if self.graph_frame_exist == 1:
+            self.graph_fr.destroy()
 
-        ax.set_xlabel('Time , s', fontsize=14)
-        ax.set_ylabel('Function', fontsize=14)
-        chart_type = FigureCanvasTkAgg(figure, self)
-
-        chart_type.get_tk_widget().grid(row=1, column=6, rowspan=20, columnspan=20, padx=10)
-        ax.set_title(f'{self.name}')
-        ax.legend()
+        self.graph_fr = tk.LabelFrame(self, text='График', width=30)
+        self.graph_fr.grid(row=0, column=4, padx=10, pady=10, rowspan=10, columnspan=20,sticky='N')
+        self.graph_painter(time_count, func_out, self.graph_fr)
+        self.graph_frame_exist = 1
 
     def output_dictionary_current(self, name=None, energy_type=None):
         self.name = name
@@ -151,8 +146,8 @@ class UnitedLayers(FrameGen):
                                  'len_tf': len(time_for_dict),
                                  'time': time_for_dict,
                                  'value': func_for_dict,
-                                 'lag': 1,
-                                 'koord_ist': None,
+                                 'lag': 0,
+                                 'koord_ist': '',
                                  'distribution': None}
         remp_sourses_dict.update({self.name: remp_sources_dict_val})
 

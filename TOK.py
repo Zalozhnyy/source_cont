@@ -1,11 +1,8 @@
-import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox as mb
-from tkinter import filedialog as fd
 from tkinter import simpledialog
 import numpy as np
-import matplotlib.pyplot as plt
-import os
+
+import sys
 
 from Main_frame import FrameGen
 from utility import *
@@ -240,5 +237,9 @@ class Koshi(FrameGen):
             self.rowconfigure(rows, weight=0, minsize=5)
             self.columnconfigure(rows, weight=0, minsize=5)
             rows += 1
-        source_button = tk.Button(self, text='Открыть программу source', command=lambda: os.startfile('source.exe'))
+        source_button = tk.Button(self, text='Открыть программу source', command=self.start_source)
         source_button.grid(row=5, column=5)
+
+    def start_source(self):
+        path = r'C:\work\remp\bin\source.exe'
+        os.startfile(path)

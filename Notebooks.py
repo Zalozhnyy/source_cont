@@ -13,9 +13,8 @@ from Main_frame import FrameGen
 from utility import *
 import sys
 
-locale.setlocale(locale.LC_ALL,'ru')
 sys.path.append(os.path.dirname(__file__))
-os.chdir(os.path.dirname(__file__))
+# os.chdir(os.path.dirname(__file__))
 
 
 def checker(parent):

@@ -36,7 +36,7 @@ def check_folder():
         if f.endswith(".PRJ") or f.endswith(".prj"):
             prj_name.append(f)
 
-    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r') as file:
+    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r',encoding='utf-8') as file:
         lines = file.readlines()
 
     out = {}

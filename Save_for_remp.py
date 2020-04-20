@@ -45,7 +45,10 @@ class Save_remp(tk.Toplevel):
         self.save_file = tk.Button(self.buttons_fr, text='Создать txt', command=self.save_txt, width=13, )
         self.save_file.grid(row=5, column=0, pady=3, padx=3)
 
-        self.button_delete_save = tk.Button(self.buttons_fr, text='Удалить', command=self.delete_from_txt, width=13)
+        # self.button_delete_save = tk.Button(self.buttons_fr, text='Удалить', command=self.delete_from_txt, width=13)
+        # self.button_delete_save.grid(row=1, column=0, pady=3, padx=3)
+        self.button_delete_save = tk.Button(self.buttons_fr, text='Удалить', command=self.delete_from_txt,
+                                            width=13)
         self.button_delete_save.grid(row=1, column=0, pady=3, padx=3)
 
         self.choice_func.set(list(self.data.keys())[0])
@@ -108,103 +111,35 @@ class Save_remp(tk.Toplevel):
                 else:
                     sub_dict.update({key: self.entry_vals[i].get()})
 
-    def output_file(self, source_type, source_name, layer_index, amplitude, len_tf, time, value, lag, koord_ist,
-                    distribution=None):
-        time_fix = ''
-        value_fix = ''
-        for i in time:
-            time_fix += str(i) + ' '
-        for i in value:
-            value_fix += str(i) + ' '
-
-        out = f'{source_type}\n' \
-              f'<source name>\n' \
-              f'{source_name}\n' \
-              f'<layer index>\n' \
-              f'{layer_index}\n' \
-              f'<amplitude>\n' \
-              f'{amplitude}\n' \
-              f'<time function>\n' \
-              f'{len_tf}\n' \
-              f'{time_fix}\n' \
-              f'{value_fix}\n' \
-              f'<lag (1 - PLANE, 2 - SPHERE), parameters km>\n' \
-              f'{lag} {koord_ist}\n' \
-              f'<distribution>\n' \
-              f'{distribution}\n\n'
-        return out
-
-    def output_file_flu(self, source_type, source_name, layer_index_from, layer_index_in, amplitude, len_tf, time,
-                        value, lag, koord_ist, distribution=None):
-        time_fix = ''
-        value_fix = ''
-        for i in time:
-            time_fix += str(i) + ' '
-        for i in value:
-            value_fix += str(i) + ' '
-        # метод для сохранения результатов под формат remp sources
-        out = f'SOURCE\n' \
-              f'<source type>\n' \
-              f'{source_type}\n' \
-              f'<source name>\n' \
-              f'{source_name}\n' \
-              f'<layer index from>\n' \
-              f'{layer_index_from}\n' \
-              f'<layer index in>\n' \
-              f'{layer_index_in}\n' \
-              f'<amplitude>\n' \
-              f'{amplitude}\n' \
-              f'<time function>\n' \
-              f'{len_tf}\n' \
-              f'{time_fix}\n' \
-              f'{value_fix}\n' \
-              f'<lag (1 - PLANE, 2 - SPHERE), parameters km>\n' \
-              f'{lag}\n' \
-              f'{koord_ist}\n' \
-              f'<distribution>\n' \
-              f'{distribution}\n\n'
-        return out
-
     def save_txt(self):
-        with open(f'{pr_dir()}/time functions/tf_for_remp.txt', 'w', encoding='utf-8') as file:
-            for item in self.data.items():
-                ldict = item[1]
+        out = ''
+        for item in self.data.items():
+            ldict = item[1]
+            for lkey in ldict.keys():
+                lval = ldict.get(lkey)
+                if lval is not None:
 
-                if 'Flu' in item[0]:
-                    file.write(self.output_file_flu(source_type=ldict.get('source_type'),
-                                                    source_name=ldict.get('source_name'),
-                                                    layer_index_from=ldict.get('layer_index_from'),
-                                                    layer_index_in=ldict.get('layer_index_in'),
-                                                    amplitude=ldict.get('amplitude'),
-                                                    len_tf=ldict.get('len_tf'),
-                                                    time=ldict.get('time'),
-                                                    value=ldict.get('value'),
-                                                    lag=ldict.get('lag'),
-                                                    koord_ist=ldict.get('koord_ist'),
-                                                    distribution=ldict.get('distribution')))
+                    # исключения по сохранению
+                    if lkey == 'source_type':
+                        out += f'{lval}\n'
 
-                elif 'Current' in item[0]:
-                    axes = ['x', 'y', 'z']
-                    distr = ['JX', 'JY', 'JZ']
-                    for i in range(len(axes)):
-                        file.write(self.output_file(source_type=ldict.get('source_type') + f'_{axes[i]}',
-                                                    source_name=ldict.get('source_name'),
-                                                    layer_index=ldict.get('layer_index'),
-                                                    amplitude=ldict.get('amplitude'),
-                                                    len_tf=ldict.get('len_tf'),
-                                                    time=ldict.get('time'),
-                                                    value=ldict.get('value'),
-                                                    lag=ldict.get('lag'),
-                                                    koord_ist=ldict.get('koord_ist'),
-                                                    distribution=f'{distr[i]}'))
-                else:
-                    file.write(self.output_file(source_type=ldict.get('source_type'),
-                                                source_name=ldict.get('source_name'),
-                                                layer_index=ldict.get('layer_index'),
-                                                amplitude=ldict.get('amplitude'),
-                                                len_tf=ldict.get('len_tf'),
-                                                time=ldict.get('time'),
-                                                value=ldict.get('value'),
-                                                lag=ldict.get('lag'),
-                                                koord_ist=ldict.get('koord_ist'),
-                                                distribution=ldict.get('distribution')))
+                    elif lkey == 'time_function':
+                        len = ldict.get(lkey)[0]
+                        time, value = ldict.get(lkey)[1], ldict.get(lkey)[2]
+                        time_fix = ''
+                        value_fix = ''
+                        for i in time:
+                            time_fix += str(i) + ' '
+                        for i in value:
+                            value_fix += str(i) + ' '
+
+                        lkey = lkey.replace('_', ' ')
+                        out += f'<{lkey}>\n{len}\n{time_fix}\n{value_fix}\n'
+
+                    else:
+                        lkey = lkey.replace('_', ' ')
+                        out += f'<{lkey}>\n{lval}\n'
+            out += '\n'
+
+        with open(f'{pr_dir()}/time functions/_remp.txt', 'w', encoding='utf-8') as file:
+            file.write(out)

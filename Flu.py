@@ -83,19 +83,17 @@ class FluTab(FrameGen):
         layers = []
         [layers.append(i) for i in self.name]
 
-        time_for_dict, func_for_dict,_ = self.data_control()
+        time_for_dict, func_for_dict, _ = self.data_control()
 
-        remp_sources_dict_val = {'source_type': self.energy_type,
-                                 'source_name': self.name,
-                                 'layer_index_from': layers[-2],
-                                 'layer_index_in': layers[-1],
-                                 'amplitude': self.koef,
-                                 'len_tf': len(time_for_dict),
-                                 'time': time_for_dict,
-                                 'value': func_for_dict,
-                                 'lag': 0,
-                                 'koord_ist': '',
-                                 'distribution': None}
+        remp_sources_dict_val = save_for_remp_form(source_type='Flux',
+                                                   source_name=self.name,
+                                                   layer_index=f'{layers[-2]} {layers[-1]}',
+                                                   particle_index=self.name.split('_')[2],
+                                                   amplitude=self.koef,
+                                                   time_for_dict=time_for_dict,
+                                                   func_for_dict=func_for_dict,
+                                                   lag_and_koord=0)
+
         remp_sourses_dict.update({self.name: remp_sources_dict_val})
 
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})

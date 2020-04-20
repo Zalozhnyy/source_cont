@@ -91,6 +91,7 @@ class PeSource(tk.Toplevel):
         if self.generate == 0:
             path = fd.askopenfilename(title='Выберите файл spectr',
                                       filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+            self.spectr_directory = path
             # path = 'spectr_3_49_norm_na_1.txt'
             with open(path, 'r', encoding='utf-8') as file_handler:
                 i = 0

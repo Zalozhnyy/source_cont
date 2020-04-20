@@ -281,17 +281,15 @@ class Gursa(FrameGen):
 
         time_for_dict, func_for_dict, _ = self.data_control()
 
-        remp_sources_dict_val = {'source_type': self.energy_type,
-                                 'source_name': class_gursa.name,
-                                 'layer_index': class_gursa.name.split('_')[-1],
-                                 'amplitude': self.koef,
-                                 'len_tf': len(time_for_dict),
-                                 'time': time_for_dict,
-                                 'value': func_for_dict,
-                                 'lag': 1,
-                                 'koord_ist': f'{class_gursa.M1[0]} {class_gursa.M1[1]} {class_gursa.M1[2]}',
-                                 'distribution': None}
-        remp_sourses_dict.update({self.name: remp_sources_dict_val})
+        remp_sources_dict_val = save_for_remp_form(source_type='Gursa',
+                                                   source_name=class_gursa.name,
+                                                   amplitude=self.koef,
+                                                   time_for_dict=time_for_dict,
+                                                   func_for_dict=func_for_dict,
+                                                   lag_and_koord=0,
+                                                   spectre=class_gursa.spectr_directory)
+
+        remp_sourses_dict.update({class_gursa.name: remp_sources_dict_val})
 
         pr_dict = {}
         pr_dict.update({

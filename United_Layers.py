@@ -116,7 +116,7 @@ class UnitedLayers(FrameGen):
             self.graph_fr.destroy()
 
         self.graph_fr = tk.LabelFrame(self, text='График', width=30)
-        self.graph_fr.grid(row=0, column=4, padx=10, pady=10, rowspan=10, columnspan=20,sticky='N')
+        self.graph_fr.grid(row=0, column=4, padx=10, pady=10, rowspan=10, columnspan=20, sticky='N')
         self.graph_painter(time_count, func_out, self.graph_fr)
         self.graph_frame_exist = 1
 
@@ -139,17 +139,36 @@ class UnitedLayers(FrameGen):
 
         time_for_dict, func_for_dict, _ = self.data_control()
 
-        remp_sources_dict_val = {'source_type': self.energy_type,
-                                 'source_name': self.name,
-                                 'layer_index': self.name.split('_')[-1],
-                                 'amplitude': self.koef,
-                                 'len_tf': len(time_for_dict),
-                                 'time': time_for_dict,
-                                 'value': func_for_dict,
-                                 'lag': 0,
-                                 'koord_ist': '',
-                                 'distribution': None}
-        remp_sourses_dict.update({self.name: remp_sources_dict_val})
+        if 'Current' in self.name:  # сохранение для Current
+            axes = ['x', 'y', 'z']
+            distr = ['JX', 'JY', 'JZ']
+            for i in range(len(axes)):
+                remp_sources_dict_val = save_for_remp_form(source_type='Current'+f'_{axes[i]}',
+                                                           source_name=self.name,
+                                                           layer_index=self.name.split('_')[-1],
+                                                           amplitude=self.koef,
+                                                           time_for_dict=time_for_dict,
+                                                           func_for_dict=func_for_dict,
+                                                           lag_and_koord=0,
+                                                           distribution=distr[i])
+
+                remp_sourses_dict.update({f'{self.name}|| axe: {axes[i]}': remp_sources_dict_val})
+
+        elif 'Sigma' in self.name:  # сохранение для Sigma
+            remp_sources_dict_val = save_for_remp_form(source_type='Sigma',
+                                                       source_name=self.name,
+                                                       layer_index=self.name.split('_')[-1],
+                                                       amplitude=self.koef,
+                                                       time_for_dict=time_for_dict,
+                                                       func_for_dict=func_for_dict,
+                                                       lag_and_koord=0)
+
+            remp_sourses_dict.update({self.name: remp_sources_dict_val})
+
+        else:
+            print('Тип источника не обнаружен Current or Sigma')
+            return
+
 
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
 

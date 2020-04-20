@@ -19,7 +19,6 @@ class PlaneWave(FrameGen):
 
         self.button_calculate.grid_configure(pady=5)
 
-
     def plane_wave_const_frame(self):
         self.plane_wave_fr = tk.LabelFrame(self, text='Плоская волна', width=20)
         self.plane_wave_fr.grid(row=1, column=4, sticky='NWSE', padx=5, columnspan=2, rowspan=3)
@@ -53,7 +52,7 @@ class PlaneWave(FrameGen):
 
         self.sub_wave_direction_combobox_value = []
         self.sub_wave_direction_combobox = ttk.Combobox(self.plane_wave_fr, width=3)
-        self.sub_wave_direction_combobox.grid(row=4, column=1, padx=3, rowspan=1,pady=5)
+        self.sub_wave_direction_combobox.grid(row=4, column=1, padx=3, rowspan=1, pady=5)
 
         current_axe = self.wave_direction_combobox.get()
         vals_for_combobox = []
@@ -62,7 +61,6 @@ class PlaneWave(FrameGen):
 
         self.sub_wave_direction_combobox.configure(value=[val for val in vals_for_combobox], state='normal')
         self.sub_wave_direction_combobox.set(vals_for_combobox[0])
-
 
     def constants_frame(self):
         self.constants_fr = tk.LabelFrame(self, text='Константы', width=20)
@@ -149,15 +147,12 @@ class PlaneWave(FrameGen):
 
         time_for_dict, func_for_dict, _ = self.data_control()
 
-        remp_sources_dict_val = {'source_type': self.energy_type,
-                                 'source_name': self.name,
-                                 'amplitude': self.koef,
-                                 'len_tf': len(time_for_dict),
-                                 'time': time_for_dict,
-                                 'value': func_for_dict,
-                                 'lag': 1,
-                                 'koord_ist': None,
-                                 'distribution': None}
+        remp_sources_dict_val = save_for_remp_form(source_type='Plane_wave',
+                                                   source_name=self.name,
+                                                   amplitude=self.koef,
+                                                   time_for_dict=time_for_dict,
+                                                   func_for_dict=func_for_dict,
+                                                   lag_and_koord=0)
         remp_sourses_dict.update({self.name: remp_sources_dict_val})
 
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})

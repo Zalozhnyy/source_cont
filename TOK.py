@@ -75,14 +75,14 @@ class ExternalField(FrameGen):
         self.graph_ext_checkbutton = tk.BooleanVar()
         self.graph_ext_checkbutton.set(0)
         ttk.Checkbutton(self, text='Построение графика', variable=self.graph_ext_checkbutton,
-                        onvalue=1, offvalue=0).grid(row=1, column=6, columnspan=2,padx=10,sticky='N')
+                        onvalue=1, offvalue=0).grid(row=1, column=6, columnspan=2, padx=10, sticky='N')
         self.button_calculate.destroy()
 
         self.ext_frame()
 
     def ext_frame(self):
         self.ext_fr = tk.LabelFrame(self, text='Компоненты')
-        self.ext_fr.grid(row=1, column=3, columnspan=3, rowspan=6,sticky='N')
+        self.ext_fr.grid(row=1, column=3, columnspan=3, rowspan=6, sticky='N')
 
         tk.Label(self.ext_fr, text='Ex').grid(row=0, column=0, sticky='E', padx=3)
         tk.Label(self.ext_fr, text='Ey').grid(row=1, column=0, sticky='E', padx=3)
@@ -198,16 +198,13 @@ class ExternalField(FrameGen):
 
         time_for_dict, func_for_dict, _ = self.data_control()
 
-        remp_sources_dict_val = {'source_type': self.energy_type,
-                                 'source_name': self.name,
-                                 'layer_index': self.name.split('_')[-1],
-                                 'amplitude': None,
-                                 'len_tf': len(time_for_dict),
-                                 'time': time_for_dict,
-                                 'value': func_for_dict,
-                                 'lag': 0,
-                                 'koord_ist': '',
-                                 'distribution': None}
+        remp_sources_dict_val = save_for_remp_form(source_type='External_field',
+                                                   source_name=self.name + f'_{key}',
+                                                   external_field_component=f'{self.external_field_values_dict.get(key)}',
+                                                   time_for_dict=time_for_dict,
+                                                   func_for_dict=func_for_dict,
+                                                   lag_and_koord=0)
+
         remp_sourses_dict.update({f'{self.name}_{key}': remp_sources_dict_val})
 
         time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})

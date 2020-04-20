@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
+from collections import namedtuple
 
 
 def config_read():
@@ -36,7 +37,7 @@ def check_folder():
         if f.endswith(".PRJ") or f.endswith(".prj"):
             prj_name.append(f)
 
-    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r',encoding='utf-8') as file:
+    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r', encoding='utf-8') as file:
         lines = file.readlines()
 
     out = {}
@@ -61,11 +62,31 @@ def pr_dir():
 
 
 def file_dialog(title=None, initialdir=None, filetypes=None):
-
     directory = fd.askopenfilename(title=title, initialdir=initialdir, filetypes=filetypes)
     if os.path.exists(directory):
-        print('dir =' ,directory)
+        print('dir =', directory)
         return directory
+
+
+def save_for_remp_form(source_type=None, source_name=None, layer_index=None, amplitude=None,
+                       time_for_dict=None, particle_index=None, func_for_dict=None,
+                       lag_and_koord=None, distribution=None, spectre=None,
+                       external_field_component=None):
+
+    out = {'source_type': source_type,
+           'source_name': source_name,
+           'external_field_component':external_field_component,
+           'layer_index': layer_index,
+           'particle_index': particle_index,
+           'amplitude': amplitude,
+           'time_function': [len(time_for_dict),
+                             time_for_dict,
+                             func_for_dict],
+           'lag (1 - PLANE, 2 - SPHERE), parameters': lag_and_koord,
+           'distribution': distribution,
+           'spectre': spectre}
+
+    return out
 
 
 class Calculations:
@@ -90,12 +111,12 @@ remp_sourses_dict = {}
 
 tab_list = []
 
-
-if __name__ =='__main__':
+if __name__ == '__main__':
     test = tk.Tk()
 
-    tk.Button(test, text='123',command=lambda : file_dialog(title='Выберите файл spectr',
-                                                 initialdir=f'{config_read()[0]}/pechs/spectr',
-                                                 filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))).pack()
+    tk.Button(test, text='123', command=lambda: file_dialog(title='Выберите файл spectr',
+                                                            initialdir=f'{config_read()[0]}/pechs/spectr',
+                                                            filetypes=(
+                                                                ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
 
     test.mainloop()

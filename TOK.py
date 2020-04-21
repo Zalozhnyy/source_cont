@@ -252,8 +252,15 @@ class Koshi(FrameGen):
     def studio_start_Source(self):
         # changes for studio version
         path = os.path.abspath(__file__)
-
+        if 'remp' not in path:
+            path = filedialog.askopenfilename(title='Укажите путь к Source.exe', filetypes=[('Source.exe', '.exe')])
+            if path == '':
+                return
+            else:
+                os.startfile(path)
+            return
         path = ''.join(f'{i}\\' for i in path.split('\\')[:-4])
+        # path = ''.join(f'{i}\\' for i in path.split('\\')[:-4])
         path = os.path.normpath(path)
         for i in os.walk(path):
             print(i)
@@ -262,7 +269,6 @@ class Koshi(FrameGen):
                     if j == 'Source.exe':
                         path = os.path.join(i[0], j)
                         sys.path.append(path)
-                        print(path)
                 break
         if os.path.split(path)[1] != 'Source.exe':
             mb.showerror('Path error', 'Файл Source.exe не найден')

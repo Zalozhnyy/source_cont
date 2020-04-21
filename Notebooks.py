@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
@@ -11,7 +16,6 @@ from plane_wave import PlaneWave
 from Project_reader import DataParcer
 from Main_frame import FrameGen
 from utility import *
-import sys
 
 sys.path.append(os.path.dirname(__file__))
 # os.chdir(os.path.dirname(__file__))

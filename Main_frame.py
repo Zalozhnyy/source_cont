@@ -662,8 +662,8 @@ class FrameGen(tk.Frame):
         return DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
 
     def save_remp(self):
-        save = Save_remp(self, data=remp_sourses_dict)
-        self.wait_window(save)
+        Save_remp(data=remp_sourses_dict)
+        # self.wait_window(save)
 
     def onExit(self):
         self.quit()

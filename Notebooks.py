@@ -14,7 +14,7 @@ from TOK import InitialField, ExternalField, Koshi
 from Flu import FluTab
 from plane_wave import PlaneWave
 from Project_reader import DataParcer
-from Main_frame import FrameGen
+from Main_frame import *
 from utility import *
 
 sys.path.append(os.path.dirname(__file__))

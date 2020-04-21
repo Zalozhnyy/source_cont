@@ -92,6 +92,7 @@ def change_path(parent):
     check_folder().clear()
     source_list.clear()
     time_func_dict.clear()
+    remp_sourses_dict.clear()
     gursa_dict.clear()
     source_number = 1
 

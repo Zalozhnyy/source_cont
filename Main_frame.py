@@ -238,7 +238,7 @@ class FrameGen(tk.Frame):
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв tf')
         self.obriv_tf_lavel.grid(row=4, column=0)
         self.entry_time_fix_val.set(f'{self.A[-1]}')
-        self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=6)
+        self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=8)
         self.entry_time_fix.grid(row=4, column=1)
 
         self.button_save_def.configure(state='disabled')

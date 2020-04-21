@@ -272,6 +272,7 @@ class Koshi(FrameGen):
         if os.path.split(path)[1] != 'Source.exe':
             mb.showerror('Path error', 'Файл Source.exe не найден')
             path = filedialog.askopenfilename(title='Укажите путь к Source.exe', filetypes=[('Source.exe', '.exe')])
+            sys.path.append(path)
             if path == '':
                 return
         else:

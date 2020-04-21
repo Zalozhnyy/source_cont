@@ -263,7 +263,6 @@ class Koshi(FrameGen):
         # path = ''.join(f'{i}\\' for i in path.split('\\')[:-4])
         path = os.path.normpath(path)
         for i in os.walk(path):
-            print(i)
             if 'Source.exe' in i[2]:
                 for j in i[2]:
                     if j == 'Source.exe':

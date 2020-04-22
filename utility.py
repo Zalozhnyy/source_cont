@@ -72,6 +72,9 @@ def check_folder(path):
 def timef_global_save(path):
     # global time_func_dict
     pr_dir = path.split('/')[-1]
+    if len(time_func_dict) == 0:
+        mb.showinfo('save', 'Нечего сохранять!')
+        return
     with open(f'{pr_dir}/time functions/time functions list.txt', 'w', encoding='utf-8') as file:
 
         for item in time_func_dict.items():
@@ -85,7 +88,7 @@ def timef_global_save(path):
 
         for out_dict in source_list:
             name = out_dict.get('<название источника>')
-            with open(rf'{pr_dir()}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
+            with open(rf'{pr_dir}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
                 for item in out_dict.items():
                     file.write(f'{item[0]}\n')
                     file.write(f'{item[1]}\n')
@@ -194,6 +197,7 @@ remp_sourses_dict = {}
 unic_path = get_recent_projects()
 dict_for_recent_pr = {}
 recent_path = ''
+path_for_remp_save =''
 
 tab_list = []
 
@@ -206,3 +210,4 @@ tab_list = []
 #                                                                 ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
 #
 #     test.mainloop()
+

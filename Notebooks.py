@@ -53,7 +53,6 @@ def folder_creator(path):
 
 
 def change_path(parent):
-
     for tabs in parent:
         tabs.destroy()
 
@@ -84,18 +83,18 @@ def start_from_recent(path, parent):
 
 
 def main(path):
-    # main_frame = FrameGen(root)
-
     if path is None:
         return
 
     file_dict = check_folder(path)
     if file_dict is None:
-        mb.showerror('Project error', f'Файл .PRJ  не найден. Указана неправильная директория\n{main_frame.path}')
+        mb.showerror('Project error', f'Файл .PRJ  не найден. Указана неправильная директория\n{path}')
         return
     set_recent_projects(path, unic_path)
 
     folder_creator(path)  # создаём папку time functions
+
+    path_for_remp_save = path
 
     tok_dir = os.path.normpath(os.path.join(path, file_dict.get('TOK')))
     pl_dir = os.path.normpath(os.path.join(path, file_dict.get('PL')))
@@ -185,24 +184,16 @@ def main(path):
 if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('1200x600')
-    main_frame = FrameGen(root)
-    main_frame._konstr()
 
-    main_frame.filemenu.add_command(label="Открыть проект", command=lambda: change_path(tab_list))
+    menu = FrameGen(root)
+    menu.konstr()
+    menu.filemenu.add_command(label="Открыть проект", command=lambda: change_path(tab_list))
 
-    main_frame.recent_pr_menu = tk.Menu(main_frame.filemenu, tearoff=0)
-    for key in get_recent_projects().keys():
-        main_frame.recent_pr_menu.add_command(label=f'{key}', command=lambda: start_from_recent(key, tab_list))
+    funcs = [(lambda k: lambda: start_from_recent(k, tab_list))(key) for key in get_recent_projects().keys()]
+    for key, f in zip(get_recent_projects().keys(), funcs):
+        menu.recent_pr_menu.add_command(label=f'{key}', command=f)
 
-    main_frame.filemenu.add_cascade(label="Недавние проекты", menu=main_frame.recent_pr_menu)
-
-    main_frame.filemenu.add_command(label="Сохранить (output dicts)", command=timef_global_save)
-
-    main_frame.toolbar()
-
-    main_frame.filemenu.add_command(label="Очистить папку time functions", command=tf_global_del)
-    # main_frame.filemenu.add_command(label="Reset", command=lambda: reset(tab_list))
-    main_frame.filemenu.add_command(label="Exit", command=main_frame.onExit)
+    menu.toolbar()
 
     nb = ttk.Notebook(root)
     nb.grid()

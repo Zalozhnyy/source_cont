@@ -108,18 +108,24 @@ class FrameGen(tk.Frame):
 
         self.a, self.A = self.time_grid()
 
-    def _konstr(self):
+    def konstr(self):
         self.parent.title("Sources")
-        self.menubar = tk.Menu(self.parent)
+        self.menubar = tk.Menu(self.parent, postcommand=self.update)
         self.parent.config(menu=self.menubar)
 
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
-
         self.menubar.add_cascade(label="Файл", menu=self.filemenu)
 
+        self.recent_pr_menu = tk.Menu(self.filemenu, tearoff=0)
+
+        self.filemenu.add_cascade(label="Недавние проекты", menu=self.recent_pr_menu)
+
     def toolbar(self):
-        # self.filemenu.add_command(label="Reset", command=lambda: self.reset(self.parent))
-        self.filemenu.add_command(label="Сохранение для РЭМП", command=self.save_remp)
+        self.filemenu.add_command(label="Сохранить (output dicts)", command=timef_global_save)
+        self.filemenu.add_command(label="Сохранение для РЭМП", command=lambda: self.save_remp)
+
+        self.filemenu.add_command(label="Очистить папку time functions", command=tf_global_del)
+        self.filemenu.add_command(label="Exit", command=self.parent.quit)
 
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
@@ -637,8 +643,20 @@ class FrameGen(tk.Frame):
         return DataParcer(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
 
     def save_remp(self):
-        Save_remp(data=remp_sourses_dict, path=self.path)
-        # self.wait_window(save)
+        if len(tab_list) == 0:
+            return
+        Save_remp(data=remp_sourses_dict, path=tab_list[0].path)
+
+    def global_save_update(self):
+        if len(tab_list) == 0:
+            return
+        timef_global_save(tab_list[0].path)
+
+    def update(self):
+        # self.filemenu.entryconfig(3, command=self.save_remp)
+        self.filemenu.entryconfig(3, command=self.save_remp)
+        self.filemenu.entryconfig(2, command=self.global_save_update)
+
 
     def onExit(self):
         self.quit()

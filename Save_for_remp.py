@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox as mb
 
 
 # from utility import pr_dir
@@ -155,6 +156,10 @@ class Save_remp():
         self.create_list = ['lag', 'distribution', 'koord_ist']
         self.distribution_list = ['JX', 'JY', 'JZ']
 
+        if len(self.data) == 0:
+            mb.showinfo('save','Нечего сохранять!')
+            return
+
         self.save_txt()
 
     def save_txt(self):
@@ -189,3 +194,5 @@ class Save_remp():
 
         with open(f'{self.path}/time functions/_remp.txt', 'w', encoding='utf-8') as file:
             file.write(out)
+
+        mb.showinfo('Save', f'Сохранено в {self.path}/time functions/_remp.txt')

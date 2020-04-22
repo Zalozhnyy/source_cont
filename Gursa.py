@@ -84,6 +84,7 @@ class Gursa(FrameGen):
             return print(f'Максимальное количество источников = {self.max_gursa_count}')
 
         self.x = PeSource(self.parent, name=f'Gursa_{self.gursa_numeric}')
+        self.x.path = self.path
         self.x.F = float(self.entry_f_val.get())
 
         self.wait_window(self.x)

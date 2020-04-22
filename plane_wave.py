@@ -137,7 +137,7 @@ class PlaneWave(FrameGen):
     def output_dictionary_plane(self):
 
         file_name = f'time functions/time_{self.name}.tf'
-        np.savetxt(f'{pr_dir()}/time functions/time_{self.name}.tf', self.output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{self.path}/time functions/time_{self.name}.tf', self.output_matrix, fmt='%-8.4g',
                    header=f'<Номер временной функции>\n'
                           f'{source_number}\n'
                           f'<Название временной функции>\n'

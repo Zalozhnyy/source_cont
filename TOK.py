@@ -64,7 +64,7 @@ class InitialField(FrameGen):
             'hz': self.some_x_val[5].get()
         }
 
-        with open(rf'{pr_dir()}/time functions/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
+        with open(rf'{self.path}/time functions/time_{self.name}_koef.txt', "w", encoding='utf-8') as f:
             for item in Initial_field_values_dict.items():
                 # print(f'{item[0]} = {item[1]}')
                 f.write(f'{item[0]} = {item[1]}\n')
@@ -183,7 +183,7 @@ class ExternalField(FrameGen):
         # np.savetxt(f'{pr_dir()}/time functions/TOK/time_ext_{key}.tf', output_matrix, fmt='%-8.4g',
         #            header=f'{key} = {self.external_field_values_dict.get(key)}\ntime\t\tfunc', delimiter='\t',
         #            comments='')
-        np.savetxt(f'{pr_dir()}/time functions/TOK/time_ext_{key}.tf', output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{self.path}/time functions/TOK/time_ext_{key}.tf', output_matrix, fmt='%-8.4g',
                    header=f'<Номер временной функции>\n'
                           f'{source_number}\n'
                           f'<Название временной функции>\n'

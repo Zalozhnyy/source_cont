@@ -16,45 +16,16 @@ from Save_for_remp import Save_remp
 from Exceptions import *
 
 
-def timef_global_save():
-    # global time_func_dict
-    with open(f'{pr_dir()}/time functions/time functions list.txt', 'w', encoding='utf-8') as file:
-
-        for item in time_func_dict.items():
-            if type(item) is not list:
-                file.write(f'{item[0]} = {item[1]}\n')
-            else:
-                for i in item:
-                    file.write(f'{i[0]} = {i[1]}\n')
-
-        mb.showinfo('Save', 'Сохранено в time functions list.txt')
-
-        for out_dict in source_list:
-            name = out_dict.get('<название источника>')
-            with open(rf'{pr_dir()}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
-                for item in out_dict.items():
-                    file.write(f'{item[0]}\n')
-                    file.write(f'{item[1]}\n')
-
-
-def tf_global_del():
-    dir = os.path.join(config_read()[0], 'time functions')
-    ask = mb.askyesno('Очистка папки', 'Вы уверены, что хотите удалить все time функции?')
-    if ask is True:
-
-        for files in os.walk(dir):
-            for file in files[2]:
-                if file.endswith('.tf') or file.endswith('.txt'):
-                    path = os.path.join(files[0], file)
-                    os.remove(path)
-
-
 class FrameGen(tk.Frame):
-    def __init__(self, parent, name='Title', energy_type='Название типа энергии'):
+    def __init__(self, parent, name='Title', energy_type='Название типа энергии', path=None):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.name = name
         self.energy_type = energy_type
+        self.path = path
+
+        if self.path != None:
+            self.pr_dir = self.path.split('/')[-1]
 
         self.entry_func = []
         self.entry_time = []
@@ -68,8 +39,11 @@ class FrameGen(tk.Frame):
         self.entry_time_fix_val = tk.StringVar()
         self.spectr = []
 
-        self.path = os.path.normpath(config_read()[0])
-        self.dir_name = config_read()[0].split('/')[-1]
+        # self.path = os.path.normpath(config_read()[0])
+        # self.path = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=os.getcwd())
+
+        # self.dir_name = config_read()[0].split('/')[-1]
+
         self.gursa_count = []
 
         self.existe_gursa_label = []
@@ -136,15 +110,16 @@ class FrameGen(tk.Frame):
 
     def _konstr(self):
         self.parent.title("Sources")
-        menubar = tk.Menu(self.parent)
-        self.parent.config(menu=menubar)
-        self.filemenu = tk.Menu(menubar, tearoff=0)
-        # self.filemenu.add_command(label="Reset", command=lambda: self.reset(self.parent))
-        self.filemenu.add_command(label="Global save", command=timef_global_save)
-        self.filemenu.add_command(label="Очистить timefunctions", command=tf_global_del)
+        self.menubar = tk.Menu(self.parent)
+        self.parent.config(menu=self.menubar)
 
-        menubar.add_cascade(label="Файл", menu=self.filemenu)
-        menubar.add_command(label="remp save", command=self.save_remp)
+        self.filemenu = tk.Menu(self.menubar, tearoff=0)
+
+        self.menubar.add_cascade(label="Файл", menu=self.filemenu)
+
+    def toolbar(self):
+        # self.filemenu.add_command(label="Reset", command=lambda: self.reset(self.parent))
+        self.filemenu.add_command(label="Сохранение для РЭМП", command=self.save_remp)
 
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
@@ -153,7 +128,7 @@ class FrameGen(tk.Frame):
         self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
                                        command=lambda: self.ent_load(
                                            fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
-                                                              initialdir=rf'{pr_dir()}/time functions/user configuration').split(
+                                                              initialdir=rf'{self.pr_dir}/time functions/user configuration').split(
                                                '/')[-1]))
         self.button_browse.grid(row=0, column=0, padx=3, pady=3)
         self.button_browse_def = tk.Button(self.load_safe_fr, width=10, text='Load default', state='active',
@@ -284,7 +259,7 @@ class FrameGen(tk.Frame):
         self.del_button.configure(state='normal')
 
     def ent_load(self, path):
-        with open(rf'{pr_dir()}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
+        with open(rf'{self.pr_dir}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         # print(lines)
@@ -497,7 +472,7 @@ class FrameGen(tk.Frame):
 
         save_dir = fd.asksaveasfilename(title='Назовите файл', filetypes=(("dtf files", "*.dtf"), ("All files", "*.*"))
                                         , defaultextension=("dtf files", "*.dtf"),
-                                        initialdir=rf'{pr_dir()}/time functions/user configuration')
+                                        initialdir=rf'{self.pr_dir}/time functions/user configuration')
         with open(save_dir, 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
@@ -508,7 +483,7 @@ class FrameGen(tk.Frame):
             mb.showinfo('Save', f'Сохранено в time functions/user configuration/{save_dir_inf}')
 
     def time_save_def(self):
-        with open(rf'{pr_dir()}/time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
+        with open(rf'{self.pr_dir}/time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')
@@ -518,12 +493,12 @@ class FrameGen(tk.Frame):
                         f'Сохранено стандартной в time functions/user configuration/default.dtf')
 
     def time_grid(self):
-        a = DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
+        a = DataParcer(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
         return f'[{a[0]} : {a[-1]}]', a
 
     def spectr_choice_classifier(self):
         spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                        initialdir=f'{config_read()[0]}/pechs/spectr',
+                                        initialdir=f'{self.path}/pechs/spectr',
                                         filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
 
         with open(spectr_dir, 'r', encoding='utf-8') as file:
@@ -659,10 +634,10 @@ class FrameGen(tk.Frame):
                 mb.showerror('Value error', f'Значение временной функции {item} выходит за пределы')
 
     def child_parcecer_grid(self):
-        return DataParcer(os.path.join(f'{self.path}', check_folder().get('GRD'))).grid_parcer()
+        return DataParcer(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
 
     def save_remp(self):
-        Save_remp(data=remp_sourses_dict)
+        Save_remp(data=remp_sourses_dict, path=self.path)
         # self.wait_window(save)
 
     def onExit(self):

@@ -2,43 +2,52 @@ import os
 import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
-from collections import namedtuple
+import locale
 
 
-def config_read():
-    with open(r"config.txt", 'r', encoding='utf-8') as g:
-        cur_dir = []
-        for line in g:
-            cur_dir.append(line.strip())
-    return cur_dir
+# def config_read():
+#     with open(r"config.txt", 'r', encoding='utf-8') as g:
+#         cur_dir = []
+#         for line in g:
+#             cur_dir.append(line.strip())
+#     return cur_dir
 
 
-def open_button():
-    filename = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=os.getcwd())
-    handle = open(r"config.txt", "w", encoding='utf-8')
-    handle.write(f'{filename}')
-    handle.close()
+# def open_button():
+#     filename = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=os.getcwd())
+#     if filename == '':
+#         return
+#     handle = open(r"config.txt", "w", encoding='utf-8')
+#     handle.write(f'{filename}')
+#     handle.close()
+#
+#     with open(r"config.txt", 'r', encoding='utf-8') as g:
+#         cur_dir = []
+#         for line in g:
+#             cur_dir.append(line.strip())
+#     # if len(cur_dir) < 1:
+#     #     mb.showerror('Error', 'Путь не выбран')
+#     # else:
+#     #     mb.showinfo('Info', 'Путь сохранён.')
+#     print(cur_dir)
+#     # main()
 
-    with open(r"config.txt", 'r', encoding='utf-8') as g:
-        cur_dir = []
-        for line in g:
-            cur_dir.append(line.strip())
-    if len(cur_dir) < 1:
-        mb.showerror('Error', 'Путь не выбран')
-    else:
-        mb.showinfo('Info', 'Путь сохранён.')
-    print(cur_dir)
-    # main()
 
-
-def check_folder():
+def check_folder(path):
     prj_name = []
-    for f in os.listdir(config_read()[0]):
+    for f in os.listdir(path):
         if f.endswith(".PRJ") or f.endswith(".prj"):
             prj_name.append(f)
+    if len(prj_name) == 0:
+        return
 
-    with open(os.path.join(config_read()[0], rf'{prj_name[0]}'), 'r', encoding='utf-8') as file:
-        lines = file.readlines()
+    try:
+        with open(os.path.join(path, rf'{prj_name[0]}'), 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+    except UnicodeDecodeError:
+        with open(os.path.join(path, rf'{prj_name[0]}'), 'r',
+                  encoding=locale.getpreferredencoding()) as file:
+            lines = file.readlines()
 
     out = {}
     for i in range(len(lines)):
@@ -56,9 +65,42 @@ def check_folder():
     return out
 
 
-def pr_dir():
-    pr_dir = os.path.abspath(config_read()[0])
-    return pr_dir
+# def pr_dir():
+#     pr_dir = os.path.abspath(config_read()[0])
+#     return pr_dir
+
+def timef_global_save(path):
+    # global time_func_dict
+    pr_dir = path.split('/')[-1]
+    with open(f'{pr_dir}/time functions/time functions list.txt', 'w', encoding='utf-8') as file:
+
+        for item in time_func_dict.items():
+            if type(item) is not list:
+                file.write(f'{item[0]} = {item[1]}\n')
+            else:
+                for i in item:
+                    file.write(f'{i[0]} = {i[1]}\n')
+
+        mb.showinfo('Save', 'Сохранено в time functions list.txt')
+
+        for out_dict in source_list:
+            name = out_dict.get('<название источника>')
+            with open(rf'{pr_dir()}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
+                for item in out_dict.items():
+                    file.write(f'{item[0]}\n')
+                    file.write(f'{item[1]}\n')
+
+
+def tf_global_del(path):
+    dir = os.path.join(path, 'time functions')
+    ask = mb.askyesno('Очистка папки', 'Вы уверены, что хотите удалить все time функции?')
+    if ask is True:
+
+        for files in os.walk(dir):
+            for file in files[2]:
+                if file.endswith('.tf') or file.endswith('.txt'):
+                    path = os.path.join(files[0], file)
+                    os.remove(path)
 
 
 def file_dialog(title=None, initialdir=None, filetypes=None):
@@ -72,10 +114,9 @@ def save_for_remp_form(source_type=None, source_name=None, layer_index=None, amp
                        time_for_dict=None, particle_index=None, func_for_dict=None,
                        lag_and_koord=None, distribution=None, spectre=None,
                        external_field_component=None):
-
     out = {'source_type': source_type,
            'source_name': source_name,
-           'external_field_component':external_field_component,
+           'external_field_component': external_field_component,
            'layer_index': layer_index,
            'particle_index': particle_index,
            'amplitude': amplitude,
@@ -101,6 +142,47 @@ class Calculations:
         return self.f
 
 
+def open_button():
+    filename = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=f'{os.getcwd()}/entry_data')
+    if filename == '':
+        return None
+    return filename
+
+
+def set_recent_projects(path, path_dict):
+    unic_path = {}
+    try:
+        with open('properties.ini', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        for i in lines:
+            unic_path.update({i.strip(): ''})
+    except:
+        pass
+
+    for f in os.listdir(path):
+        if f.endswith(".PRJ") or f.endswith(".prj"):
+            unic_path.update({path: ''})
+
+    for i in path_dict.keys():
+        unic_path.update({i.strip(): ''})
+
+    with open('properties.ini', 'w', encoding='utf-8') as file:
+        for i, key in enumerate(unic_path.keys()):
+            file.write(key + '\n')
+
+
+def get_recent_projects():
+    out = {}
+    try:
+        with open('properties.ini', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        for i in lines:
+            out.update({i.strip(): ''})
+    except:
+        pass
+    return out
+
+
 source_list = []
 gursa_dict = {}
 source_number = 1
@@ -109,14 +191,18 @@ time_func_dict = {}
 
 remp_sourses_dict = {}
 
+unic_path = get_recent_projects()
+dict_for_recent_pr = {}
+recent_path = ''
+
 tab_list = []
 
-if __name__ == '__main__':
-    test = tk.Tk()
-
-    tk.Button(test, text='123', command=lambda: file_dialog(title='Выберите файл spectr',
-                                                            initialdir=f'{config_read()[0]}/pechs/spectr',
-                                                            filetypes=(
-                                                                ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
-
-    test.mainloop()
+# if __name__ == '__main__':
+#     test = tk.Tk()
+#
+#     tk.Button(test, text='123', command=lambda: file_dialog(title='Выберите файл spectr',
+#                                                             initialdir=f'{}/pechs/spectr',
+#                                                             filetypes=(
+#                                                                 ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
+#
+#     test.mainloop()

@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-from utility import pr_dir
+
+# from utility import pr_dir
 
 
 # class Save_remp_(tk.Toplevel):
@@ -146,8 +147,9 @@ from utility import pr_dir
 
 
 class Save_remp():
-    def __init__(self, data=None):
+    def __init__(self, data=None, path=None):
         self.data = data.copy()
+        self.path = path
 
         self.frame_exist = 0
         self.create_list = ['lag', 'distribution', 'koord_ist']
@@ -185,5 +187,5 @@ class Save_remp():
                         out += f'<{lkey}>\n{lval}\n'
             out += '\n'
 
-        with open(f'{pr_dir()}/time functions/_remp.txt', 'w', encoding='utf-8') as file:
+        with open(f'{self.path}/time functions/_remp.txt', 'w', encoding='utf-8') as file:
             file.write(out)

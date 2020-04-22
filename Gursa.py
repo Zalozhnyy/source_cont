@@ -24,7 +24,7 @@ class Gursa(FrameGen):
         self.gursa_numeric = 1
 
         # отслеживание отрисованных источников
-        path = os.path.join(config_read()[0], check_folder().get('PAR'))
+        path = os.path.join(self.path, check_folder(self.path).get('PAR'))
         self.max_gursa_count, numbers_convert = DataParcer(path).par_decoder()
         self.gursa_numbers = {}
         for i in numbers_convert:
@@ -116,7 +116,7 @@ class Gursa(FrameGen):
 
             if self.x.spectr_type.get() == 1:
                 type = 'DISCRETE'
-                np.savetxt(f'{pr_dir()}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
+                np.savetxt(f'{self.path}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
                            self.x.Spektr_output, fmt='%-6.3g', header='SP_TYPE={}\n[DATA]'.format(type),
                            comments='', delimiter='\t')
 
@@ -130,7 +130,7 @@ class Gursa(FrameGen):
                 self.Spektr_output_2 = np.insert(self.Spektr_output_2, 1, np.zeros(self.Spektr_output_2.shape[0]
                                                                                    , dtype=int), axis=1)
 
-                np.savetxt(f'{pr_dir()}/time functions/Gursa/IL_{self.x.name}.txt', self.Spektr_output_2,
+                np.savetxt(f'{self.path}/time functions/Gursa/IL_{self.x.name}.txt', self.Spektr_output_2,
                            fmt='%-6.3g', comments='', delimiter='\t',
                            header='Пример фиксированного спектра\n'
                                   'Номер спектра (номер частицы)\n'
@@ -150,7 +150,7 @@ class Gursa(FrameGen):
             elif self.x.spectr_type.get() == 0:
                 type = 'CONTINUOUS'
                 np.savetxt(
-                    f'{pr_dir()}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
+                    f'{self.path}/time functions/Gursa/Spektr_output_{self.x.name}.txt',
                     self.x.Spektr_output, fmt='%-6.3g', comments='', delimiter='\t',
                     header='SP_TYPE={}\n[DATA]\n{:.2g}'.format(type, self.x.spectr_cont[0, 0]))
 
@@ -162,7 +162,7 @@ class Gursa(FrameGen):
                 out_sp = np.insert(out_sp, 1, np.zeros(out_sp.shape[0], dtype=int), axis=1)
                 out_sp = np.insert(out_sp, 1, np.zeros(out_sp.shape[0], dtype=int), axis=1)
 
-                np.savetxt(f'{pr_dir()}/time functions/Gursa/IL_{self.x.name}.txt', out_sp,
+                np.savetxt(f'{self.path}/time functions/Gursa/IL_{self.x.name}.txt', out_sp,
                            fmt='%-6.3g', comments='', delimiter='\t',
                            header='Пример фиксированного спектра\n'
                                   'Номер спектра (номер частицы)\n'
@@ -204,7 +204,7 @@ class Gursa(FrameGen):
         # np.savetxt(f'{pr_dir()}/time functions/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
         #            header=f'1 pechs\n{time_count[0]} {time_count[-1]} {koef}\n{len(time_count)}', delimiter='\t',
         #            comments='')
-        np.savetxt(f'{pr_dir()}/time functions/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{self.path}/time functions/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',
                    header=f'<Номер временной функции>\n'
                           f'{source_number}\n'
                           f'<Название временной функции>\n'

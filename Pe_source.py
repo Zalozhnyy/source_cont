@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 
-from utility import  config_read
+# from utility import  config_read
 
 
 class PeSource(tk.Toplevel):
@@ -238,7 +238,7 @@ class PeSource(tk.Toplevel):
 
         # БЛОК ЧТЕНИЯ ТАБЛИЦ ПОСТОЯННЫХ
 
-        materials_path = os.path.join(config_read()[0], 'pechs\materials')
+        materials_path = os.path.join(self.path, 'pechs\materials')
 
         try:
             if os.path.exists(materials_path):

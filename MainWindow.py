@@ -47,7 +47,7 @@ class MainWindow(tk.Frame):
         self.filemenu.add_command(label="Сохранение для РЭМП", command=self.remp_save)
 
         self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder)
-        self.filemenu.add_command(label="Очистить папку time functions", command=lambda: tf_global_del(self.path))
+        # self.filemenu.add_command(label="Очистить папку time functions", command=lambda: tf_global_del(self.path))
         self.filemenu.add_command(label='Перезагрузка', command=self.reset)
         self.filemenu.add_command(label="Exit", command=self.parent.quit)
 

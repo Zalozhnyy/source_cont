@@ -39,7 +39,7 @@ def check_folder(path):
 
 def timef_global_save(path):
     # global time_func_dict
-    pr_dir = path.split('/')[-1]
+    pr_dir = path
     if len(time_func_dict) == 0:
         mb.showinfo('save', 'Нечего сохранять!')
         return

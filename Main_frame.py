@@ -25,8 +25,6 @@ class FrameGen(tk.Frame):
         self.energy_type = energy_type
 
         self.path = path
-        if self.path is not None:
-            self.pr_dir = self.path.split('/')[-1]
 
         self.entry_func = []
         self.entry_time = []
@@ -116,7 +114,7 @@ class FrameGen(tk.Frame):
         self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
                                        command=lambda: self.ent_load(
                                            fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
-                                                              initialdir=rf'{self.pr_dir}/time functions/user configuration').split(
+                                                              initialdir=rf'{self.path}/time functions/user configuration').split(
                                                '/')[-1]))
         self.button_browse.grid(row=0, column=0, padx=3, pady=3)
         self.button_browse_def = tk.Button(self.load_safe_fr, width=10, text='Load default', state='active',
@@ -247,7 +245,7 @@ class FrameGen(tk.Frame):
         self.del_button.configure(state='normal')
 
     def ent_load(self, path):
-        with open(rf'{self.pr_dir}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
+        with open(rf'{self.path}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = [line.strip() for line in lines]
         # print(lines)
@@ -460,7 +458,7 @@ class FrameGen(tk.Frame):
 
         save_dir = fd.asksaveasfilename(title='Назовите файл', filetypes=(("dtf files", "*.dtf"), ("All files", "*.*"))
                                         , defaultextension=("dtf files", "*.dtf"),
-                                        initialdir=rf'{self.pr_dir}/time functions/user configuration')
+                                        initialdir=rf'{self.path}/time functions/user configuration')
         with open(save_dir, 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
@@ -471,7 +469,7 @@ class FrameGen(tk.Frame):
             mb.showinfo('Save', f'Сохранено в time functions/user configuration/{save_dir_inf}')
 
     def time_save_def(self):
-        with open(rf'{self.pr_dir}/time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
+        with open(rf'{self.path}/time functions/user configuration/default.dtf', 'w', encoding='utf-8') as file:
             for i in self.func_list:
                 file.write(f'{i} ')
             file.write('\n')

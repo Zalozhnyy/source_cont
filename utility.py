@@ -5,34 +5,6 @@ from tkinter import messagebox as mb
 import locale
 
 
-# def config_read():
-#     with open(r"config.txt", 'r', encoding='utf-8') as g:
-#         cur_dir = []
-#         for line in g:
-#             cur_dir.append(line.strip())
-#     return cur_dir
-
-
-# def open_button():
-#     filename = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=os.getcwd())
-#     if filename == '':
-#         return
-#     handle = open(r"config.txt", "w", encoding='utf-8')
-#     handle.write(f'{filename}')
-#     handle.close()
-#
-#     with open(r"config.txt", 'r', encoding='utf-8') as g:
-#         cur_dir = []
-#         for line in g:
-#             cur_dir.append(line.strip())
-#     # if len(cur_dir) < 1:
-#     #     mb.showerror('Error', 'Путь не выбран')
-#     # else:
-#     #     mb.showinfo('Info', 'Путь сохранён.')
-#     print(cur_dir)
-#     # main()
-
-
 def check_folder(path):
     prj_name = []
     for f in os.listdir(path):
@@ -64,10 +36,6 @@ def check_folder(path):
 
     return out
 
-
-# def pr_dir():
-#     pr_dir = os.path.abspath(config_read()[0])
-#     return pr_dir
 
 def timef_global_save(path):
     # global time_func_dict
@@ -194,12 +162,9 @@ time_func_dict = {}
 
 remp_sourses_dict = {}
 
-unic_path = get_recent_projects()
 dict_for_recent_pr = {}
 recent_path = ''
-path_for_remp_save =''
-
-tab_list = []
+path_for_remp_save = ''
 
 # if __name__ == '__main__':
 #     test = tk.Tk()
@@ -210,4 +175,3 @@ tab_list = []
 #                                                                 ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
 #
 #     test.mainloop()
-

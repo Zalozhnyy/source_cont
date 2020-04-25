@@ -71,6 +71,7 @@ class FluTab(FrameGen):
 
     def output_dictionary_flu(self):
 
+        print(self.pr_dir)
         file_name = f'time functions/time_{self.name}.tf'
         np.savetxt(f'{self.pr_dir}/time functions/time_{self.name}.tf', self.output_matrix, fmt='%-8.4g',
                    header=f'<Номер временной функции>\n'

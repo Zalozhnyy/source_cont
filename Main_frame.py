@@ -20,11 +20,12 @@ from Exceptions import *
 class FrameGen(tk.Frame):
     def __init__(self, parent, path, name='Title', energy_type='Название типа энергии'):
         tk.Frame.__init__(self)
-
+        self.parent = parent
         self.name = name
         self.energy_type = energy_type
 
         self.path = path
+        self.pr_dir = path
 
         self.entry_func = []
         self.entry_time = []

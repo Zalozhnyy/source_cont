@@ -115,11 +115,11 @@ class FrameGen(tk.Frame):
         self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
                                        command=lambda: self.ent_load(
                                            fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
-                                                              initialdir=rf'{self.path}/time functions/user configuration').split(
-                                               '/')[-1]))
+                                                              initialdir=rf'{self.path}/time functions/user configuration')))
         self.button_browse.grid(row=0, column=0, padx=3, pady=3)
         self.button_browse_def = tk.Button(self.load_safe_fr, width=10, text='Load default', state='active',
-                                           command=lambda: self.ent_load('default.dtf'))
+                                           command=lambda: self.ent_load(
+                                               rf'{self.path}/time functions/user configuration/default.dtf'))
         self.button_browse_def.grid(row=0, column=1, padx=3, pady=3)
         self.button_save = tk.Button(self.load_safe_fr, width=10, text='Save as', state='disabled',
                                      command=self.time_save)
@@ -246,8 +246,13 @@ class FrameGen(tk.Frame):
         self.del_button.configure(state='normal')
 
     def ent_load(self, path):
-        with open(rf'{self.path}/time functions/user configuration/{path}', 'r', encoding='utf-8') as file:
-            lines = file.readlines()
+        try:
+            with open(f'{path}', 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+        except FileNotFoundError:
+            if 'default.dtf' in path:
+                mb.showerror('path error', 'default.dtf не обнаружен. Сначала сохраните значения как стандартные.')
+                return
         lines = [line.strip() for line in lines]
         # print(lines)
         if type(self.entry_time) is list:
@@ -485,7 +490,7 @@ class FrameGen(tk.Frame):
 
     def spectr_choice_classifier(self):
         spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                        initialdir=f'{self.path}/pechs/spectr',
+                                        initialdir=f'{self.path}',
                                         filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
 
         with open(spectr_dir, 'r', encoding='utf-8') as file:

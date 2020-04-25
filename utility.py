@@ -77,7 +77,6 @@ def tf_global_del(path):
 def file_dialog(title=None, initialdir=None, filetypes=None):
     directory = fd.askopenfilename(title=title, initialdir=initialdir, filetypes=filetypes)
     if os.path.exists(directory):
-        print('dir =', directory)
         return directory
 
 

@@ -511,7 +511,26 @@ class FrameGen(tk.Frame):
 
         try:
             if self.spectr_type == 'CONTINUOUS':
-                spectr = np.loadtxt(self.spectr_dir, skiprows=3)
+                with open(self.spectr_dir, 'r', encoding='utf-8') as file_handler:
+                    i = 0
+                    s = []
+                    for line in file_handler:
+                        i += 1
+                        if i < 3: continue
+                        if len(line.split()) < 2:
+                            line = line + '0'
+                            s.append(line.split())
+                        else:
+                            s.append(line.split())
+
+                    out = np.array(s, dtype=float)
+                    for i in range(len(out) - 1):
+                        out[i, 0] = (out[i, 0] + out[i + 1, 0]) / 2
+                        out[i, 1] = out[i + 1, 1]
+                    out = np.delete(out, np.s_[-1:], 0)
+
+                spectr = out
+
             elif self.spectr_type == 'DISCRETE':
                 spectr = np.loadtxt(self.spectr_dir, skiprows=2)
             return spectr

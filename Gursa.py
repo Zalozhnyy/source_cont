@@ -199,7 +199,8 @@ class Gursa(FrameGen):
         F = float(self.entry_f_val.get())
         intergal_tf = integrate.simps(y=output_matrix[:, 1], x=output_matrix[:, 0], dx=output_matrix[:, 0])
 
-        self.koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        # self.koef = F / (0.23 * E_cp * intergal_tf * 1e3 * 1.6e-19)
+        self.koef = F / intergal_tf
 
         file_name = f'time functions/Gursa/time_{self.x.name}.tf'
         # np.savetxt(f'{pr_dir()}/time functions/Gursa/time_{self.x.name}.tf', output_matrix, fmt='%-8.4g',

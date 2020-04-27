@@ -66,11 +66,11 @@ class Gursa(FrameGen):
 
         self.gursa_combobox = ttk.Combobox(self.gursa_fr, values=self.gursa_dict.keys(), width=10, state='disabled')
         self.gursa_combobox.grid(row=0, column=2, pady=3, padx=3)
-        self.delete_gursa_class_button = tk.Button(self.gursa_fr, text='Delete obj', command=self.regrid_gursa,
+        self.delete_gursa_class_button = tk.Button(self.gursa_fr, text='Удалить', command=self.regrid_gursa,
                                                    width=8, state='disabled')
         self.delete_gursa_class_button.grid(row=0, column=1, padx=3, pady=3)
 
-        self.add_button_gursa = tk.Button(self.gursa_fr, text='Add source', width=10, command=self.gursa_cw,
+        self.add_button_gursa = tk.Button(self.gursa_fr, text='Добавить источник', width=15, command=self.gursa_cw,
                                           state='disabled')
         self.add_button_gursa.grid(row=0, column=0, padx=3, pady=3)
 

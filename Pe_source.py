@@ -32,7 +32,6 @@ class PeSource(tk.Toplevel):
         self.focus()
 
         self.child_window()
-        print(repr(self))
 
 
     def child_window(self):

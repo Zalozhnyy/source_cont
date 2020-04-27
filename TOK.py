@@ -36,7 +36,7 @@ class InitialField(FrameGen):
             some_x = tk.Entry(self, textvariable=self.some_x_val[i], width=4)
             some_x.grid(row=2 + i, column=6)
 
-        ini_save_button = tk.Button(self, width=10, text='Save', state='normal', command=self.save_Initial_field)
+        ini_save_button = tk.Button(self, width=10, text='Сохранить', state='normal', command=self.save_Initial_field)
         ini_save_button.grid(row=0, column=6, pady=5)
 
     def save_Initial_field(self):
@@ -114,8 +114,8 @@ class ExternalField(FrameGen):
         [keys.append(i) for i in self.external_field_values_dict.keys()]
 
         for i in range(len(keys)):
-            self.ext_load_tf_button.append(tk.Button(self.ext_fr, text=f'calc {keys[i]} tf', overrelief='ridge',
-                                                     width=9, state='disabled'))
+            self.ext_load_tf_button.append(tk.Button(self.ext_fr, text=f'Рассчитать {keys[i]}', overrelief='ridge',
+                                                     width=12, state='disabled'))
             self.ext_load_tf_button[i].grid(row=0 + i, column=2, padx=3, pady=2)
 
         self.ext_load_tf_button[0].configure(command=lambda: self.calculate_external_field(keys[0]))

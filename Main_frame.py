@@ -112,19 +112,19 @@ class FrameGen(tk.Frame):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
         self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
 
-        self.button_browse = tk.Button(self.load_safe_fr, width=10, text='Load', state='active',
+        self.button_browse = tk.Button(self.load_safe_fr, width=12, text='Загрузить', state='active',
                                        command=lambda: self.ent_load(
                                            fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
                                                               initialdir=rf'{self.path}/time functions/user configuration')))
         self.button_browse.grid(row=0, column=0, padx=3, pady=3)
-        self.button_browse_def = tk.Button(self.load_safe_fr, width=10, text='Load default', state='active',
+        self.button_browse_def = tk.Button(self.load_safe_fr, width=12, text='Загр. стандарт', state='active',
                                            command=lambda: self.ent_load(
                                                rf'{self.path}/time functions/user configuration/default.dtf'))
         self.button_browse_def.grid(row=0, column=1, padx=3, pady=3)
-        self.button_save = tk.Button(self.load_safe_fr, width=10, text='Save as', state='disabled',
+        self.button_save = tk.Button(self.load_safe_fr, width=12, text='Сохранить как', state='disabled',
                                      command=self.time_save)
         self.button_save.grid(row=1, column=0, padx=3, pady=3)
-        self.button_save_def = tk.Button(self.load_safe_fr, width=10, text='Save as default',
+        self.button_save_def = tk.Button(self.load_safe_fr, width=12, text='Сохр. как станд.',
                                          command=self.time_save_def,
                                          state='disabled')
         self.button_save_def.grid(row=1, column=1, padx=3, pady=3)
@@ -134,23 +134,23 @@ class FrameGen(tk.Frame):
         self.entry_func_fr = tk.LabelFrame(self, text='Блок ввода данных временной функции', width=30)
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5)
 
-        self.button_read_gen = tk.Button(self.entry_func_fr, width=9, text='Read', state='disabled',
+        self.button_read_gen = tk.Button(self.entry_func_fr, width=12, text='Прочитать', state='disabled',
                                          command=self.local_get)
         self.button_read_gen.grid(row=0, column=2, padx=3, pady=3)
-        self.button_generate = tk.Button(self.entry_func_fr, width=9, text='Generate', command=self.ent,
+        self.button_generate = tk.Button(self.entry_func_fr, width=12, text='Сгенерировать', command=self.ent,
                                          state='active')
         self.button_generate.grid(row=1, column=2, padx=3, pady=3)
 
         label_name_energy = tk.Label(self.entry_func_fr, text=f'{self.energy_type}')
         label_name_energy.grid(row=2, column=0, columnspan=2)
-        label_func = tk.Label(self.entry_func_fr, text='value', width=15)
+        label_func = tk.Label(self.entry_func_fr, text='Значение функции', width=15)
         label_func.grid(row=3, column=1, padx=2, pady=2)
-        label_time = tk.Label(self.entry_func_fr, text='time', width=15)
+        label_time = tk.Label(self.entry_func_fr, text='Время', width=15)
         label_time.grid(row=3, column=0, padx=2, pady=2)
 
-        self.add_button = tk.Button(self.entry_func_fr, width=6, text='add cell', state='disabled',
+        self.add_button = tk.Button(self.entry_func_fr, width=6, text='Доб. яч.', state='disabled',
                                     command=lambda: self.add_entry())
-        self.del_button = tk.Button(self.entry_func_fr, width=6, text='del cell', state='disabled',
+        self.del_button = tk.Button(self.entry_func_fr, width=6, text='Уд. яч.', state='disabled',
                                     command=lambda: self.delete_entry())
         self.add_button.grid(row=0, column=0, sticky='e', padx=3)
         self.del_button.grid(row=0, column=1, sticky='w', padx=3)
@@ -178,15 +178,15 @@ class FrameGen(tk.Frame):
         self.entry_func_vel = tk.StringVar()
         self.entry_time_vel = tk.StringVar()
 
-        tk.Label(self.entry_func_fr, text='time').grid(row=0, column=0, pady=3, padx=2)
+        tk.Label(self.entry_func_fr, text='Время').grid(row=0, column=0, pady=3, padx=2)
         self.entry_time = tk.Entry(self.entry_func_fr, width=35, textvariable=self.entry_time_vel, justify='left')
         self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7)
 
-        tk.Label(self.entry_func_fr, text='value').grid(row=1, column=0, pady=3, padx=2)
+        tk.Label(self.entry_func_fr, text='Зн. функции').grid(row=1, column=0, pady=3, padx=2)
         self.entry_time = tk.Entry(self.entry_func_fr, width=35, textvariable=self.entry_func_vel, justify='left')
         self.entry_time.grid(row=1, column=1, pady=3, padx=2, columnspan=7)
 
-        self.button_read_gen = tk.Button(self.entry_func_fr, width=10, text='Read', state='normal',
+        self.button_read_gen = tk.Button(self.entry_func_fr, width=10, text='Прочитать', state='normal',
                                          command=self.local_get_row)
         self.button_read_gen.grid(row=5, column=1, padx=3, pady=3)
 

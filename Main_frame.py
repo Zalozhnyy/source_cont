@@ -246,6 +246,8 @@ class FrameGen(tk.Frame):
         self.del_button.configure(state='normal')
 
     def ent_load(self, path):
+        if path == '':
+            return
         try:
             with open(f'{path}', 'r', encoding='utf-8') as file:
                 lines = file.readlines()

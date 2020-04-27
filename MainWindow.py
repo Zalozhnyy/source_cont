@@ -49,7 +49,11 @@ class MainWindow(tk.Frame):
         self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder)
         # self.filemenu.add_command(label="Очистить папку time functions", command=lambda: tf_global_del(self.path))
         self.filemenu.add_command(label='Перезагрузка', command=self.reset)
-        self.filemenu.add_command(label="Exit", command=self.parent.quit)
+        self.filemenu.add_command(label="Exit", command=self.onExit)
+
+    def onExit(self):
+        self.parent.quit()
+        self.parent.destroy()
 
     def browse_from_recent(self, path):
         self.path = path

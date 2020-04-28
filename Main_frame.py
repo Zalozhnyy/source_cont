@@ -103,7 +103,7 @@ class FrameGen(tk.Frame):
         self.load_save_frame()
         self.entry_func_frame()
 
-        self.button_calculate = tk.Button(self, width=15, text='Рассчёт', state='disabled')
+        self.button_calculate = tk.Button(self, width=15, text='Расчёт', state='disabled')
         self.button_calculate.grid(row=1, column=3, padx=3)
 
         self.a, self.A = self.time_grid()

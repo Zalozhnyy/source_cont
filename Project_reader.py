@@ -119,21 +119,27 @@ class DataParcer:
             layers = int(lines_pl[6])
             line = 9  # <Движение частицы в слое (вертикаль-слои, горизонталь-частицы) 0-нет/1-да>
             line += 2 * (particle_count + 1)  # <Объемный источник (вертикаль-слои, горизонталь-частицы) 0-нет/1-да>
-            line += 2  # <Частица номер> + 1
+            line += 1  # <Частица номер>
 
             out_pl = {}
-            lay_number = int(lines_pl[line].strip())
-            line += 1
+
             for i in range(particle_count):
+                line += 1
+                lay_number = int(lines_pl[line].strip())
+
                 key_list = []
                 for j in range(layers):
-                    key_list.append(lines_pl[line].split())
                     line += 1
+                    key_list.append(lines_pl[line].split())
 
                 key_list = np.array(key_list, dtype=int)
                 out_pl.update({lay_number: key_list})
-                line += 2
+                line += 1
+            return out_pl
 
+        except Exception:
+            print('Ошибка в чтении файла .PL')
+            return
             # with open(rf'{self.path}', 'r', encoding='utf-8') as file:
             #     lines_pl = file.readlines()
             # for line in range(len(lines_pl)):
@@ -149,10 +155,8 @@ class DataParcer:
             # # print('.PL\n', out_pl)
             # return out_pl
             # print('.PL\n', out_pl)
-            return out_pl
-        except Exception:
-            print('Ошибка в чтении файла .PL')
-            return
+
+
 
     def grid_parcer(self):
 
@@ -194,7 +198,7 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\KUVSH.LAY'
-    x = DataParcer(test_file).lay_decoder()
+    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\Wpala\PROJECT_1_new.PL'
+    x = DataParcer(test_file).pl_decoder()
 
     print(x)

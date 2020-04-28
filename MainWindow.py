@@ -188,8 +188,8 @@ class MainWindow(tk.Frame):
                         self.notebook.add(tab, text=f"{tab.name}")
                         tab.notebooks()
 
-            if ar[:, 0].any() == 1:
-                mb.showinfo('ERROR', 'Частицы в нулевом слое!')
+            # if ar[:, 0].any() == 1:
+            #     mb.showinfo('ERROR', 'Частицы в нулевом слое!')
 
         if TOK[0] == 1:
             energy_type = 'Начальное поле'

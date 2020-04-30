@@ -43,7 +43,7 @@ class MainWindow(tk.Frame):
 
         self.filemenu.add_cascade(label="Недавние проекты", menu=self.recent_pr_menu)
 
-        self.filemenu.add_command(label="Сохранить (output dicts)", command=lambda: timef_global_save(self.path))
+        # self.filemenu.add_command(label="Сохранить (output dicts)", command=lambda: timef_global_save(self.path))
         self.filemenu.add_command(label="Сохранение для РЭМП", command=self.remp_save)
 
         self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder)

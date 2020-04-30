@@ -194,7 +194,7 @@ class ExternalField(FrameGen):
                           f'{self.external_field_values_dict.get(key)}\n'
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
-        self.external_tf_num.append(file_name)
+        # self.external_tf_num.append(file_name)
 
         print(f'{key}  рассчитан')
 
@@ -209,14 +209,12 @@ class ExternalField(FrameGen):
 
         remp_sourses_dict.update({f'{self.name}_{key}': remp_sources_dict_val})
 
-        time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
-
-        if self.name in time_func_dict.keys():
-            time_func_dict.popitem()
-        if len(self.external_tf_num) == 1:
-            time_func_dict.update({f'{self.name}': self.external_tf_num[0]})
-        else:
-            time_func_dict.update({f'{self.name}': self.external_tf_num})
+        # if self.name in time_func_dict.keys():
+        #     time_func_dict.popitem()
+        # if len(self.external_tf_num) == 1:
+        #     time_func_dict.update({f'{self.name}': self.external_tf_num[0]})
+        # else:
+        #     time_func_dict.update({f'{self.name}': self.external_tf_num})
 
         if self.graph_ext_checkbutton.get() == 1:
             # построение графиков

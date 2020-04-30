@@ -195,4 +195,4 @@ class Save_remp():
         with open(f'{self.path}/remp_sources.txt', 'w', encoding='utf-8') as file:
             file.write(out)
 
-        mb.showinfo('Save', f'Сохранено в {self.path}/remp_sources.txt')
+        mb.showinfo('Save', f'Сохранено в {self.path}/remp_sources')

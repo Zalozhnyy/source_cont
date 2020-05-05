@@ -139,17 +139,19 @@ class UnitedLayers(FrameGen):
 
         time_for_dict, func_for_dict, _ = self.data_control()
 
+        lag = self.pech_check()
+
         if 'Current' in self.name:  # сохранение для Current
             axes = ['x', 'y', 'z']
             distr = ['JX', 'JY', 'JZ']
             for i in range(len(axes)):
-                remp_sources_dict_val = save_for_remp_form(source_type='Current'+f'_{axes[i]}',
+                remp_sources_dict_val = save_for_remp_form(source_type='Current' + f'_{axes[i]}',
                                                            source_name=self.name,
                                                            layer_index=self.name.split('_')[-1],
                                                            amplitude=self.koef,
                                                            time_for_dict=time_for_dict,
                                                            func_for_dict=func_for_dict,
-                                                           lag_and_koord=0,
+                                                           lag_and_koord=lag,
                                                            distribution=distr[i])
 
                 remp_sourses_dict.update({f'{self.name}|| axe: {axes[i]}': remp_sources_dict_val})
@@ -161,14 +163,13 @@ class UnitedLayers(FrameGen):
                                                        amplitude=self.koef,
                                                        time_for_dict=time_for_dict,
                                                        func_for_dict=func_for_dict,
-                                                       lag_and_koord=0)
+                                                       lag_and_koord=lag)
 
             remp_sourses_dict.update({self.name: remp_sources_dict_val})
 
         else:
             print('Тип источника не обнаружен Current or Sigma')
             return
-
 
         # time_func_dict.update({f'{self.name}': os.path.normpath(file_name)})
         #
@@ -219,3 +220,19 @@ class UnitedLayers(FrameGen):
         #         pr_dict.pop(key)
         #
         # source_list.append(pr_dict)
+
+    def pech_check(self):
+        path = os.path.join(self.path, r'pechs\initials\source')
+
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+
+            for i in lines:
+                if 'SOURCE_DIRECTION' in i:
+                    koord = i.split('=')[-1]
+
+            lag = f'1 {koord}'
+        else:
+            lag = '0'
+        return lag

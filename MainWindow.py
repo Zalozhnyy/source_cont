@@ -169,7 +169,8 @@ class MainWindow(tk.Frame):
 
         if np.any(LAY[:, 1:] == 1):
             # Класс рассчте Current,Sigma
-            u_tab = UnitedLayers(parent=self.parent, path=self.path, energy_type='Current and Sigma')
+            u_tab = UnitedLayers(parent=self.parent, path=self.path, name='Current and Sigma',
+                                 energy_type='Current and Sigma')
 
             u_tab.lay_dir = lay_dir
             u_tab.pl_dir = pl_dir

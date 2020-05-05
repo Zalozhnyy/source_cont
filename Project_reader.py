@@ -44,14 +44,14 @@ class DataParcer:
             line = 2  # <Количество слоев> + 1 строка
             lay_numeric = int(lines[line])
             out_lay = np.zeros((lay_numeric, 3), dtype=int)
-            #print(f'<Количество слоев> + 1 строка     {lines[line]}')
+            # print(f'<Количество слоев> + 1 строка     {lines[line]}')
 
             line += 2  # <Номер, название слоя>
-            #print(f'<Номер, название слоя>     {lines[line]}')
+            # print(f'<Номер, название слоя>     {lines[line]}')
 
             for layer in range(lay_numeric):
                 line += 1  # <Номер, название слоя> + 1 строка
-                #print(f'<Номер, название слоя> + 1 строка     {lines[line]}')
+                # print(f'<Номер, название слоя> + 1 строка     {lines[line]}')
 
                 out_lay[layer, 0] = int(lines[line].split()[0])  # 0 - номер слоя
 
@@ -156,8 +156,6 @@ class DataParcer:
             # return out_pl
             # print('.PL\n', out_pl)
 
-
-
     def grid_parcer(self):
 
         try:
@@ -196,9 +194,39 @@ class DataParcer:
             print('Ошибка в чтении файла .PL')
             return
 
+    def remp_source_decoder(self):
+        try:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                lines = file.readlines()
+        except UnicodeDecodeError:
+            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                lines = file.readlines()
+
+        out_dict = {}
+        value = {}
+        for i, line in enumerate(lines):
+
+            if '<source name>' in line:
+                key = lines[i + 1].strip()
+                if 'Current' in key or 'Sigma' in key:
+                    key = 'Current and Sigma'
+            if '<amplitude>' in line:
+                value.update({'amplitude': float(lines[i + 1].strip())})
+            if '<time function>' in line:
+                t = lines[i + 2].split()
+                t = [float(i) for i in t]
+                value.update({'time': t})
+                f = lines[i + 3].split()
+                f = [float(i) for i in f]
+                value.update({'value': f})
+
+                out_dict.update({key: value})
+
+        return out_dict
+
 
 if __name__ == '__main__':
-    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\Wpala\PROJECT_1_new.PL'
-    x = DataParcer(test_file).pl_decoder()
+    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\remp_sources'
+    x = DataParcer(test_file).remp_source_decoder()
 
     print(x)

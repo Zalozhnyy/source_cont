@@ -192,7 +192,7 @@ class Save_remp():
                         out += f'<{lkey}>\n{lval}\n'
             out += '\n'
 
-        with open(f'{self.path}/remp_sources.txt', 'w', encoding='utf-8') as file:
+        with open(f'{self.path}/remp_sources', 'w', encoding='utf-8') as file:
             file.write(out)
 
         mb.showinfo('Save', f'Сохранено в {self.path}/remp_sources')

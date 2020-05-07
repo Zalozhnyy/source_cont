@@ -2,6 +2,7 @@ import numpy as np
 import tkinter as tk
 from scipy import integrate
 import os
+import matplotlib.pyplot as plt
 
 from Project_reader import DataParcer
 from Main_frame import FrameGen
@@ -119,6 +120,9 @@ class UnitedLayers(FrameGen):
         self.graph_fr.grid(row=0, column=4, padx=10, pady=10, rowspan=10, columnspan=20, sticky='N')
         self.graph_painter(time_count, func_out, self.graph_fr)
         self.graph_frame_exist = 1
+
+    # def integral(self):
+    #     pass
 
     def output_dictionary_current(self, name=None, energy_type=None):
         self.name = name

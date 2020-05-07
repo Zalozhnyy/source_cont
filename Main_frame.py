@@ -77,7 +77,7 @@ class FrameGen(tk.Frame):
         self.button_change_method = tk.Button(self)
         self.button_change_method.grid(row=3, column=0, padx=5, pady=5, sticky='WN', columnspan=2)
 
-        # test_button = tk.Button(self,text='test',command=self.delete_fig)
+        # test_button = tk.Button(self,text='test',command=self.integral)
         # test_button.grid(row=2,column=3)
 
         self.load_save_frame()
@@ -300,8 +300,7 @@ class FrameGen(tk.Frame):
         else:
             self.entry_time = []
             self.entry_func = []
-        self.entry_func_fr.destroy()
-        self.entry_func_frame()
+
         self.func_entry_vel.clear()
         self.time_entry_vel.clear()
 
@@ -311,10 +310,12 @@ class FrameGen(tk.Frame):
         for i, word in enumerate(lines[1].split()):
             self.time_entry_vel.append(tk.StringVar())
             self.time_entry_vel[i].set(word)
+
+        self.entry_func_fr.destroy()
+        self.entry_func_frame()
+
         # print('func = ', self.func_entry_vel)
         # print('time = ', self.time_entry_vel)
-
-        self.ent_load_back()
 
     def ent_load_back(self):
         if type(self.entry_time) is not list:
@@ -437,9 +438,14 @@ class FrameGen(tk.Frame):
 
         func_string = self.func_entry_vel.get()
         if '(' in func_string:
+            tmp = ''
             for i in range(len(self.time_list)):
                 calc = func_string.replace('t', f'{self.time_list[i]}')
                 self.func_list.append(eval(calc))
+                tmp += '{:.5g} '.format(eval(calc))
+
+            self.func_entry_vel.set(tmp)
+
         else:
             for i in self.func_entry_vel.get().split():
                 try:

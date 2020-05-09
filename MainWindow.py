@@ -17,14 +17,24 @@ from Save_for_remp import Save_remp
 
 
 class MainWindow(tk.Frame):
-    def __init__(self, parent, path=None):
+    def __init__(self, parent, path=None, projectfilename=None):
         tk.Frame.__init__(self)
         self.parent = parent
-        self.path = path
 
         self.notebook = None
-
         self.toolbar()
+
+        try:
+            if projectfilename is not None:
+                if os.path.exists(projectfilename):
+                    self.path = os.path.dirname(projectfilename)
+                    self.check_project()
+            else:
+                raise Exception
+        except Exception:
+            self.path = path
+
+
 
     def toolbar(self):
         self.parent.title("Sources")

@@ -10,6 +10,12 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('1200x600')
 
-    main_win = MainWindow(root)
+    try:
+        print(f'Проект {projectfilename}')
+        ini = os.path.normpath(projectfilename)
+    except:
+        ini = None
+
+    main_win = MainWindow(root, projectfilename=ini)
 
     root.mainloop()

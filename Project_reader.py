@@ -234,18 +234,21 @@ class DataParcer:
             lag = self.pech_check_utility(self.source_path)
             mb.showinfo('Info', fr'lag/parameters взят из {self.source_path}')
         else:
-            ask = mb.askyesno('Проект pechs н найден',
+            ask = mb.askyesno('Проект pechs не найден',
                               f'Путь {self.source_path} не найден. Проект pechs не обнаружен.\n'
                               f'Продолжить без проекта pechs? (lag/parameters будет равен нулю)')
             if ask is True:
+                self.source_path = None
                 lag = '0'
             else:
                 mb.showinfo('Info', fr'Выберите файл source, находящийся в <pechs/initials/source>')
                 self.source_path = fd.askopenfilename(title='Выберите файл source', initialdir=f'{self.path}')
                 if self.source_path == '':
                     mb.showinfo('Info', fr'lag/parameters равен 0')
+                    self.source_path = None
                     return '0'
                 lag = self.pech_check_utility(self.source_path)
+
         return lag
 
     def pech_check_utility(self, path):
@@ -263,7 +266,7 @@ class DataParcer:
         out = {}
         if not os.path.exists(path):
             return out
-        with open(path, 'r') as file:
+        with open(path, 'r',encoding='utf-8') as file:
             while True:
                 line = file.readline().strip()
                 if line == '':

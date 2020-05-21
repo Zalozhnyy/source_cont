@@ -163,6 +163,7 @@ class Save_remp():
 
     def save_specters_configuration(self):
         out = ''
+        print(self.data.items())
         for item in self.data.items():
             out += f'{item[0]};{item[1][0]};{item[1][1]}\n'
 

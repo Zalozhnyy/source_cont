@@ -88,7 +88,8 @@ class FrameGen(tk.Frame):
 
         self.a, self.A = self.time_grid()
 
-        self.remp_source, self.specter_config = self.remp_source_finder()
+        self.remp_source = self.remp_source_finder()
+        self.specter_config = DataParcer(self.path).temp_spectres_reader()
         self.constants_frame()
         self.loat_from_remp()
 
@@ -102,9 +103,7 @@ class FrameGen(tk.Frame):
 
         out = DataParcer(remp_path).remp_source_decoder()
 
-        sp = DataParcer(self.path).temp_spectres_reader()
-
-        return out, sp
+        return out
 
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
@@ -287,7 +286,6 @@ class FrameGen(tk.Frame):
             return
 
     def loat_from_remp_calc(self):
-        print(self.specter_config.keys())
         if self.name in self.specter_config.keys():
             self.get()
             self.stectr_choice(specter=self.specter_config.get(self.name)[0],

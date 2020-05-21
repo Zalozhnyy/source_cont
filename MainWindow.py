@@ -202,25 +202,25 @@ class MainWindow(tk.Frame):
             # if ar[:, 0].any() == 1:
             #     mb.showinfo('ERROR', 'Частицы в нулевом слое!')
 
-        if TOK[0] == 1:
-            energy_type = 'Начальное поле'
-            tab = InitialField(self.parent, self.path, 'Initial_field', f'{energy_type}')
-            self.notebook.add(tab, text=f"{tab.name}")
-            tab.notebooks()
+        # if TOK[0] == 1:
+        #     energy_type = 'Начальное поле'
+        #     tab = InitialField(self.parent, self.path, 'Initial_field', f'{energy_type}')
+        #     self.notebook.add(tab, text=f"{tab.name}")
+        #     tab.notebooks()
+        #
+        # if TOK[1] == 1:
+        #     energy_type = 'Внешнее поле'
+        #
+        #     tab = ExternalField(self.parent, self.path, 'External_field', f'{energy_type}')
+        #     self.notebook.add(tab, text=f"{tab.name}")
+        #     tab.notebooks()
 
-        if TOK[1] == 1:
-            energy_type = 'Внешнее поле'
-
-            tab = ExternalField(self.parent, self.path, 'External_field', f'{energy_type}')
-            self.notebook.add(tab, text=f"{tab.name}")
-            tab.notebooks()
-
-        if TOK[2] == 1:
-            energy_type = 'Gursa'
-
-            tab = Gursa(self.parent, self.path, 'Gursa', f'{energy_type}')
-            self.notebook.add(tab, text=f"{tab.name}")
-            tab.notebooks()
+        # if TOK[2] == 1:
+        #     energy_type = 'Gursa'
+        #
+        #     tab = Gursa(self.parent, self.path, 'Gursa', f'{energy_type}')
+        #     self.notebook.add(tab, text=f"{tab.name}")
+        #     tab.notebooks()
 
         if TOK[2] == 0:
             energy_type = 'Koshi'

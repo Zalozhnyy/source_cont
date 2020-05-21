@@ -155,7 +155,6 @@ class UnitedLayers(FrameGen):
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
 
-
         time_for_dict, func_for_dict, _ = self.data_control()
 
         if 'Current' in self.name:  # сохранение для Current

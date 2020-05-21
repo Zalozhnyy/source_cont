@@ -243,6 +243,7 @@ class DataParcer:
                 mb.showinfo('Info', fr'Выберите файл source, находящийся в <pechs/initials/source>')
                 self.source_path = fd.askopenfilename(title='Выберите файл source', initialdir=f'{self.path}')
                 if self.source_path == '':
+                    mb.showinfo('Info', fr'lag/parameters равен 0')
                     return '0'
                 lag = self.pech_check_utility(self.source_path)
         return lag
@@ -260,6 +261,8 @@ class DataParcer:
     def temp_spectres_reader(self):
         path = os.path.join(self.path, r'time functions/user configuration/temp.ini')
         out = {}
+        if not os.path.exists(path):
+            return out
         with open(path, 'r') as file:
             while True:
                 line = file.readline().strip()

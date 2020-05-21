@@ -12,7 +12,6 @@ class FluTab(FrameGen):
 
     def notebooks(self):
         self._notebooks()
-        self.constants_frame()
 
     def local_get(self):
         self.get()
@@ -27,9 +26,18 @@ class FluTab(FrameGen):
     def button_states(self):
         self.button_calculate.configure(state='active')
 
-    def stectr_choice(self):
+    def stectr_choice(self, specter=None, lag=None):
+        if specter is None:
+            sp = fd.askopenfilename(title='Выберите файл spectr',
+                                    initialdir=f'{self.path}/pechs/spectrs',
+                                    filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+            if sp == '':
+                return
+        else:
+            sp = specter
+
         try:
-            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier(sp)
             self.spectr = self.spectr_choice_opener()
             if type(self.spectr) is int:
                 raise Exception('Чтение файла вызвало ошибку')
@@ -39,6 +47,14 @@ class FluTab(FrameGen):
         except Exception:
             print('stectr_choice unknown error')
             return
+
+        if lag is None:
+            self.pech_check_sample = DataParcer(self.path)
+            self.lag = self.pech_check_sample.pech_check()
+            specters_dict.update({self.name: (self.spectr_dir, self.pech_check_sample.source_path)})
+        else:
+            self.lag = lag
+            specters_dict.update({self.name: (self.spectr_dir, self.lag)})
 
         self.calculate()
 
@@ -71,9 +87,7 @@ class FluTab(FrameGen):
 
     def output_dictionary_flu(self):
 
-        print(self.pr_dir)
-        file_name = f'time functions/time_{self.name}.tf'
-        np.savetxt(f'{self.pr_dir}/time functions/time_{self.name}.tf', self.output_matrix, fmt='%-8.4g',
+        np.savetxt(f'{self.pr_dir}/time functions/time_{self.name}.tf', self.output_matrix, fmt='%-5.4g',
                    header=f'<Номер временной функции>\n'
                           f'{source_number}\n'
                           f'<Название временной функции>\n'
@@ -93,7 +107,7 @@ class FluTab(FrameGen):
                                                    amplitude=self.koef,
                                                    time_for_dict=time_for_dict,
                                                    func_for_dict=func_for_dict,
-                                                   lag_and_koord=0)
+                                                   lag_and_koord=self.lag)
 
         remp_sourses_dict.update({self.name: remp_sources_dict_val})
 

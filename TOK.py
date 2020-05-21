@@ -1,12 +1,12 @@
 from tkinter import ttk
 from tkinter import simpledialog
 from tkinter import filedialog
-from tkinter import messagebox as mb
 import numpy as np
 
 import sys
 
 from Main_frame import FrameGen
+from Project_reader import DataParcer
 from utility import *
 
 
@@ -73,6 +73,8 @@ class InitialField(FrameGen):
 class ExternalField(FrameGen):
     def notebooks(self):
         self._notebooks()
+
+        # self.lag = ''
 
         self.graph_ext_checkbutton = tk.BooleanVar()
         self.graph_ext_checkbutton.set(0)
@@ -165,6 +167,9 @@ class ExternalField(FrameGen):
                 if type(self.spectr) is int:
                     return
 
+        # if self.lag =='':
+        #     self.lag = DataParcer(self.path).pech_check()
+
         self.external_field_values_dict = {
             'Ex': self.some_x_val[0].get(),
             'Ey': self.some_x_val[1].get(),
@@ -199,6 +204,8 @@ class ExternalField(FrameGen):
         print(f'{key}  рассчитан')
 
         time_for_dict, func_for_dict, _ = self.data_control()
+
+        specters_dict.update({self.name: (self.spectr_dir, None)})
 
         remp_sources_dict_val = save_for_remp_form(source_type='External_field',
                                                    source_name=self.name + f'_{key}',

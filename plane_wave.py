@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
 from Main_frame import FrameGen
+from Project_reader import DataParcer
 from utility import *
 
 
@@ -14,7 +15,6 @@ class PlaneWave(FrameGen):
 
     def notebooks(self):
         self._notebooks()
-        self.constants_frame()
         self.plane_wave_const_frame()
 
         self.button_calculate.grid_configure(pady=5)
@@ -93,9 +93,18 @@ class PlaneWave(FrameGen):
     def button_states(self):
         self.button_calculate.configure(state='active', command=self.stectr_choice)
 
-    def stectr_choice(self):
+    def stectr_choice(self, specter=None, lag=None):
+        if specter is None:
+            sp = fd.askopenfilename(title='Выберите файл spectr',
+                                    initialdir=f'{self.path}/pechs/spectrs',
+                                    filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+            if sp == '':
+                return
+        else:
+            sp = specter
+
         try:
-            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier(sp)
             self.spectr = self.spectr_choice_opener()
             if type(self.spectr) is int:
                 raise Exception('Чтение файла вызвало ошибку')
@@ -105,6 +114,14 @@ class PlaneWave(FrameGen):
         except Exception:
             print('stectr_choice unknown error')
             return
+
+        if lag is None:
+            self.pech_check_sample = DataParcer(self.path)
+            self.lag = self.pech_check_sample.pech_check()
+            specters_dict.update({self.name: (self.spectr_dir, self.pech_check_sample.source_path)})
+        else:
+            self.lag = lag
+            specters_dict.update({self.name: (self.spectr_dir, self.lag)})
 
         self.calculate()
 
@@ -146,6 +163,8 @@ class PlaneWave(FrameGen):
                    delimiter='\t', comments='')
 
         time_for_dict, func_for_dict, _ = self.data_control()
+
+        specters_dict.update({self.name: (self.spectr_dir, None)})
 
         remp_sources_dict_val = save_for_remp_form(source_type='Plane_wave',
                                                    source_name=self.name,

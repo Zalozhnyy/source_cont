@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as mb
+import os
 
 
 # from utility import pr_dir
@@ -157,10 +158,16 @@ class Save_remp():
         self.distribution_list = ['JX', 'JY', 'JZ']
 
         if len(self.data) == 0:
-            mb.showinfo('save','Нечего сохранять!')
+            mb.showinfo('save', 'Нечего сохранять!')
             return
 
-        self.save_txt()
+    def save_specters_configuration(self):
+        out = ''
+        for item in self.data.items():
+            out += f'{item[0]};{item[1][0]};{item[1][1]}\n'
+
+        with open(fr'{self.path}/time functions/user configuration/temp.ini', 'w', encoding='utf-8') as file:
+            file.write(out)
 
     def save_txt(self):
         out = ''

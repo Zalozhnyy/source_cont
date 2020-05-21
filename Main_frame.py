@@ -88,7 +88,8 @@ class FrameGen(tk.Frame):
 
         self.a, self.A = self.time_grid()
 
-        self.remp_source = self.remp_source_finder()
+        self.remp_source, self.specter_config = self.remp_source_finder()
+        self.constants_frame()
         self.loat_from_remp()
 
     def remp_source_finder(self):
@@ -101,7 +102,9 @@ class FrameGen(tk.Frame):
 
         out = DataParcer(remp_path).remp_source_decoder()
 
-        return out
+        sp = DataParcer(self.path).temp_spectres_reader()
+
+        return out, sp
 
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
@@ -279,8 +282,16 @@ class FrameGen(tk.Frame):
                     self.func_entry_vel[i].set(val)
 
                 self.ent_load_back()
+                self.loat_from_remp_calc()
         else:
             return
+
+    def loat_from_remp_calc(self):
+        print(self.specter_config.keys())
+        if self.name in self.specter_config.keys():
+            self.get()
+            self.stectr_choice(specter=self.specter_config.get(self.name)[0],
+                               lag=self.specter_config.get(self.name)[1])
 
     def ent_load(self, path):
         if path == '':
@@ -554,12 +565,10 @@ class FrameGen(tk.Frame):
         a = DataParcer(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
         return f'[{a[0]} : {a[-1]}]', a
 
-    def spectr_choice_classifier(self):
-        spectr_dir = fd.askopenfilename(title='Выберите файл spectr',
-                                        initialdir=f'{self.path}',
-                                        filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+    def spectr_choice_classifier(self, path):
+        spectr_dir = os.path.normpath(path)
 
-        with open(spectr_dir, 'r', encoding='utf-8') as file:
+        with open(spectr_dir, 'r') as file:
             strings = []
             for string in range(5):
                 strings.append(file.readline().strip())

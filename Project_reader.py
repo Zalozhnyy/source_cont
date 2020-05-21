@@ -1,5 +1,8 @@
 import numpy as np
 import locale
+import os
+from tkinter import filedialog as fd
+from tkinter import messagebox as mb
 
 
 class DataParcer:
@@ -224,9 +227,51 @@ class DataParcer:
 
         return out_dict
 
+    def pech_check(self):
+        self.source_path = os.path.join(self.path, r'pechs/initials/source')
+
+        if os.path.exists(self.source_path):
+            lag = self.pech_check_utility(self.source_path)
+            mb.showinfo('Info', fr'lag/parameters взят из {self.source_path}')
+        else:
+            ask = mb.askyesno('Проект pechs н найден',
+                              f'Путь {self.source_path} не найден. Проект pechs не обнаружен.\n'
+                              f'Продолжить без проекта pechs? (lag/parameters будет равен нулю)')
+            if ask is True:
+                lag = '0'
+            else:
+                mb.showinfo('Info', fr'Выберите файл source, находящийся в <pechs/initials/source>')
+                self.source_path = fd.askopenfilename(title='Выберите файл source', initialdir=f'{self.path}')
+                if self.source_path == '':
+                    return '0'
+                lag = self.pech_check_utility(self.source_path)
+        return lag
+
+    def pech_check_utility(self, path):
+        with open(path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+
+        for i in lines:
+            if 'SOURCE_DIRECTION' in i:
+                koord = i.split('=')[-1]
+
+        return f'1 {koord}'
+
+    def temp_spectres_reader(self):
+        path = os.path.join(self.path, r'time functions/user configuration/temp.ini')
+        out = {}
+        with open(path, 'r') as file:
+            while True:
+                line = file.readline().strip()
+                if line == '':
+                    break
+                line = line.split(';')
+                out.update({line[0]: (line[1], line[2])})
+        return out
+
 
 if __name__ == '__main__':
-    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\remp_sources'
-    x = DataParcer(test_file).remp_source_decoder()
+    test_file = r'C:\work\tzp_8'
+    x = DataParcer(test_file).temp_spectres_reader()
 
     print(x)

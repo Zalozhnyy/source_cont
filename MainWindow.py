@@ -34,8 +34,6 @@ class MainWindow(tk.Frame):
         except Exception:
             self.path = path
 
-
-
     def toolbar(self):
         self.parent.title("Sources")
         self.menubar = tk.Menu(self.parent, postcommand=self.update)
@@ -145,7 +143,8 @@ class MainWindow(tk.Frame):
     def remp_save(self):
         if self.path is None:
             return
-        Save_remp(data=remp_sourses_dict, path=self.path)
+        Save_remp(data=remp_sourses_dict, path=self.path).save_txt()
+        Save_remp(data=specters_dict, path=self.path).save_specters_configuration()
 
     def open_folder(self):
         if self.path is None:
@@ -156,6 +155,7 @@ class MainWindow(tk.Frame):
         source_list.clear()
         time_func_dict.clear()
         remp_sourses_dict.clear()
+        specters_dict.clear()
         gursa_dict.clear()
 
     def initial(self):

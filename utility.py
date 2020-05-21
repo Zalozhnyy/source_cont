@@ -160,6 +160,7 @@ source_number = 1
 time_func_dict = {}
 
 remp_sourses_dict = {}
+specters_dict = {}
 
 dict_for_recent_pr = {}
 recent_path = ''

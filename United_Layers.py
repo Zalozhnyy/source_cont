@@ -14,7 +14,6 @@ class UnitedLayers(FrameGen):
 
     def notebooks(self):
         self._notebooks()
-        self.constants_frame()
 
     def local_get(self):
         self.get()
@@ -26,10 +25,18 @@ class UnitedLayers(FrameGen):
         self.button_states()
         self.button_calculate.configure(command=self.stectr_choice)
 
-    def stectr_choice(self):
+    def stectr_choice(self, specter=None, lag=None):
+        if specter is None:
+            sp = fd.askopenfilename(title='Выберите файл spectr',
+                                    initialdir=f'{self.path}/pechs/spectrs',
+                                    filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+            if sp == '':
+                return
+        else:
+            sp = specter
 
         try:
-            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier()
+            self.spectr_dir, self.spectr_type = self.spectr_choice_classifier(sp)
             self.spectr = self.spectr_choice_opener()
             if type(self.spectr) is int:
                 raise Exception('Чтение файла вызвало ошибку')
@@ -40,6 +47,13 @@ class UnitedLayers(FrameGen):
             print('stectr_choice unknown error')
             return
 
+        if lag is None:
+            self.pech_check_sample = DataParcer(self.path)
+            self.lag = self.pech_check_sample.pech_check()
+            specters_dict.update({f'Current and Sigma': (self.spectr_dir, self.pech_check_sample.source_path)})
+        else:
+            self.lag = lag
+            specters_dict.update({f'Current and Sigma': (self.spectr_dir, self.lag)})
         self.project_checker()
 
     def button_states(self):
@@ -141,9 +155,8 @@ class UnitedLayers(FrameGen):
                           f'<Временная фукнция t с, доля>',
                    delimiter='\t', comments='')
 
-        time_for_dict, func_for_dict, _ = self.data_control()
 
-        lag = self.pech_check()
+        time_for_dict, func_for_dict, _ = self.data_control()
 
         if 'Current' in self.name:  # сохранение для Current
             axes = ['x', 'y', 'z']
@@ -155,7 +168,7 @@ class UnitedLayers(FrameGen):
                                                            amplitude=self.koef,
                                                            time_for_dict=time_for_dict,
                                                            func_for_dict=func_for_dict,
-                                                           lag_and_koord=lag,
+                                                           lag_and_koord=self.lag,
                                                            distribution=distr[i])
 
                 remp_sourses_dict.update({f'{self.name}|| axe: {axes[i]}': remp_sources_dict_val})
@@ -167,7 +180,7 @@ class UnitedLayers(FrameGen):
                                                        amplitude=self.koef,
                                                        time_for_dict=time_for_dict,
                                                        func_for_dict=func_for_dict,
-                                                       lag_and_koord=lag)
+                                                       lag_and_koord=self.lag)
 
             remp_sourses_dict.update({self.name: remp_sources_dict_val})
 
@@ -224,19 +237,3 @@ class UnitedLayers(FrameGen):
         #         pr_dict.pop(key)
         #
         # source_list.append(pr_dict)
-
-    def pech_check(self):
-        path = os.path.join(self.path, r'pechs\initials\source')
-
-        if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as file:
-                lines = file.readlines()
-
-            for i in lines:
-                if 'SOURCE_DIRECTION' in i:
-                    koord = i.split('=')[-1]
-
-            lag = f'1 {koord}'
-        else:
-            lag = '0'
-        return lag

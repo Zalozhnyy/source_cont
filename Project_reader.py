@@ -277,7 +277,7 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\work\tzp_8'
-    x = DataParcer(test_file).temp_spectres_reader()
+    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\Wpala\PROJECT_1_new.PL'
+    x = DataParcer(test_file).pl_decoder()
 
     print(x)

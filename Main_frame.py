@@ -76,7 +76,6 @@ class FrameGen(tk.Frame):
 
         self.button_change_method = tk.Button(self)
         self.button_change_method.grid(row=3, column=0, padx=5, pady=5, sticky='WN', columnspan=2)
-
         # test_button = tk.Button(self,text='test',command=self.integral)
         # test_button.grid(row=2,column=3)
 
@@ -200,33 +199,50 @@ class FrameGen(tk.Frame):
 
         tk.Label(self.entry_func_fr, text='Время').grid(row=0, column=0, pady=3, padx=2)
         self.entry_time = tk.Entry(self.entry_func_fr, width=35, textvariable=self.time_entry_vel, justify='left')
-        self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7)
+        self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
 
         tk.Label(self.entry_func_fr, text='Зн. функции').grid(row=1, column=0, pady=3, padx=2)
         self.entry_func = tk.Entry(self.entry_func_fr, width=35, textvariable=self.func_entry_vel, justify='left')
-        self.entry_func.grid(row=1, column=1, pady=3, padx=2, columnspan=7)
+        self.entry_func.grid(row=1, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
+
+        self.entryScroll = tk.Scrollbar(self.entry_func_fr, orient=tk.HORIZONTAL, command=self.__scrollHandler,
+                                        bg='black',activebackground='green')
+        self.entryScroll.grid(row=3, column=0, columnspan=8, sticky='WEN')
+
+        self.entry_time["xscrollcommand"] = self.entryScroll.set
+        self.entry_func["xscrollcommand"] = self.entryScroll.set
 
         self.button_read_gen = tk.Button(self.entry_func_fr, width=10, text='Прочитать', state='normal',
                                          command=self.local_get_row)
-        self.button_read_gen.grid(row=5, column=1, padx=3, pady=3)
+        self.button_read_gen.grid(row=7, column=1, padx=3, pady=3)
 
-        tk.Label(self.entry_func_fr, text='Огр времени').grid(row=2, column=0)
+        tk.Label(self.entry_func_fr, text='Огр времени').grid(row=4, column=0)
         self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{self.a}')
-        self.entry_time_label.grid(row=2, column=1)
-        tk.Label(self.entry_func_fr, text='Огр функции').grid(row=3, column=0)
+        self.entry_time_label.grid(row=4, column=1)
+        tk.Label(self.entry_func_fr, text='Огр функции').grid(row=5, column=0)
         self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
-        self.entry_func_label.grid(row=3, column=1)
+        self.entry_func_label.grid(row=5, column=1)
 
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв tf')
-        self.obriv_tf_lavel.grid(row=4, column=0)
+        self.obriv_tf_lavel.grid(row=6, column=0)
         self.entry_time_fix_val.set(f'{self.A[-1]}')
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=8)
-        self.entry_time_fix.grid(row=4, column=1)
+        self.entry_time_fix.grid(row=6, column=1)
 
         self.button_save_def.configure(state='disabled')
         self.button_save.configure(state='disabled')
         self.button_change_method.configure(text='Дискретный метод', width=15,
                                             command=lambda: (self.entry_func_fr.destroy(), self.entry_func_frame()))
+
+    def __scrollHandler(self, *L):
+        op, howMany = L[0], L[1]
+        if op == "scroll":
+            units = L[2]
+            self.entry_time.xview_scroll(howMany, units)
+            self.entry_func.xview_scroll(howMany, units)
+        elif op == "moveto":
+            self.entry_time.xview_moveto(howMany)
+            self.entry_func.xview_moveto(howMany)
 
     def ent(self):
         self.entry_func = []

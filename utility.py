@@ -37,30 +37,6 @@ def check_folder(path):
     return out
 
 
-def timef_global_save(path):
-    # global time_func_dict
-    pr_dir = path
-    if len(time_func_dict) == 0:
-        mb.showinfo('save', 'Нечего сохранять!')
-        return
-    with open(f'{pr_dir}/time functions/time functions list.txt', 'w', encoding='utf-8') as file:
-
-        for item in time_func_dict.items():
-            if type(item) is not list:
-                file.write(f'{item[0]} = {item[1]}\n')
-            else:
-                for i in item:
-                    file.write(f'{i[0]} = {i[1]}\n')
-
-        mb.showinfo('Save', 'Сохранено в time functions list.txt')
-
-        for out_dict in source_list:
-            name = out_dict.get('<название источника>')
-            with open(rf'{pr_dir}/time functions/output dicts/{name}_out.txt', 'w', encoding='utf-8') as file:
-                for item in out_dict.items():
-                    file.write(f'{item[0]}\n')
-                    file.write(f'{item[1]}\n')
-
 
 def tf_global_del(path):
     dir = os.path.join(path, 'time functions')
@@ -153,18 +129,18 @@ def get_recent_projects():
     return out
 
 
-source_list = []
-gursa_dict = {}
-source_number = 1
-
-time_func_dict = {}
-
-remp_sourses_dict = {}
-specters_dict = {}
-
-dict_for_recent_pr = {}
-recent_path = ''
-path_for_remp_save = ''
+# source_list = []
+# gursa_dict = {}
+# source_number = 1
+#
+# time_func_dict = {}
+#
+# remp_sourses_dict = {}
+# specters_dict = {}
+#
+# dict_for_recent_pr = {}
+# recent_path = ''
+# path_for_remp_save = ''
 
 # if __name__ == '__main__':
 #     test = tk.Tk()

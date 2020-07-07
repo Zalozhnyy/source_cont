@@ -8,6 +8,7 @@ from tkinter import messagebox as mb
 class DataParcer:
     def __init__(self, path):
         self.path = path
+        self.dir_path = os.path.dirname(self.path)
         self.decoding_def = locale.getpreferredencoding()
         self.decoding = 'utf-8'
 
@@ -182,19 +183,26 @@ class DataParcer:
         try:
             # L[0] '<Количество типов частиц>'
             L = []
-            L.append(int(lines[2].strip()))
+            part_names = []
+            part_count = (int(lines[2].strip()))
 
-            string_num = 6
-            for numbers in range(L[0]):
-                L.append(int(lines[string_num + 1].split()[0]))
-                string_num += 4  # <Количество процессов>
-                string_num += 2 * int(lines[string_num + 1].strip()) + 1
-                string_num += 4  # переход к следующему кластеру
+            string_num = 3  # <Type(1-electron, 2-positron, 3-quantum), Name> - 1
+            for numbers in range(part_count):
+                string_num += 1  # <Type(1-electron, 2-positron, 3-quantum), Name>
+                string_num += 1
+                part_names.append(lines[string_num].strip().split()[-1])
 
-            return L[0], L[1:]
+                string_num += 2  # <Number, charge(el.), mass(g), + 1 string
+                L.append(int(lines[string_num].split()[0]))
+                string_num += 4  # <Number of processes> + 1 string
+                procces = int(lines[string_num].strip())
+
+                string_num += procces * 2 + 1
+
+            return part_count, L, part_names
 
         except Exception:
-            print('Ошибка в чтении файла .PL')
+            print('Ошибка в чтении файла .PAR')
             return
 
     def remp_source_decoder(self):
@@ -266,7 +274,7 @@ class DataParcer:
         out = {}
         if not os.path.exists(path):
             return out
-        with open(path, 'r',encoding='utf-8') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             while True:
                 line = file.readline().strip()
                 if line == '':
@@ -275,9 +283,27 @@ class DataParcer:
                 out.update({line[0]: (line[1], line[2])})
         return out
 
+    def get_spectre_for_flux(self, part_number, from_layer, to_layer):
+        out = {}
+        for file in os.listdir(os.path.split(self.path)[0]):
+            if file.endswith('.spc'):
+                d = file.replace('.spc', '')
+                l = d.split('_')
+                fl = int(l[0])
+                tl = int(l[1])
+                pn = int(l[-1])
+                if (pn == int(part_number)) and (fl == int(from_layer)) and (tl == int(to_layer)):
+                    with open(os.path.join(self.dir_path, file), 'r') as f:
+                        for i, line in enumerate(f):
+                            if i == 2:
+                                number = line.strip()
+                                break
+                    out.update({file: number})
+        return out
+
 
 if __name__ == '__main__':
-    test_file = r'C:\Users\Никита\Dropbox\work_cloud\source_cont\entry_data\Wpala\PROJECT_1_new.PL'
-    x = DataParcer(test_file).pl_decoder()
+    test_file = r'C:\work\Test_projects\wpala\shpala_new.PAR'
+    x = DataParcer(test_file).get_spectre_for_flux(1, 1, 0)
 
     print(x)

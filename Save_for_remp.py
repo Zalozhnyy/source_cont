@@ -4,203 +4,146 @@ from tkinter import messagebox as mb
 import os
 
 
-# from utility import pr_dir
-
-
-# class Save_remp_(tk.Toplevel):
-#     def __init__(self, parent=None, data=None):
-#         super().__init__(parent)
-#
-#         self.data = data.copy()
-#
-#         self.frame_exist = 0
-#         self.create_list = ['lag', 'distribution', 'koord_ist']
-#         self.distribution_list = ['JX', 'JY', 'JZ']
-#
-#         self.main_window()
-#
-#     def main_window(self):
-#         self.title('REMP save utility')
-#         self.geometry('800x300')
-#         rows = 0
-#         while rows < 30:
-#             self.rowconfigure(rows, weight=0, minsize=3)
-#             self.columnconfigure(rows, weight=0, minsize=3)
-#             rows += 1
-#
-#         self.buttons_frame()
-#
-#     def buttons_frame(self):
-#         self.buttons_fr = ttk.LabelFrame(self, text=f'Редактирование/сохранение')
-#         self.buttons_fr.grid(row=0, column=0, rowspan=3, columnspan=3, padx=5, pady=5)
-#
-#         self.configure_output = tk.Button(self.buttons_fr, text='Редактировать', width=13,
-#                                           command=lambda: self.param_creator(data=self.get_choice_func()))
-#         self.configure_output.grid(row=0, column=0, pady=3, padx=3)
-#
-#         self.choice_func = ttk.Combobox(self.buttons_fr, values=[key for key in self.data.keys()], width=20,
-#                                         state='normal')
-#         self.choice_func.grid(row=0, column=1, pady=3, padx=3, columnspan=2)
-#
-#         self.button_save = tk.Button(self.buttons_fr, text='Сохранить', command=self.data_conf, width=13, )
-#         self.button_save.grid(row=2, column=0, pady=3, padx=3)
-#
-#         self.save_file = tk.Button(self.buttons_fr, text='Создать txt', command=self.save_txt, width=13, )
-#         self.save_file.grid(row=5, column=0, pady=3, padx=3)
-#
-#         # self.button_delete_save = tk.Button(self.buttons_fr, text='Удалить', command=self.delete_from_txt, width=13)
-#         # self.button_delete_save.grid(row=1, column=0, pady=3, padx=3)
-#         self.button_delete_save = tk.Button(self.buttons_fr, text='Удалить', command=self.delete_from_txt,
-#                                             width=13)
-#         self.button_delete_save.grid(row=1, column=0, pady=3, padx=3)
-#
-#         self.choice_func.set(list(self.data.keys())[0])
-#         self.param_creator(data=self.get_choice_func())
-#
-#     def get_choice_func(self):
-#         print(self.choice_func.get())
-#         sub_dict = self.data.get(self.choice_func.get())
-#         return sub_dict
-#
-#     def frame_gen(self):
-#         if self.frame_exist == 1:
-#             self.current_set_fr.destroy()
-#             self.frame_exist = 0
-#
-#         self.current_set_fr = ttk.LabelFrame(self, text=f'{self.choice_func.get()}')
-#         self.current_set_fr.grid(row=0, column=3, rowspan=len(self.create_list), padx=5, pady=5, sticky='NW')
-#         self.frame_exist = 1
-#
-#     def param_creator(self, data):
-#         self.frame_gen()
-#
-#         self.exist_labels = []
-#         self.exist_entry = []
-#
-#         self.entry_vals = [tk.StringVar() for _ in range(len(data.keys()))]
-#
-#         j = 0
-#         for i, key in enumerate(data.keys()):
-#             self.entry_vals[i].set(f'{data.get(key)}')
-#
-#             if key in self.create_list:
-#                 self.exist_labels.append(tk.Label(self.current_set_fr, text=f'{key}'))
-#                 self.exist_labels[j].grid(row=j, column=3)
-#
-#                 if key == 'distribution':
-#                     self.destr_cmb = ttk.Combobox(self.current_set_fr, values=[i for i in self.distribution_list],
-#                                                   width=10, state='normal')
-#                     self.destr_cmb.grid(row=j, column=4, pady=3, padx=3, sticky='')
-#                     j += 1
-#                     continue
-#
-#                 self.exist_entry.append(tk.Entry(self.current_set_fr, textvariable=self.entry_vals[i]))
-#                 self.exist_entry[j].grid(row=j, column=4, pady=3, padx=3)
-#                 j += 1
-#
-#     def delete_from_txt(self):
-#         target = self.choice_func.get()
-#         self.data.pop(target)
-#
-#         self.choice_func.configure(values=[key for key in self.data.keys()])
-#         self.choice_func.set('')
-#
-#     def data_conf(self):
-#         sub_dict = self.data.get(self.current_set_fr['text'])
-#         for i, key in enumerate(sub_dict.keys()):
-#             if key in self.create_list:
-#                 if key == 'distribution':
-#                     sub_dict.update({key: self.destr_cmb.get()})
-#                 else:
-#                     sub_dict.update({key: self.entry_vals[i].get()})
-#
-#     def save_txt(self):
-#         out = ''
-#         for item in self.data.items():
-#             ldict = item[1]
-#             for lkey in ldict.keys():
-#                 lval = ldict.get(lkey)
-#                 if lval is not None:
-#
-#                     # исключения по сохранению
-#                     if lkey == 'source_type':
-#                         out += f'{lval}\n'
-#
-#                     elif lkey == 'time_function':
-#                         len = ldict.get(lkey)[0]
-#                         time, value = ldict.get(lkey)[1], ldict.get(lkey)[2]
-#                         time_fix = ''
-#                         value_fix = ''
-#                         for i in time:
-#                             time_fix += str(i) + ' '
-#                         for i in value:
-#                             value_fix += str(i) + ' '
-#
-#                         lkey = lkey.replace('_', ' ')
-#                         out += f'<{lkey}>\n{len}\n{time_fix}\n{value_fix}\n'
-#
-#                     else:
-#                         lkey = lkey.replace('_', ' ')
-#                         out += f'<{lkey}>\n{lval}\n'
-#             out += '\n'
-#
-#         with open(f'{pr_dir()}/time functions/_remp.txt', 'w', encoding='utf-8') as file:
-#             file.write(out)
-
-
 class Save_remp():
-    def __init__(self, data=None, path=None):
-        self.data = data.copy()
+    def __init__(self, data_object=None, path=None):
+        self.db = data_object
         self.path = path
 
-        self.frame_exist = 0
-        self.create_list = ['lag', 'distribution', 'koord_ist']
-        self.distribution_list = ['JX', 'JY', 'JZ']
+        self.save()
 
-        if len(self.data) == 0:
-            mb.showinfo('save', 'Нечего сохранять!')
-            return
-
-    def save_specters_configuration(self):
+    def save(self):
         out = ''
-        print(self.data.items())
-        for item in self.data.items():
-            out += f'{item[0]};{item[1][0]};{item[1][1]}\n'
+        for item in self.db.items():
+            gsource_db = item[1]
+            name = item[0]
 
-        with open(fr'{self.path}/time functions/user configuration/temp.ini', 'w', encoding='utf-8') as file:
-            file.write(out)
+            for f_key in gsource_db.get_first_level_keys():
+                for s_key in gsource_db.get_second_level_keys(f_key):
+                    if 'Flu' in s_key:
+                        out += self.flux_save(gsource_db, f_key, s_key)
+                        if 'None' in out:
+                            print(f'Введены не все данные в источнике {s_key}')
+                            return
+                    if 'Current' in s_key:
+                        out += self.current_save(gsource_db, f_key, s_key)
+                        if 'None' in out:
+                            print(f'Введены не все данные в источнике {s_key}')
+                            return
+                    if 'Gursa' in s_key:
+                        out += self.gursa_save(gsource_db, f_key, s_key)
+                        if 'None' in out:
+                            print(f'Введены не все данные в источнике {s_key}')
+                            return
 
-    def save_txt(self):
+                            # print(out)
+        self.save_file(out)
+
+    def flux_save(self, gsource_db, f_key, s_key):
         out = ''
-        for item in self.data.items():
-            ldict = item[1]
-            for lkey in ldict.keys():
-                lval = ldict.get(lkey)
-                if lval is not None:
+        out += f'Flux\n'
+        out += '<Influence number>\n'
+        out += gsource_db.get_share_data('influence_number') + '\n'
+        out += f'<source name>\n'
+        out += f'{s_key}\n'
+        out += f'<layer index>\n'
+        out += f'{s_key.split("_")[-1][0]} {s_key.split("_")[-1][1]}\n'
+        out += f'<particle index>\n'
+        out += f'{s_key.split("_")[2]}\n'
+        out += f'<amplitude>\n'
+        out += f'{gsource_db.get_share_data("amplitude")}\n'
+        out += f'<time function>\n'
+        out += f'{gsource_db.get_share_data("count")}\n'
+        time = ''
+        for i in gsource_db.get_share_data("time"):
+            time += str(i) + ' '
+        out += f'{time}\n'
+        func = ''
+        for i in gsource_db.get_share_data("func"):
+            func += str(i) + ' '
+        out += f'{func}\n'
+        out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
+        out += f'{gsource_db.get_share_data("lag").strip()}\n'
+        out += f'<spectre>\n'
+        out += ' '.join(gsource_db.get_last_level_data(f_key, s_key, "spectre")) + f'\n'
+        out += f'<spectre_number>\n'
+        out += ' '.join((gsource_db.get_last_level_data(f_key, s_key, "spectre_numbers"))) + '\n'
+        out += '\n'
 
-                    # исключения по сохранению
-                    if lkey == 'source_type':
-                        out += f'{lval}\n'
+        return out
 
-                    elif lkey == 'time_function':
-                        len = ldict.get(lkey)[0]
-                        time, value = ldict.get(lkey)[1], ldict.get(lkey)[2]
-                        time_fix = ''
-                        value_fix = ''
-                        for i in time:
-                            time_fix += str(i) + ' '
-                        for i in value:
-                            value_fix += str(i) + ' '
+    def current_save(self, gsource_db, f_key, s_key):
+        out = ''
+        out += f'{"_".join(s_key.split("_")[:2])}\n'
+        out += '<Influence number>\n'
+        out += gsource_db.get_share_data('influence_number') + '\n'
+        out += f'<source name>\n'
+        out += f'{s_key}\n'
+        out += f'<layer index>\n'
+        out += f'{s_key.split("_")[-1]}\n'
+        out += f'<amplitude>\n'
+        out += f'{gsource_db.get_share_data("amplitude")}\n'
+        out += f'<time function>\n'
+        out += f'{gsource_db.get_share_data("count")}\n'
+        time = ''
+        for i in gsource_db.get_share_data("time"):
+            time += str(i) + ' '
+        out += f'{time}\n'
+        func = ''
+        for i in gsource_db.get_share_data("func"):
+            func += str(i) + ' '
+        out += f'{func}\n'
+        out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
+        out += f'{gsource_db.get_share_data("lag").strip()}\n'
+        out += f'<spectre>\n'
+        out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre")}' + f'\n'
+        out += f'<spectre_number>\n'
+        out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre_numbers")}' + '\n'
+        out += '<distribution>\n'
+        if s_key.split("_"[1]) == 'x':
+            out += 'JX\n'
+        elif s_key.split("_"[1]) == 'y':
+            out += 'JY\n'
+        elif s_key.split("_"[1]) == 'z':
+            out += 'JZ\n'
 
-                        lkey = lkey.replace('_', ' ')
-                        out += f'<{lkey}>\n{len}\n{time_fix}\n{value_fix}\n'
+        out += '\n'
 
-                    else:
-                        lkey = lkey.replace('_', ' ')
-                        out += f'<{lkey}>\n{lval}\n'
-            out += '\n'
+        return
 
-        with open(f'{self.path}/remp_sources', 'w', encoding='utf-8') as file:
-            file.write(out)
+    def gursa_save(self, gsource_db, f_key, s_key):
+        out = ''
+        out += f'{s_key.split("_")[0]}\n'
+        out += '<Influence number>\n'
+        out += gsource_db.get_share_data('influence_number') + '\n'
+        out += f'<source name>\n'
+        out += f'{s_key}\n'
+        out += f'<amplitude>\n'
+        out += f'{gsource_db.get_share_data("amplitude")}\n'
+        out += f'<time function>\n'
+        out += f'{gsource_db.get_share_data("count")}\n'
+        time = ''
+        for i in gsource_db.get_share_data("time"):
+            time += str(i) + ' '
+        out += f'{time}\n'
+        func = ''
+        for i in gsource_db.get_share_data("func"):
+            func += str(i) + ' '
+        out += f'{func}\n'
+        out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
+        out += f'{gsource_db.get_share_data("lag").strip()}\n'
+        out += f'<spectre>\n'
+        out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre")}' + f'\n'
+        out += f'<spectre_number>\n'
+        out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre_numbers")}' + '\n'
+        out += '\n'
 
-        mb.showinfo('Save', f'Сохранено в {self.path}/remp_sources')
+        return out
+
+    def save_file(self, string):
+
+        file = os.path.join(self.path, 'remp_sources')
+        file = os.path.normpath(file)
+        with open(file, 'w', encoding='utf-8') as f:
+            f.write(string)
+
+        mb.showinfo('Save', f'Сохранено в {file}')

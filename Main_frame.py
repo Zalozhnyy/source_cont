@@ -401,7 +401,7 @@ class FrameGen(ttk.LabelFrame):
             self.func_entry_vel[i].set(str(func[i]))
             self.time_entry_vel[i].set(str(time[i]))
 
-        self.entry_f_val.set(':4g'.format(self.db.get_share_data('amplitude')))
+        self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
 
         self.get()
 

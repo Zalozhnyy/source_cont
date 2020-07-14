@@ -172,7 +172,7 @@ class FrameGen(ttk.LabelFrame):
         else:
             from_row = False
 
-        self.entry_func_fr = tk.LabelFrame(self, text='Блок ввода данных временной функции', width=30)
+        self.entry_func_fr = tk.LabelFrame(self, text='Временная функция', width=30)
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5)
 
         # self.button_read_gen = tk.Button(self.entry_func_fr, width=12, text='Прочитать', state='disabled',
@@ -189,9 +189,9 @@ class FrameGen(ttk.LabelFrame):
         label_time = tk.Label(self.entry_func_fr, text='Время', width=15)
         label_time.grid(row=3, column=0, padx=2, pady=2)
 
-        self.add_button = tk.Button(self.entry_func_fr, width=6, text='Доб. яч.', state='normal',
+        self.add_button = tk.Button(self.entry_func_fr, width=3, text='+', state='normal',
                                     command=lambda: self.add_entry())
-        self.del_button = tk.Button(self.entry_func_fr, width=6, text='Уд. яч.', state='normal',
+        self.del_button = tk.Button(self.entry_func_fr, width=3, text='-', state='normal',
                                     command=lambda: self.delete_entry())
         self.add_button.grid(row=0, column=0, sticky='e', padx=3)
         self.del_button.grid(row=0, column=1, sticky='w', padx=3)
@@ -239,13 +239,14 @@ class FrameGen(ttk.LabelFrame):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def rows_metod(self):
-        for i in range(len(self.func_entry_vel)):
-            self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
-            self.time_entry_vel[i].trace_vdelete('w', self.time_trace_id[i])
-
-        self.entry_time_fix_val.trace_vdelete('w', self.fix_trace_id)
 
         if type(self.func_entry_vel) is list:
+            # for i in range(len(self.time_trace_id)):
+            #     self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
+            #     self.time_entry_vel[i].trace_vdelete('w', self.time_trace_id[i])
+
+            self.entry_time_fix_val.trace_vdelete('w', self.fix_trace_id)
+
             tmp_f = ''
             for val in self.func_entry_vel:
                 tmp_f += val.get() + ' '
@@ -347,7 +348,7 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
         self.entry_func_label.grid(row=5 + int(self.cell_numeric), column=1)
 
-        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв tf')
+        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв временной функции')
         self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel), column=0)
         self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_callback())
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
@@ -400,7 +401,7 @@ class FrameGen(ttk.LabelFrame):
             self.func_entry_vel[i].set(str(func[i]))
             self.time_entry_vel[i].set(str(time[i]))
 
-        self.entry_f_val.set(str(self.db.get_share_data('amplitude')))
+        self.entry_f_val.set(':4g'.format(self.db.get_share_data('amplitude')))
 
         self.get()
 
@@ -795,7 +796,7 @@ class FrameGen(ttk.LabelFrame):
             k, b = Calculations().linear_dif(entry_f[i], entry_t[i], entry_f[i + 1], entry_t[i + 1])
             # print(f'k = {k} , b = {b}')
             # print(np.extract((time_cell == entry_t[i]),time_cell))
-            dt = time_cell[1] - time_cell[0]
+            dt = time_cell[i+1] - time_cell[i]
             left_side = np.where(time_cell == entry_t[i])[0]
             right_side = np.where(time_cell == entry_t[i + 1])[0]
 

@@ -213,27 +213,49 @@ class DataParcer:
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
 
-        out_dict = {}
-        value = {}
+        triggers = ['Gursa', 'Current_x', 'Current_y', 'Current_z', 'Sigma', 'Flux']
+        r = []
         for i, line in enumerate(lines):
+            if any([line.strip() == j for j in triggers]):
+                r.append(i)
+        r.append(len(lines))
+        out = {}
+        for i in range(len(r) - 1):
+            for j in range(r[i], r[i + 1]):
+                if lines[j].strip() == '<influence number>':
+                    influence_number = int(lines[j + 1].strip())
+                    if influence_number not in out.keys():
+                        out.update({influence_number: {}})
 
-            if '<source name>' in line:
-                key = lines[i + 1].strip()
-                if 'Current' in key or 'Sigma' in key:
-                    key = 'Current and Sigma'
-            if '<amplitude>' in line:
-                value.update({'amplitude': float(lines[i + 1].strip())})
-            if '<time function>' in line:
-                t = lines[i + 2].split()
-                t = [float(i) for i in t]
-                value.update({'time': t})
-                f = lines[i + 3].split()
-                f = [float(i) for i in f]
-                value.update({'value': f})
+                if lines[j].strip() == '<source name>':
+                    name = lines[j + 1].strip()
+                    out[influence_number].update({name: {}})
 
-                out_dict.update({key: value})
+                if lines[j].strip() == '<amplitude>':
+                    amplitude = float(lines[j + 1].strip())
+                    out[influence_number][name].update({'amplitude': amplitude})
 
-        return out_dict
+                if lines[j].strip() == '<time function>':
+                    count = int(lines[j + 1].strip())
+                    time = lines[j + 2].strip().split()
+                    func = lines[j + 3].strip().split()
+                    out[influence_number][name].update({'count': count})
+                    out[influence_number][name].update({'time': np.array(time, dtype=float)})
+                    out[influence_number][name].update({'func': np.array(func, dtype=float)})
+
+                if lines[j].strip() == '<spectre>':
+                    spectre = lines[j + 1].strip()
+                    out[influence_number][name].update({'spectre': spectre})
+
+                if lines[j].strip() == '<spectre number>':
+                    spectre_number = lines[j + 1].strip()
+                    out[influence_number][name].update({'spectre number': spectre_number})
+
+                if lines[j].strip() == '<distribution>':
+                    distribution = lines[j + 1].strip()
+                    out[influence_number][name].update({'distribution': distribution})
+
+        return out
 
     def pech_check(self):
         self.source_path = os.path.join(self.path, r'pechs/initials/source')
@@ -269,6 +291,13 @@ class DataParcer:
 
         return f'1 {koord}'
 
+    def distribution_reader(self):
+        out = []
+        for i in os.listdir(self.path + '/'):
+            if 'JX' in i or 'JY' in i or 'JZ' in i:
+                out.append(i)
+        return out
+
     def temp_spectres_reader(self):
         path = os.path.join(self.path, r'time functions/user configuration/temp.ini')
         out = {}
@@ -303,7 +332,6 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\work\Test_projects\wpala\shpala_new.PAR'
-    x = DataParcer(test_file).get_spectre_for_flux(1, 1, 0)
-
+    test_file = r'C:\work\Test_projects\tzp_8'
+    x = DataParcer(test_file).distribution_reader()
     print(x)

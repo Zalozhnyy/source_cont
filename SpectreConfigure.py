@@ -4,6 +4,8 @@ from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 from tkinter import simpledialog
 import numpy as np
+from scipy import integrate
+import matplotlib.pyplot as plt
 import os
 
 
@@ -690,9 +692,74 @@ class SpectreConfigure(tk.Toplevel):
             pass
 
 
+class SpectreCalculations:
+    def __init__(self, spectre_path):
+        self.path = spectre_path
+
+        self.calculations()
+
+    def type_checker(self):
+        with open(self.path, 'r') as file:
+            lines = file.readlines()
+
+        if 'SP_TYPE=CONTINUOUS' in lines[0]:
+            with open(self.path, 'r') as file:
+                lines = file.readlines()
+            out = []
+            for i in range(len(lines)):
+                if i == 2:
+                    a = [lines[i].strip(), '0']
+                    out.append(a)
+                elif i > 2:
+                    out.append(lines[i].strip().split())
+            data = np.array(out, dtype=float)
+
+        elif 'SP_TYPE=DISCRETE' in lines[0]:
+            data = np.loadtxt(self.path, skiprows=2)
+
+        elif 'Номер спектра' in lines[1] and '0' in lines[6]:
+            data = np.loadtxt(self.path, skiprows=14)
+            data = np.column_stack((data[:, 1], data[:, -1]))
+
+        elif 'Номер спектра' in lines[1] and '5' in lines[6]:
+            data = np.loadtxt(self.path, skiprows=14)
+            data = data[:, 1:3]
+
+        else:
+            return None
+
+        return data
+
+    def calculations(self):
+        data = self.type_checker()
+        if data is None:
+            print('Спектр не распознан')
+            return
+        print(data)
+
+        E_avg = np.sum(data[:, 0] * data[:, 1], axis=0) / np.sum(data[:, 1])
+
+        tf_intergal = integrate.simps(y=data[:, 1], x=data[:, 0], dx=data[:, 0])
+        c = tf_intergal / (data[-1, 0] - data[0, 0])
+        print(c)
+        print(E_avg)
+
+        plt.title(f'Просто интеграл без деления на отрезок {tf_intergal}\n'
+                  f'с делением (на графике) {c}\n'
+                  f'Eср из письма {E_avg}')
+        plt.ylabel('ДОЛЯ')
+        plt.xlabel('энергия')
+        plt.plot(data[:, 0], data[:, 1], label='спектр')
+        plt.plot(data[:, 0], [c for _ in range(data.shape[0])], label='интеграл делённый на отрезок')
+        plt.legend()
+        plt.show()
+
+
 if __name__ == '__main__':
-    root = tk.Tk()
+    # root = tk.Tk()
+    #
+    # x = SpectreConfigure(parent=root)
+    #
+    # root.mainloop()
 
-    x = SpectreConfigure(parent=root)
-
-    root.mainloop()
+    a = SpectreCalculations(r'D:\Qt_pr\Spectre_configure\spectr_3_49_norm_na_1_discr.txt')

@@ -30,20 +30,26 @@ class Save_remp():
             for f_key in gsource_db.get_first_level_keys():
                 for s_key in gsource_db.get_second_level_keys(f_key):
                     if 'Flu' in s_key:
-                        out += self.flux_save(gsource_db, f_key, s_key)
+                        out += self.flux_save(gsource_db, f_key, s_key, name)
+                        if 'None' in out:
+                            print(f'Введены не все данные в источнике {s_key}')
+                            mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
+                            return
+                    if 'Volume' in s_key:
+                        out += self.volume_save(gsource_db, f_key, s_key, name)
                         if 'None' in out:
                             print(f'Введены не все данные в источнике {s_key}')
                             mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
                             return
                     if 'Current' in s_key:
-                        d = self.current_save(gsource_db, f_key, s_key)
+                        d = self.current_save(gsource_db, f_key, s_key, name)
                         if 'None' in d:
                             print(f'В источнике {s_key} нет тока')
                             mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
                         else:
                             out += d
                     if 'Gursa' in s_key:
-                        out += self.gursa_save(gsource_db, f_key, s_key)
+                        out += self.gursa_save(gsource_db, f_key, s_key, name)
                         if 'None' in out:
                             print(f'Введены не все данные в источнике {s_key}')
                             mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
@@ -52,11 +58,13 @@ class Save_remp():
                             # print(out)
         self.save_file(out)
 
-    def flux_save(self, gsource_db, f_key, s_key):
+    def flux_save(self, gsource_db, f_key, s_key, name):
         out = ''
         out += f'Flux\n'
         out += '<influence number>\n'
         out += gsource_db.get_share_data('influence_number') + '\n'
+        out += '<influence name>\n'
+        out += name + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<layer index>\n'
@@ -64,7 +72,7 @@ class Save_remp():
         out += f'<particle index>\n'
         out += f'{s_key.split("_")[2]}\n'
         out += f'<amplitude>\n'
-        out += f'{self.calc_amplitude}\n'
+        out += '{:6g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''
@@ -85,17 +93,54 @@ class Save_remp():
 
         return out
 
-    def current_save(self, gsource_db, f_key, s_key):
+    def volume_save(self, gsource_db, f_key, s_key, name):
+        out = ''
+        out += f'Volume\n'
+        out += '<influence number>\n'
+        out += gsource_db.get_share_data('influence_number') + '\n'
+        out += '<influence name>\n'
+        out += name + '\n'
+        out += f'<source name>\n'
+        out += f'{s_key}\n'
+        out += f'<layer index>\n'
+        out += f'{s_key.split("_")[-1][0]}\n'
+        out += f'<particle index>\n'
+        out += f'{s_key.split("_")[1]}\n'
+        out += f'<amplitude>\n'
+        out += '{:6g}\n'.format(self.calc_amplitude)
+        out += f'<time function>\n'
+        out += f'{gsource_db.get_share_data("count")}\n'
+        time = ''
+        for i in gsource_db.get_share_data("time"):
+            time += str(i) + ' '
+        out += f'{time}\n'
+        func = ''
+        for i in gsource_db.get_share_data("func"):
+            func += str(i) + ' '
+        out += f'{func}\n'
+        out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
+        out += f'{gsource_db.get_share_data("lag").strip()}\n'
+        out += f'<spectre>\n'
+        out += ''.join(gsource_db.get_last_level_data(f_key, s_key, "spectre")) + f'\n'
+        out += f'<spectre number>\n'
+        out += ''.join((gsource_db.get_last_level_data(f_key, s_key, "spectre numbers"))) + '\n'
+        out += '\n'
+
+        return out
+
+    def current_save(self, gsource_db, f_key, s_key, name):
         out = ''
         out += f'{"_".join(s_key.split("_")[:2])}\n'
         out += '<influence number>\n'
         out += gsource_db.get_share_data('influence_number') + '\n'
+        out += '<influence name>\n'
+        out += name + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<layer index>\n'
         out += f'{s_key.split("_")[-1]}\n'
         out += f'<amplitude>\n'
-        out += f'{self.calc_amplitude}\n'
+        out += '{:6g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''
@@ -119,15 +164,17 @@ class Save_remp():
 
         return out
 
-    def gursa_save(self, gsource_db, f_key, s_key):
+    def gursa_save(self, gsource_db, f_key, s_key, name):
         out = ''
         out += f'{s_key.split("_")[0]}\n'
         out += '<influence number>\n'
         out += gsource_db.get_share_data('influence_number') + '\n'
+        out += '<influence name>\n'
+        out += name + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<amplitude>\n'
-        out += f'{self.calc_amplitude}\n'
+        out += '{:6g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''

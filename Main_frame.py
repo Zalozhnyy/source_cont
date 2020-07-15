@@ -923,6 +923,12 @@ class FrameGen(ttk.LabelFrame):
         except:
             pass
 
+    def set_amplitude(self):
+        try:
+            self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
+        except:
+            self.entry_f_val.set('')
+
     def __scrollHandler_func(self, *L):
         op, howMany = L[0], L[1]
         if op == "scroll":

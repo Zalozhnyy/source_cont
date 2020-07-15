@@ -121,11 +121,20 @@ class DataParcer:
         try:
             particle_count = int(lines_pl[2])
             layers = int(lines_pl[6])
-            line = 9  # <Движение частицы в слое (вертикаль-слои, горизонталь-частицы) 0-нет/1-да>
-            line += 2 * (particle_count + 1)  # <Объемный источник (вертикаль-слои, горизонталь-частицы) 0-нет/1-да>
-            line += 1  # <Частица номер>
+            line = 8  # <Layer numbers>
+            layers_numbers = np.array(lines_pl[line].strip().split(), dtype=int)
+            particle_numbers = np.array(lines_pl[4].strip().split(), dtype=int)
 
-            out_pl = {}
+            line += 1  # <Particle motion in a layer (vertical-layers, horizontal-particles) 0-No/1-Yes>
+            line += particle_count + 1  # <Source in volume (vertical-layers, horizontal-particles) 0-No/1-Yes/2-Random>
+
+            out_volume = {}
+            for i in range(particle_count):
+                line += 1
+                out_volume.update({particle_numbers[i]: np.array(lines_pl[line].strip().split(), dtype=int)})
+            line += 2  # <Surface source + 1
+
+            out_surf = {}
 
             for i in range(particle_count):
                 line += 1
@@ -137,9 +146,9 @@ class DataParcer:
                     key_list.append(lines_pl[line].split())
 
                 key_list = np.array(key_list, dtype=int)
-                out_pl.update({lay_number: key_list})
+                out_surf.update({lay_number: key_list})
                 line += 1
-            return out_pl
+            return out_surf, out_volume
 
         except Exception:
             print('Ошибка в чтении файла .PL')
@@ -332,6 +341,6 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\work\Test_projects\tzp_8'
-    x = DataParcer(test_file).distribution_reader()
+    test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
+    x = DataParcer(test_file).pl_decoder()
     print(x)

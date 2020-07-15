@@ -125,7 +125,7 @@ class MainWindow(tk.Frame):
         self.par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
 
         self.TOK = DataParcer(self.tok_dir).tok_decoder()
-        self.PL = DataParcer(self.pl_dir).pl_decoder()
+        self.PL_surf, self.PL_vol = DataParcer(self.pl_dir).pl_decoder()
         self.LAY = DataParcer(self.lay_dir).lay_decoder()
         self.PAR = DataParcer(self.par_dir).par_decoder()
 
@@ -268,7 +268,7 @@ class MainWindow(tk.Frame):
         self.tabs_dict = {}
         self.tree = []
         self.global_tree_db = {}
-
+        self.global_count_gsources = 0
 
     def open_folder(self):
         if self.path is None:
@@ -324,8 +324,8 @@ class MainWindow(tk.Frame):
         if par_empty is False:
             index = self.PAR[2].index(part_list[0])
             number = self.PAR[1][index]
-            ar = self.PL.get(number)
-            for i in range(ar.shape[0]):
+            ar = self.PL_surf.get(number)
+            for i in range(ar.shape[0]):  # surfCE
                 for j in range(1, ar.shape[1]):
                     if ar[i, j] == 1:
                         energy_type = f'Источник частиц №{number} из {j}-го слоя в {i}-й'
@@ -345,13 +345,25 @@ class MainWindow(tk.Frame):
                         obj.insert_third_level(part_list[0], name, 'spectre numbers',
                                                [i for i in spectres.values()])
 
+            for i in self.PL_vol[number]:  # volume
+                if i != 0:
+                    energy_type = f'Объёмный источник частиц №{number} слой №{i}'
+                    name = f'Volume_{number}_{i}'
+
+                    obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre_numbers', None)
+
         obj.insert_share_data('influence_number', f'{self.global_count_gsources}')
 
         print(obj.get_first_level_keys())
 
         return obj
 
-    def tree_db_load_from_rs(self, part_list, obj_name, ):
+    def tree_db_load_from_rs(self, part_list, obj_name):
         obj = TreeDataStructure(part_list, obj_name)
 
         index = self.PAR[2].index(part_list[0])
@@ -380,7 +392,8 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
 
                     try:
-                        obj.insert_third_level('Current', f'{name}', 'distribution', self.rs_data[number][name]['distribution'])
+                        obj.insert_third_level('Current', f'{name}', 'distribution',
+                                               self.rs_data[number][name]['distribution'])
                     except:
                         obj.insert_third_level('Current', f'{name}', 'distribution', None)
 
@@ -412,7 +425,7 @@ class MainWindow(tk.Frame):
 
         index = self.PAR[2].index(part_list[0])
         number = self.PAR[1][index]
-        ar = self.PL.get(number)
+        ar = self.PL_surf.get(number)
         for i in range(ar.shape[0]):
             for j in range(1, ar.shape[1]):
                 if ar[i, j] == 1:
@@ -432,6 +445,19 @@ class MainWindow(tk.Frame):
                                            [i for i in spectres.keys()])
                     obj.insert_third_level(part_list[0], name, 'spectre numbers',
                                            [i for i in spectres.values()])
+
+        for i in self.PL_vol[number]:  # volume
+            if i != 0:
+                energy_type = f'Объёмный источник частиц №{number} слой №{i}'
+                name = f'Volume_{number}_{i}'
+
+                obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+
+                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
+                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', self.rs_data[number][name]['spectre'])
+                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers',
+                                       self.rs_data[number][name]['spectre number'])
 
         obj.insert_share_data('influence_number', f'{self.global_count_gsources}')
 
@@ -582,35 +608,45 @@ class MainWindow(tk.Frame):
         self.main_frame_exist = True
 
         for index, s_type in enumerate(self.global_tree_db[name].get_first_level_keys()):
-            if s_type == 'Sigma':
+            source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
+            if len(source_keys) == 0:
+                continue
+            if any(['Sigma' in s_key for s_key in source_keys]):
                 lb = 'Энерговыделение'
                 part = self.tree[ind].insert(source, index, text=lb, open=True)
 
-                source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
                 for i, s_key in enumerate(source_keys):
                     self.tree[ind].insert(part, i, text=f'{s_key}', open=True)
 
-            elif s_type == 'Current':
+            elif any(['Current' in s_key for s_key in source_keys]):
                 lb = 'Сторонний ток'
                 part = self.tree[ind].insert(source, index, text=lb, open=True)
 
-                source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
                 for i, s_key in enumerate(source_keys):
                     self.tree[ind].insert(part, i, text=f'{s_key}', open=True)
 
             else:
+                jj = 0
                 lb = s_type.split()[-1]
                 part = self.tree[ind].insert(source, index, text=lb, open=True)
-                boundary_source = self.tree[ind].insert(part, 0, text='С границ', open=True)
-                surface_source = self.tree[ind].insert(part, 1, text='Поверхностные', open=True)
-                volume_source = self.tree[ind].insert(part, 2, text='Объёмные', open=True)
+                if False:
+                    jj += 1
+                    boundary_source = self.tree[ind].insert(part, jj, text='С границ', open=True)
+                if any(['Flu' in s_key for s_key in source_keys]):
+                    jj += 1
+                    surface_source = self.tree[ind].insert(part, jj, text='Поверхностные', open=True)
+                if any(['Gursa' in s_key for s_key in source_keys]):
+                    jj += 1
+                    volume_source = self.tree[ind].insert(part, jj, text='Объёмные', open=True)
 
-                source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
                 for i, s_key in enumerate(source_keys):
                     if 'Flu' in s_key:
                         self.tree[ind].insert(surface_source, i, text=f'{s_key}', open=True)
 
                     elif 'Gursa' in s_key:
+                        self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
+
+                    elif 'Volume' in s_key:
                         self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
 
         self.tree[ind].bind("<Button-3>", lambda _,
@@ -644,7 +680,9 @@ class MainWindow(tk.Frame):
                         fr_data.load_data()
                     else:
                         fr_data._notebooks()
+                        fr_data.set_amplitude()
 
+                    self.main_frame_exist = True
                     fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
             elif self.tree[index].item(x)['text'] in s_list:
@@ -664,6 +702,9 @@ class MainWindow(tk.Frame):
                             break
 
                 if 'Gursa' in self.tree[index].item(x)['text']:
+                    self.regular_source_interface(fr_data, name, first_key, second_key)
+
+                elif 'Volume' in self.tree[index].item(x)['text']:
                     self.regular_source_interface(fr_data, name, first_key, second_key)
 
                 elif 'Flu' in self.tree[index].item(x)['text']:
@@ -690,19 +731,19 @@ class MainWindow(tk.Frame):
 
         choice_sp = tk.Button(fr_data, text='Выбрать файл', width=13,
                               command=lambda: self.__choice_spectre(name, first_key, second_key))
-        choice_sp.grid(row=1, column=5, sticky='E',padx=20)
+        choice_sp.grid(row=1, column=5, sticky='E', padx=20)
         self.conf_sp = tk.Button(fr_data, text='Редактировать', width=13, state='disabled',
                                  command=lambda: self.__start_spectre_configure(name,
                                                                                 first_key,
                                                                                 second_key,
                                                                                 self.spectre_path))
-        self.conf_sp.grid(row=2, column=5, sticky='E',padx=20)
+        self.conf_sp.grid(row=2, column=5, sticky='E', padx=20)
         create_sp = tk.Button(fr_data, text='Создать спектр', width=13,
                               command=lambda: self.__start_spectre_configure(name,
                                                                              first_key,
                                                                              second_key,
                                                                              create=True))
-        create_sp.grid(row=3, column=5, sticky='E',padx=20)
+        create_sp.grid(row=3, column=5, sticky='E', padx=20)
 
         try:
             if self.global_tree_db[name].get_last_level_data(first_key, second_key,
@@ -805,7 +846,7 @@ class MainWindow(tk.Frame):
         self.global_tree_db[name].insert_first_level(name_for_db)
         number = self.PAR[1][self.PAR[2].index(name_for_db)]
         obj = self.global_tree_db[name]
-        ar = self.PL.get(number)
+        ar = self.PL_surf.get(number)
         for i in range(ar.shape[0]):
             for j in range(1, ar.shape[1]):
                 if ar[i, j] == 1:
@@ -876,34 +917,6 @@ class MainWindow(tk.Frame):
             print('The object can not be deleted')
         print('ПОСЛЕ УДАЛЕНИЯ')
         print(self.global_tree_db[name].get_first_level_keys())
-
-    def pl_tree_insert(self, source, number):
-        pl_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PL')))
-        PL = DataParcer(pl_dir).pl_decoder()
-
-        ar = PL.get(number)
-        for i in range(ar.shape[0]):
-            for j in range(1, ar.shape[1]):
-                if ar[i, j] == 1:
-                    energy_type = f'Источник электронов №{number} из {j}го в {i}й'
-                    name = f'Flu_e_{number}_{j}{i}'
-
-                    self.tree[-1].insert(source, i, text=name)
-
-    def lay_tree_insert(self, source):
-        lay_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('LAY')))
-        LAY = DataParcer(lay_dir).lay_decoder()
-
-        for i in range(LAY.shape[0]):
-            if LAY[i, 1] == 1:
-                energy_type = 'Current'
-                name = f'{energy_type}_layer_{i}'
-                self.tree[-1].insert(source[0], i, text=name)
-
-            if LAY[i, 2] == 1:
-                energy_type = 'Sigma'
-                name = f'{energy_type}_layer_{i}'
-                self.tree[-1].insert(source[1], i, text=name)
 
     def __tree_view_deconstructor(self):
         data = [i for i in self.global_tree_db.keys()]

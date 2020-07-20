@@ -17,8 +17,6 @@ from SpectreConfigure import SpectreConfigure
 from Dialogs import SelectParticleDialog, DeleteGSourceDialog
 
 
-# TODO Правка метода current source interface
-
 class TreeDataStructure:
     def __init__(self, part_list, obj_name):
         self.obj_name = obj_name
@@ -82,15 +80,6 @@ class TreeDataStructure:
         return self.__obj_structure['share_data'][key]
 
 
-class Exampleframe(ttk.LabelFrame):
-    def __init__(self, parent, text):
-        super().__init__(parent)
-
-        self.configure(text=text)
-
-        tk.Label(self, text=text).grid()
-
-
 class MainWindow(tk.Frame):
     def __init__(self, parent, path=None, projectfilename=None):
         super().__init__(parent)
@@ -125,7 +114,7 @@ class MainWindow(tk.Frame):
         self.par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
 
         self.TOK = DataParcer(self.tok_dir).tok_decoder()
-        self.PL_surf, self.PL_vol = DataParcer(self.pl_dir).pl_decoder()
+        self.PL_surf, self.PL_vol, self.PL_bound = DataParcer(self.pl_dir).pl_decoder()
         self.LAY = DataParcer(self.lay_dir).lay_decoder()
         self.PAR = DataParcer(self.par_dir).par_decoder()
 
@@ -282,7 +271,9 @@ class MainWindow(tk.Frame):
         obj.insert_share_data('lag', self.lag)
 
         create_list = ['x', 'y', 'z']
+        boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
         distr_list = DataParcer(self.path + '/').distribution_reader()
+        b_list = DataParcer(self.path + '/').get_spectre_for_bound()
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
@@ -355,7 +346,19 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
                     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
                     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre_numbers', None)
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers', None)
+
+            for i in range(len(self.PL_bound[number])):
+                if self.PL_bound[number][i] == 1:
+                    energy_type = 'Boundaries'
+                    name = f'{energy_type}_{number}_{boundaries_decode[i]}'
+
+                    obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
+                    obj.insert_third_level(part_list[0], name, 'spectre', [i for i in b_list.keys()])
+                    obj.insert_third_level(part_list[0], name, 'spectre numbers', [i for i in b_list.values()])
 
         obj.insert_share_data('influence_number', f'{self.global_count_gsources}')
 
@@ -380,6 +383,7 @@ class MainWindow(tk.Frame):
         obj.insert_share_data('lag', self.lag)
 
         create_list = ['x', 'y', 'z']
+        boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
@@ -458,6 +462,22 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', self.rs_data[number][name]['spectre'])
                 obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers',
                                        self.rs_data[number][name]['spectre number'])
+
+        for i in range(len(self.PL_bound[number])):
+            if self.PL_bound[number][i] == 1:
+                energy_type = 'Boundaries'
+                name = f'{energy_type}_{number}_{boundaries_decode[i]}'
+
+                obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+
+                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
+
+                sp = self.rs_data[number][name]['spectre'].split()
+                obj.insert_third_level(part_list[0], name, 'spectre', sp)
+
+                sp_n = self.rs_data[number][name]['spectre number'].split()
+                obj.insert_third_level(part_list[0], name, 'spectre numbers', sp_n)
 
         obj.insert_share_data('influence_number', f'{self.global_count_gsources}')
 
@@ -629,7 +649,7 @@ class MainWindow(tk.Frame):
                 jj = 0
                 lb = s_type.split()[-1]
                 part = self.tree[ind].insert(source, index, text=lb, open=True)
-                if False:
+                if any(['Boundaries' in s_key for s_key in source_keys]):
                     jj += 1
                     boundary_source = self.tree[ind].insert(part, jj, text='С границ', open=True)
                 if any(['Flu' in s_key for s_key in source_keys]):
@@ -648,6 +668,9 @@ class MainWindow(tk.Frame):
 
                     elif 'Volume' in s_key:
                         self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
+
+                    elif 'Boundaries' in s_key:
+                        self.tree[ind].insert(boundary_source, i, text=f'{s_key}', open=True)
 
         self.tree[ind].bind("<Button-3>", lambda _,
                                                  index=ind,
@@ -712,6 +735,9 @@ class MainWindow(tk.Frame):
 
                 elif 'Current' in self.tree[index].item(x)['text']:
                     self.current_source_interface(fr_data, name, first_key, second_key)
+
+                elif 'Boundaries' in self.tree[index].item(x)['text']:
+                    self.boundaries_interface(fr_data, name, first_key, second_key)
 
                 fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
@@ -790,6 +816,38 @@ class MainWindow(tk.Frame):
                                                          [i for i in spectres.keys()])
             self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers',
                                                          [i for i in spectres.values()])
+
+        spectres_label['text'] = t
+
+    def boundaries_interface(self, parent_widget, name, first_key, second_key):
+
+        fr_data = parent_widget
+
+        e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
+        en_type = tk.Label(fr_data, text=f'{e}')
+        en_type.grid(row=0, column=0, columnspan=3, sticky='NW')
+        spectres_label = tk.Label(fr_data)
+        spectres_label.grid(row=1, column=0, columnspan=3, rowspan=8, sticky='N')
+
+        distr_list = DataParcer(self.path + '/').get_spectre_for_bound()
+
+        if len(distr_list) != 6:
+            print('Опознано неправильное количество спектров.\nПроверьте наличие файлов .spc в проекте')
+            if len(distr_list) < 6:
+                t = 'Проверьте файлы xmin_part в проекте\nНайдено менее 6 подобных файлов'
+            if len(distr_list) > 6:
+                t = 'Проверьте файлы xmin_part в проекте\nНайдено более 6 подобных файлов'
+
+        elif len(distr_list) == 6:
+            t = 'Список файлов:\n'
+
+            for i in distr_list.keys():
+                t += i + '  ' + '№  ' + distr_list[i] + '\n'
+
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre',
+                                                         [i for i in distr_list.keys()])
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers',
+                                                         [i for i in distr_list.values()])
 
         spectres_label['text'] = t
 

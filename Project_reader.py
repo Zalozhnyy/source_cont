@@ -148,7 +148,24 @@ class DataParcer:
                 key_list = np.array(key_list, dtype=int)
                 out_surf.update({lay_number: key_list})
                 line += 1
-            return out_surf, out_volume
+
+            # exit on <Current density calculation
+            line += 1 + layers  # <Ionization inhibition
+            line += 1 + layers  # <<Ionization source
+            line += 1 + layers  # <<Elastic scattering
+            line += 1 + layers  # <<<Particle number>
+
+            out_boundaries = {}
+
+            for i in range(particle_count):
+                line += 1
+                cur_part = int(lines_pl[line].strip())
+                line += 2  # <Source from the boundaries + 1
+                out_boundaries.update({cur_part: np.array(lines_pl[line].strip().split(), dtype=int)})
+                line += 1
+
+            # print(lines_pl[line])
+            return out_surf, out_volume, out_boundaries
 
         except Exception:
             print('Ошибка в чтении файла .PL')
@@ -339,8 +356,22 @@ class DataParcer:
                     out.update({file: number})
         return out
 
+    def get_spectre_for_bound(self):
+        out = {}
+        create_list = ['xmax_part', 'xmin_part', 'ymax_part', 'ymin_part', 'zmax_part', 'zmin_part']
+        for file in os.listdir(os.path.split(self.path)[0]):
+            if any(file in i for i in create_list):
+                with open(os.path.join(self.dir_path, file), 'r') as f:
+                    for i, line in enumerate(f):
+                        if i == 2:
+                            number = line.strip()
+                            break
+                out.update({file: number})
+
+        return out
+
 
 if __name__ == '__main__':
-    test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
-    x = DataParcer(test_file).pl_decoder()
+    test_file = r'C:\work\Test_projects\wpala'
+    x = DataParcer(test_file).get_spectre_for_bound()
     print(x)

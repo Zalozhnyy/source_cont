@@ -297,6 +297,7 @@ class MainWindow(tk.Frame):
 
                 obj.insert_third_level('Sigma', f'{name}', 'name', name)
                 obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level('Current', f'{name}', 'distribution', None)
 
         if self.TOK[2] == 1:
             index = self.PAR[2].index(part_list[0])
@@ -411,6 +412,12 @@ class MainWindow(tk.Frame):
 
                 obj.insert_third_level('Sigma', f'{name}', 'name', name)
                 obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
+
+                try:
+                    obj.insert_third_level('Sigma', f'{name}', 'distribution',
+                                           self.rs_data[number][name]['distribution'])
+                except:
+                    obj.insert_third_level('Sigma', f'{name}', 'distribution', None)
 
         if self.TOK[2] == 1:
             index = self.PAR[2].index(part_list[0])
@@ -734,6 +741,9 @@ class MainWindow(tk.Frame):
                     self.flu_source_interface(fr_data, name, first_key, second_key)
 
                 elif 'Current' in self.tree[index].item(x)['text']:
+                    self.current_source_interface(fr_data, name, first_key, second_key)
+
+                elif 'Sigma' in self.tree[index].item(x)['text']:
                     self.current_source_interface(fr_data, name, first_key, second_key)
 
                 elif 'Boundaries' in self.tree[index].item(x)['text']:

@@ -52,6 +52,14 @@ class Save_remp():
                         else:
                             out += d
 
+                    if 'Sigma' in s_key:
+                        d = self.current_save(gsource_db, f_key, s_key, name)
+                        out += d
+                        if 'None' in d:
+                            print(f'Введены не все данные в источнике {s_key}')
+                            mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
+                            return
+
                     if 'Gursa' in s_key:
                         a = self.gursa_save(gsource_db, f_key, s_key, name)
                         out += a

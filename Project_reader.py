@@ -153,16 +153,23 @@ class DataParcer:
             line += 1 + layers  # <Ionization inhibition
             line += 1 + layers  # <<Ionization source
             line += 1 + layers  # <<Elastic scattering
-            line += 1 + layers  # <<<Particle number>
 
-            out_boundaries = {}
+            try:
+                line += 1 + layers  # <<<Particle number>
 
-            for i in range(particle_count):
-                line += 1
-                cur_part = int(lines_pl[line].strip())
-                line += 2  # <Source from the boundaries + 1
-                out_boundaries.update({cur_part: np.array(lines_pl[line].strip().split(), dtype=int)})
-                line += 1
+                out_boundaries = {}
+
+                for i in range(particle_count):
+                    line += 1
+                    cur_part = int(lines_pl[line].strip())
+                    line += 2  # <Source from the boundaries + 1
+                    out_boundaries.update({cur_part: np.array(lines_pl[line].strip().split(), dtype=int)})
+                    line += 1
+            except:
+                print('Старый файл PL')
+                out_boundaries = {}
+                for i in range(particle_count):
+                    out_boundaries.update({particle_numbers[i]: np.zeros((layers), dtype=int)})
 
             # print(lines_pl[line])
             return out_surf, out_volume, out_boundaries
@@ -372,6 +379,9 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\work\Test_projects\wpala'
-    x = DataParcer(test_file).get_spectre_for_bound()
+    test_file = r'C:\work\Test_projects\tzp_8\KUVSH.PL'
+    a = DataParcer(test_file)
+    x, y, z = a.pl_decoder()
     print(x)
+    print(y)
+    print(z)

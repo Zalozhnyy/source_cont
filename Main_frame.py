@@ -71,8 +71,6 @@ class FrameGen(ttk.LabelFrame):
         # self.spectr_dir = ''
         # self.spectr_type = ''
 
-        print(repr(self))
-
     def _notebooks(self):
         # rows = 0
         # while rows < 100:
@@ -223,7 +221,7 @@ class FrameGen(ttk.LabelFrame):
         self.entry_f_val.trace('w', lambda name, index, mode: self.__get_amplitude_callback())
 
         label_f = tk.Label(self.constants_fr, text='Амплитуда, квант')
-        label_f.grid(row=0, column=0, padx=3, sticky='E',pady=3)
+        label_f.grid(row=0, column=0, padx=3, sticky='E', pady=3)
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
         self.entry_f.grid(row=0, column=2, padx=3)
@@ -341,7 +339,6 @@ class FrameGen(ttk.LabelFrame):
         a, A = self.time_grid()
         self.entry_time_fix_val.set(f'{A[-1]}')
         self.end_time = A
-
 
         self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{a}')
         self.entry_time_label.grid(row=5 + int(self.cell_numeric), column=0)
@@ -594,6 +591,8 @@ class FrameGen(ttk.LabelFrame):
                 if t is not None:
                     self.time_entry_vel.set(t)
                     print('range_выполнен')
+                elif t is None:
+                    raise Exception
             except:
                 return
 
@@ -629,10 +628,13 @@ class FrameGen(ttk.LabelFrame):
             # mb.showerror('Index error', 'Размерности не совпадают!')
             return
 
-        try:
-            self.time_list, self.func_list, _ = self.data_control()
-        except:
+        time_list, func_list, _ = self.data_control()
+        if time_list is None:
             return
+
+        self.time_list = time_list
+        self.func_list = func_list
+
         print('time = ', self.time_list)
         print('func = ', self.func_list)
         self.db.insert_share_data('count', len(self.time_list))
@@ -686,7 +688,13 @@ class FrameGen(ttk.LabelFrame):
                     # mb.showerror('Value error', f'{self.time_entry_vel[x].get()} не является числом')
                     # return print(f'{self.time_entry_vel[x].get()} не является числом')
 
-        self.time_list, self.func_list, _ = self.data_control()
+        time_list, func_list, _ = self.data_control()
+        if time_list is None:
+            return
+
+        self.time_list = time_list
+        self.func_list = func_list
+
         print('time = ', self.time_list)
         print('func = ', self.func_list)
         self.db.insert_share_data('count', len(self.time_list))
@@ -790,13 +798,14 @@ class FrameGen(ttk.LabelFrame):
     def interpolate_user_time(self):
 
         entry_t, entry_f, time_cell = self.data_control()
+
         time_count = []
         func_out = []
         for i in range(len(entry_t) - 1):
             k, b = Calculations().linear_dif(entry_f[i], entry_t[i], entry_f[i + 1], entry_t[i + 1])
             # print(f'k = {k} , b = {b}')
             # print(np.extract((time_cell == entry_t[i]),time_cell))
-            dt = time_cell[i+1] - time_cell[i]
+            dt = time_cell[i + 1] - time_cell[i]
             left_side = np.where(time_cell == entry_t[i])[0]
             right_side = np.where(time_cell == entry_t[i + 1])[0]
 
@@ -833,7 +842,7 @@ class FrameGen(ttk.LabelFrame):
         try:
             self.user_timeset = float(self.entry_time_fix_val.get())
         except:
-            pass
+            return None, None, None
 
         # print(f'функция {self.func_list}')
         # print(f'время {self.time_list}')
@@ -843,30 +852,34 @@ class FrameGen(ttk.LabelFrame):
         # блок проверки на ограничение пользователем тайм функции
         if self.grd_def[-1] == self.user_timeset:
             time_cell = self.grd_def
-            if entry_t[-1] != time_cell[-1]:
-                entry_t = np.append(entry_t, time_cell[-1])
-                entry_f = np.append(entry_f, 0)
-            if entry_t[0] != 0 and entry_f[0] != 0:
-                entry_t = np.insert(entry_t, 0, 0)
-                entry_f = np.insert(entry_f, 0, 0)
+            # if entry_t[-1] != time_cell[-1]:
+            #     entry_t = np.append(entry_t, time_cell[-1])
+            #     entry_f = np.append(entry_f, 0)
+            # if entry_t[0] != 0 and entry_f[0] != 0:
+            #     entry_t = np.insert(entry_t, 0, 0)
+            #     entry_f = np.insert(entry_f, 0, 0)
         else:
-            time_right_side = np.where(self.user_timeset == self.grd_def)[0]
-            if len(time_right_side) == 0:
-                time_right_side = \
-                    np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
-            # print(time_right_side)
-            time_cell = self.grd_def[:time_right_side[0]]
-            for i in range(len(entry_f)):
-                if entry_t[i] > time_cell[-1]:
-                    entry_t = np.delete(entry_t, np.s_[i:], 0)
-                    entry_f = np.delete(entry_f, np.s_[i:], 0)
-                    break
-            if entry_t[-1] != time_cell[-1]:
-                entry_t = np.append(entry_t, time_cell[-1])
-                entry_f = np.append(entry_f, entry_f[-1])
-            if entry_t[0] != 0 and entry_f[0] != 0:
-                entry_t = np.insert(entry_t, 0, 0)
-                entry_f = np.insert(entry_f, 0, 0)
+            try:
+                time_right_side = np.where(self.user_timeset == self.grd_def)[0]
+                if len(time_right_side) == 0:
+                    time_right_side = \
+                        np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
+                # print(time_right_side)
+                time_cell = self.grd_def[:time_right_side[0]]
+                for i in range(len(entry_f)):
+                    if entry_t[i] > time_cell[-1]:
+                        entry_t = np.delete(entry_t, np.s_[i:], 0)
+                        entry_f = np.delete(entry_f, np.s_[i:], 0)
+                        break
+                # if entry_t[-1] != time_cell[-1]:
+                #     entry_t = np.append(entry_t, time_cell[-1])
+                #     entry_f = np.append(entry_f, entry_f[-1])
+                # if entry_t[0] != 0 and entry_f[0] != 0:
+                #     entry_t = np.insert(entry_t, 0, 0)
+                #     entry_f = np.insert(entry_f, 0, 0)
+            except:
+                time_cell = None
+                pass
 
         for i in range(len(entry_t) - 1):
             if entry_t[i] > entry_t[i + 1]:

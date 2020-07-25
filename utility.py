@@ -37,7 +37,6 @@ def check_folder(path):
     return out
 
 
-
 def tf_global_del(path):
     dir = os.path.join(path, 'time functions')
     ask = mb.askyesno('Очистка папки', 'Вы уверены, что хотите удалить все time функции?')
@@ -105,9 +104,7 @@ def set_recent_projects(path, path_dict):
     except:
         pass
 
-    for f in os.listdir(path):
-        if f.endswith(".PRJ") or f.endswith(".prj"):
-            unic_path.update({path: ''})
+    unic_path.update({path: ''})
 
     for i in path_dict.keys():
         unic_path.update({i.strip(): ''})
@@ -127,7 +124,6 @@ def get_recent_projects():
     except:
         pass
     return out
-
 
 # source_list = []
 # gursa_dict = {}

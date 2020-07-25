@@ -143,33 +143,36 @@ class DataParcer:
                 key_list = []
                 for j in range(layers):
                     line += 1
-                    key_list.append(lines_pl[line].split())
+                    key_list.append(lines_pl[line].strip().split())
 
                 key_list = np.array(key_list, dtype=int)
                 out_surf.update({lay_number: key_list})
                 line += 1
 
             # exit on <Current density calculation
-            line += 1 + layers  # <Ionization inhibition
-            line += 1 + layers  # <<Ionization source
-            line += 1 + layers  # <<Elastic scattering
+            line += 1 + particle_count  # <Ionization inhibition
+            line +=  1 + particle_count  # <<Ionization source
+            line += 1 + particle_count  # <<Elastic scattering
 
             try:
-                line += 1 + layers  # <<<Particle number>
+                line += 1 + particle_count  # <<<Particle number>
 
                 out_boundaries = {}
 
                 for i in range(particle_count):
                     line += 1
+
                     cur_part = int(lines_pl[line].strip())
                     line += 2  # <Source from the boundaries + 1
+
                     out_boundaries.update({cur_part: np.array(lines_pl[line].strip().split(), dtype=int)})
                     line += 1
+
             except:
                 print('Старый файл PL')
                 out_boundaries = {}
                 for i in range(particle_count):
-                    out_boundaries.update({particle_numbers[i]: np.zeros((layers), dtype=int)})
+                    out_boundaries.update({particle_numbers[i]: np.zeros(6, dtype=int)})
 
             # print(lines_pl[line])
             return out_surf, out_volume, out_boundaries
@@ -215,24 +218,26 @@ class DataParcer:
 
         try:
             # L[0] '<Количество типов частиц>'
-            L = []
-            part_names = []
+            particles = {}
             part_count = (int(lines[2].strip()))
 
             string_num = 3  # <Type(1-electron, 2-positron, 3-quantum), Name> - 1
             for numbers in range(part_count):
                 string_num += 1  # <Type(1-electron, 2-positron, 3-quantum), Name>
                 string_num += 1
-                part_names.append(lines[string_num].strip().split()[-1])
+                name = lines[string_num].strip().split()[-1]
+                particles.update({name: {}})
+                particles[name].update({'type': int(lines[string_num].strip().split()[0])})
 
                 string_num += 2  # <Number, charge(el.), mass(g), + 1 string
-                L.append(int(lines[string_num].split()[0]))
+                particles[name].update({'number': int(lines[string_num].split()[0])})
+
                 string_num += 4  # <Number of processes> + 1 string
                 procces = int(lines[string_num].strip())
 
                 string_num += procces * 2 + 1
 
-            return part_count, L, part_names
+            return particles
 
         except Exception:
             print('Ошибка в чтении файла .PAR')
@@ -246,7 +251,7 @@ class DataParcer:
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
 
-        triggers = ['Gursa', 'Current_x', 'Current_y', 'Current_z', 'Sigma', 'Flux']
+        triggers = ['Gursa', 'Current_x', 'Current_y', 'Current_z', 'Energy', 'Flux','Boundaries']
         r = []
         for i, line in enumerate(lines):
             if any([line.strip() == j for j in triggers]):
@@ -259,6 +264,14 @@ class DataParcer:
                     influence_number = int(lines[j + 1].strip())
                     if influence_number not in out.keys():
                         out.update({influence_number: {}})
+
+                if lines[j].strip() == '<influence name>':
+                    influence_name = lines[j + 1].strip()
+                    out[influence_number].update({'influence name': influence_name})
+
+                if lines[j].strip() == '<particle number>':
+                    particle_number = int(lines[j + 1].strip())
+                    out[influence_number].update({'particle number': particle_number})
 
                 if lines[j].strip() == '<source name>':
                     name = lines[j + 1].strip()
@@ -379,9 +392,13 @@ class DataParcer:
 
 
 if __name__ == '__main__':
-    test_file = r'C:\work\Test_projects\tzp_8\KUVSH.PL'
+    # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
+    #test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
+    test_file = r'C:\work\Test_projects\wpala\remp_sources'
     a = DataParcer(test_file)
-    x, y, z = a.pl_decoder()
+    # out_surf, out_volume, out_boundaries = a.pl_decoder()
+    # print(f' surf  {out_surf}')
+    # print(f' vol  {out_volume}')
+    # print(f' bound  {out_boundaries}')
+    x = a.remp_source_decoder()
     print(x)
-    print(y)
-    print(z)

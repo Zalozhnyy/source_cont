@@ -150,7 +150,7 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_frame_constructor(data, labels, 'DISCRETE')
             # self.rows_count_val.trace('r', lambda name, index, mode: self.__creator('DISCRETE', labels, 2))
 
-        elif 'Номер спектра' in lines[1] and '0' in lines[6]:
+        elif 'Номер спектра' in lines[1] and lines[6].strip() == '0':
             self.spectre_type_cb = 'SP_0'
             self.spetre_type_cobbobox.set('Фиксированный')
             data = self.description_sp_zero(True, self.spectre_type_cb)
@@ -158,7 +158,7 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_frame_constructor(data, labels, 'SP_0')
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_0', labels, 5))
 
-        elif 'Номер спектра' in lines[1] and '5' in lines[6]:
+        elif 'Номер спектра' in lines[1] and lines[6].strip() == '5':
             check = self.pechs_check()
             if check == 0:
                 return
@@ -171,7 +171,12 @@ class SpectreConfigure(tk.Toplevel):
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
 
         else:
-            mb.showerror('Spectre error', 'Тип спектра не был распознан')
+            f = self.spectre_path
+            osCommandString = f"notepad.exe {f}"
+            os.system(osCommandString)
+            self.destroy()
+
+            #mb.showerror('Spectre error', 'Тип спектра не был распознан')
 
         # self.spectre_frame_constructor(data)
 
@@ -528,7 +533,8 @@ class SpectreConfigure(tk.Toplevel):
             np.savetxt(save_path, out_data, comments='', header=header, delimiter='\t',
                        fmt=['%i', '%3.3g', '%3.4g', '%4.4g', '%3.4g'])
 
-            mb.showinfo('Save', f'Сохранено в {save_path}')
+            mb.showinfo('Save', f'Сохранено в {os.path.normpath(save_path)}')
+            self.spectre_path = save_path
 
         if self.spectre_type_cb == 'CONTINUOUS':
             header = f'SP_TYPE=CONTINUOUS\n' \

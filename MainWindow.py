@@ -14,11 +14,11 @@ from Project_reader import DataParcer
 from Save_for_remp import Save_remp
 from Main_frame import FrameGen
 from SpectreConfigure import SpectreConfigure
-from Dialogs import SelectParticleDialog, DeleteGSourceDialog
+from Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView
 
 
 class TreeDataStructure:
-    def __init__(self, part_list, obj_name):
+    def __init__(self, obj_name, part_list=[]):
         self.obj_name = obj_name
 
         self.particle_list = part_list
@@ -32,7 +32,7 @@ class TreeDataStructure:
             self.__obj_structure[self.obj_name].update({f'{i}': {}})
 
         self.__obj_structure[self.obj_name].update({'Current': {}})
-        self.__obj_structure[self.obj_name].update({'Sigma': {}})
+        self.__obj_structure[self.obj_name].update({'Energy': {}})
 
     def __insert_share_data(self):
         self.__obj_structure['share_data'].update({'amplitude': None,
@@ -85,6 +85,8 @@ class MainWindow(tk.Frame):
         super().__init__(parent)
         self.parent = parent
 
+        self.prj_path = None
+
         self.notebook = None
         self.tabs_dict = {}
         self.tree = []
@@ -95,11 +97,13 @@ class MainWindow(tk.Frame):
         self.global_count_gsources = 0
 
         self.main_frame_exist = False
+        self.remp_source_exist = False
 
         try:
             if projectfilename is not None:
                 if os.path.exists(projectfilename):
-                    self.path = os.path.dirname(projectfilename)
+                    self.prj_path = projectfilename
+                    self.path = os.path.split(self.prj_path)[0]
                     self.check_project()
             else:
                 raise Exception
@@ -144,8 +148,8 @@ class MainWindow(tk.Frame):
         self.filemenu.add_command(label="Exit", command=self.onExit)
 
         self.menubar.add_command(label='Добавить воздействие',
-                                 command=lambda: self.tree_view_constructor(empty=True), state='disabled')
-        self.menubar.add_command(label='Удалить воздействие', command=self.__tree_view_deconstructor, state='disabled')
+                                 command=self.__add_source_button, state='normal')
+        self.menubar.add_command(label='Удалить воздействие', command=self.__tree_view_deconstructor, state='normal')
         self.menubar.add_command(label='Справка')
         self.menubar.add_command(label='test', command=self.test)
 
@@ -154,14 +158,17 @@ class MainWindow(tk.Frame):
         self.parent.destroy()
 
     def browse_from_recent(self, path):
-        self.path = path
+        self.prj_path = path
+        self.path = os.path.split(self.prj_path)[0]
         self.check_project()
 
     def browse_folder(self):
-        self.path = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=f'{os.getcwd()}/entry_data')
-        if self.path == '' or self.path is None:
+        self.prj_path = fd.askopenfilename(title='Укажите путь к проекту REMP', initialdir=f'{os.getcwd()}',
+                                           filetypes=[('PRJ files', '.PRJ')])
+        if self.prj_path == '' or self.prj_path is None:
             return None
 
+        self.path = os.path.split(self.prj_path)[0]
         self.check_project()
 
     def folder_creator(self):
@@ -181,19 +188,12 @@ class MainWindow(tk.Frame):
             os.mkdir(os.path.join(f'{dir}/time functions/TOK'))
 
     def check_folder(self):
-        prj_name = []
-        path = self.path
-        for f in os.listdir(path):
-            if f.endswith(".PRJ") or f.endswith(".prj"):
-                prj_name.append(f)
-        if len(prj_name) == 0:
-            return
 
         try:
-            with open(os.path.join(path, rf'{prj_name[0]}'), 'r', encoding='utf-8') as file:
+            with open(self.prj_path, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
         except UnicodeDecodeError:
-            with open(os.path.join(path, rf'{prj_name[0]}'), 'r',
+            with open(self.prj_path, 'r',
                       encoding=locale.getpreferredencoding()) as file:
                 lines = file.readlines()
 
@@ -225,7 +225,7 @@ class MainWindow(tk.Frame):
         if self.file_dict is None:
             mb.showerror('Project error', f'Файл .PRJ  не найден. Указана неправильная директория\n{self.path}')
             return
-        set_recent_projects(self.path, get_recent_projects())
+        set_recent_projects(self.prj_path, get_recent_projects())
 
         # self.folder_creator()  # создаём папку time functions
         # self.initial()
@@ -235,19 +235,22 @@ class MainWindow(tk.Frame):
 
         self.from_project_reader()
         self.lag = DataParcer(self.path).pech_check()
+        self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
 
         if 'remp_sources' in os.listdir(self.path):
-            self.rs_data = DataParcer(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
-            ind_part_list = [i for i in self.rs_data.keys()]
-            ind_part_list = sorted(ind_part_list)
-            part_list = [self.PAR[2][self.PAR[1].index(i)] for i in ind_part_list]
 
-            for gsource in part_list:
-                self.tree_view_constructor(gsource_name=gsource, ask_name=False, initial=True, rs=True)
-            return
+            ask = mb.askyesno('Обнаружен rems source', 'Обнаружен файл remp source\nЗагрузить данные из remp source?')
 
-        for gsource in self.PAR[2]:
-            self.tree_view_constructor(gsource_name=gsource, ask_name=False, initial=True)
+            if ask is True:
+
+                self.rs_data = DataParcer(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
+                self.remp_source_exist = True
+
+                for p_number in self.rs_data.keys():
+                    load_name = self.rs_data[p_number]['influence name']
+                    part_number = self.rs_data[p_number]['particle number']
+
+                    self.tree_view_constructor(load=True, ask_name=False, load_data=(load_name, part_number))
 
     def reset(self):
         if self.path is None:
@@ -264,16 +267,12 @@ class MainWindow(tk.Frame):
             return
         os.startfile(self.path)
 
-    def tree_db_insert(self, part_list, obj_name, par_empty=False):
-        # !!!!!!difference add in method add_part_insert_db!!!!!!!
-        obj = TreeDataStructure(part_list, obj_name)
-
-        obj.insert_share_data('lag', self.lag)
+    def tree_db_insert(self, obj_name):
+        obj = TreeDataStructure(obj_name)
 
         create_list = ['x', 'y', 'z']
-        boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
-        distr_list = DataParcer(self.path + '/').distribution_reader()
-        b_list = DataParcer(self.path + '/').get_spectre_for_bound()
+        obj.insert_share_data('lag', self.lag)
+        obj.insert_share_data('influence number', str(self.global_count_gsources))
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
@@ -291,303 +290,232 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level('Current', f'{name}', 'distribution', None)
 
             if self.LAY[i, 2] == 1:
-                energy_type = 'Sigma'
+                energy_type = 'Energy'
                 name = f'{energy_type}_layer_{i}'
-                obj.insert_second_level('Sigma', f'{name}', {})
+                obj.insert_second_level('Energy', f'{name}', {})
 
-                obj.insert_third_level('Sigma', f'{name}', 'name', name)
-                obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
-                obj.insert_third_level('Current', f'{name}', 'distribution', None)
+                obj.insert_third_level('Energy', f'{name}', 'name', name)
+                obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level('Energy', f'{name}', 'distribution', None)
 
-        if self.TOK[2] == 1:
-            index = self.PAR[2].index(part_list[0])
-            number = self.PAR[1][index]
-
-            energy_type = f'Gursa'
-            name = f'Gursa_{number}'
-
-            obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
-
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers', None)
-
-        if par_empty is False:
-            index = self.PAR[2].index(part_list[0])
-            number = self.PAR[1][index]
-            ar = self.PL_surf.get(number)
-            for i in range(ar.shape[0]):  # surfCE
-                for j in range(1, ar.shape[1]):
-                    if ar[i, j] == 1:
-                        energy_type = f'Источник частиц №{number} из {j}-го слоя в {i}-й'
-                        name = f'Flu_e_{number}_{j}{i}'
-
-                        obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
-
-                        obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-                        obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-                        obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
-
-                        from_l = name.split('_')[-1][0]
-                        to_l = name.split('_')[-1][1]
-                        spectres = DataParcer(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
-                        obj.insert_third_level(part_list[0], name, 'spectre',
-                                               [i for i in spectres.keys()])
-                        obj.insert_third_level(part_list[0], name, 'spectre numbers',
-                                               [i for i in spectres.values()])
-
-            for i in self.PL_vol[number]:  # volume
-                if i != 0:
-                    energy_type = f'Объёмный источник частиц №{number} слой №{i}'
-                    name = f'Volume_{number}_{i}'
-
-                    obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
-
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers', None)
-
-            for i in range(len(self.PL_bound[number])):
-                if self.PL_bound[number][i] == 1:
-                    energy_type = 'Boundaries'
-                    name = f'{energy_type}_{number}_{boundaries_decode[i]}'
-
-                    obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
-
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-                    obj.insert_third_level(part_list[0], name, 'spectre', [i for i in b_list.keys()])
-                    obj.insert_third_level(part_list[0], name, 'spectre numbers', [i for i in b_list.values()])
-
-        obj.insert_share_data('influence_number', f'{self.global_count_gsources}')
-
-        print(obj.get_first_level_keys())
+        # if self.TOK[2] == 1:
+        #     number = self.PAR[part_list[0]]['number']
+        #
+        #     energy_type = f'Gursa'
+        #     name = f'Gursa_{number}'
+        #
+        #     obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+        #
+        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
+        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
+        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
+        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers', None)
 
         return obj
 
-    def tree_db_load_from_rs(self, part_list, obj_name):
-        obj = TreeDataStructure(part_list, obj_name)
+    def tree_db_insert_particle(self, obj_name, particle, load=False):
+        obj = obj_name
 
-        index = self.PAR[2].index(part_list[0])
-        number = self.PAR[1][index]
-        for i in self.rs_data[number].keys():
-            obj.insert_share_data('count', self.rs_data[number][i]['count'])
-            time = self.rs_data[number][i]['time']
-            obj.insert_share_data('time', time)
-            func = self.rs_data[number][i]['func']
-            obj.insert_share_data('func', func)
-            obj.insert_share_data('amplitude',
-                                  self.rs_data[number][i]['amplitude'] * integrate.trapz(x=np.array(time, dtype=float),
-                                                                                         y=np.array(func, dtype=float)))
-        obj.insert_share_data('lag', self.lag)
-
-        create_list = ['x', 'y', 'z']
         boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
+        boundaries_decode_f = {'X': 'xmax_part', 'Y': 'ymax_part', 'Z': 'zmax_part', '-X': 'xmin_part',
+                               '-Y': 'ymin_part',
+                               '-Z': 'zmin_part', }
 
-        for i in range(self.LAY.shape[0]):
-            if self.LAY[i, 1] == 1:
-                energy_type = 'Current'
-                for axis in create_list:
-                    name = f'{energy_type}_{axis}_layer_{i}'
-                    obj.insert_second_level('Current', f'{name}', {})
+        distr_list = DataParcer(self.path + '/').distribution_reader()
+        b_list = DataParcer(self.path + '/').get_spectre_for_bound()
 
-                    obj.insert_third_level('Current', f'{name}', 'name', name)
-                    obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
+        number = self.PAR[particle]['number']
+        type = self.PAR[particle]['type']
+
+        obj.insert_share_data('particle number', self.PAR[particle]['number'])
+
+        if load:
+            if particle not in obj.get_first_level_keys():
+                obj.insert_first_level(f'{particle}')
+
+            for i in self.rs_data[number].keys():
+                if i == 'particle number' or i == 'influence name':
+                    continue
+                obj.insert_share_data('count', self.rs_data[number][i]['count'])
+                time = self.rs_data[number][i]['time']
+                obj.insert_share_data('time', time)
+                func = self.rs_data[number][i]['func']
+                obj.insert_share_data('func', func)
+                obj.insert_share_data('amplitude',
+                                      self.rs_data[number][i]['amplitude'] * integrate.trapz(
+                                          x=np.array(time, dtype=float),
+                                          y=np.array(func, dtype=float)))
+
+            for i in range(self.LAY.shape[0]):
+                if self.LAY[i, 1] == 1:
+                    for axis in ['x', 'y', 'z']:
+                        energy_type = 'Current'
+                        name = f'{energy_type}_{axis}_layer_{i}'
+                        try:
+                            f = self.rs_data[number][name]['distribution']
+                            if f in os.listdir(self.path):
+                                obj.insert_third_level('Current', f'{name}', 'distribution', f)
+                            else:
+                                print(f'Файл {f} для источника {name} не обнаружен в проекте')
+                                raise Exception
+                        except:
+                            obj.insert_third_level('Current', f'{name}', 'distribution', None)
+
+                if self.LAY[i, 2] == 1:
+                    energy_type = 'Energy'
+                    name = f'{energy_type}_layer_{i}'
 
                     try:
-                        obj.insert_third_level('Current', f'{name}', 'distribution',
-                                               self.rs_data[number][name]['distribution'])
+                        f = self.rs_data[number][name]['distribution']
+                        if f in os.listdir(self.path):
+                            obj.insert_third_level('Energy', f'{name}', 'distribution', f)
+                        else:
+                            print(f'Файл {f} для источника {name} не обнаружен в проекте')
+                            raise Exception
                     except:
-                        obj.insert_third_level('Current', f'{name}', 'distribution', None)
+                        obj.insert_third_level('Energy', f'{name}', 'distribution', None)
 
-                    # obj.insert_third_level('Current', f'{name}', 'spectre', None)
-                    # obj.insert_third_level('Current', f'{name}', 'spectre numbers', None)
-
-            if self.LAY[i, 2] == 1:
-                energy_type = 'Sigma'
-                name = f'{energy_type}_layer_{i}'
-                obj.insert_second_level('Sigma', f'{name}', {})
-
-                obj.insert_third_level('Sigma', f'{name}', 'name', name)
-                obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
-
-                try:
-                    obj.insert_third_level('Sigma', f'{name}', 'distribution',
-                                           self.rs_data[number][name]['distribution'])
-                except:
-                    obj.insert_third_level('Sigma', f'{name}', 'distribution', None)
-
-        if self.TOK[2] == 1:
-            index = self.PAR[2].index(part_list[0])
-            number = self.PAR[1][index]
-
-            energy_type = f'Gursa'
-            name = f'Gursa_{number}'
-
-            obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
-
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', self.rs_data[number][name]['spectre'])
-            obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers',
-                                   self.rs_data[number][name]['spectre number'])
-
-        index = self.PAR[2].index(part_list[0])
-        number = self.PAR[1][index]
         ar = self.PL_surf.get(number)
-        for i in range(ar.shape[0]):
-            for j in range(1, ar.shape[1]):
-                if ar[i, j] == 1:
+
+        for i in range(ar.shape[0]):  # surfCE
+            for j in range(0, ar.shape[1]):
+                if ar[i, j] != 0:
                     energy_type = f'Источник частиц №{number} из {j}-го слоя в {i}-й'
                     name = f'Flu_e_{number}_{j}{i}'
 
-                    obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+                    obj.insert_second_level(f'{particle}', f'{name}', {})
 
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-                    obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
+                    obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level(f'{particle}', f'{name}', 'name', name)
+                    obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
+                    obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
 
                     from_l = name.split('_')[-1][0]
                     to_l = name.split('_')[-1][1]
                     spectres = DataParcer(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
-                    obj.insert_third_level(part_list[0], name, 'spectre',
-                                           [i for i in spectres.keys()])
-                    obj.insert_third_level(part_list[0], name, 'spectre numbers',
-                                           [i for i in spectres.values()])
 
-        for i in self.PL_vol[number]:  # volume
-            if i != 0:
+                    if len(spectres) == 6:
+                        obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
+                        obj.insert_third_level(particle, name, 'spectre numbers', [i for i in spectres.values()])
+
+                    if load:
+                        try:
+                            spectre = [i for i in self.rs_data[number][name]['spectre'].split(' ')]
+                            obj.insert_third_level(f'{particle}', f'{name}', 'spectre', spectre)
+
+                            spectre_number = [i for i in self.rs_data[number][name]['spectre number'].split(' ')]
+                            obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', spectre_number)
+
+                        except:
+                            print(
+                                f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                            if len(spectres) == 6:
+                                obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
+                                obj.insert_third_level(particle, name, 'spectre numbers',
+                                                       [i for i in spectres.values()])
+                            else:
+                                obj.insert_third_level(particle, name, 'spectre', None)
+                                obj.insert_third_level(particle, name, 'spectre numbers', None)
+
+        for i in range(len(self.PL_vol[number])):  # volume
+            if self.PL_vol[number][i] != 0 and type != 7 and type != 8:
                 energy_type = f'Объёмный источник частиц №{number} слой №{i}'
                 name = f'Volume_{number}_{i}'
 
-                obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+                obj.insert_second_level(f'{particle}', f'{name}', {})
 
-                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', self.rs_data[number][name]['spectre'])
-                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers',
-                                       self.rs_data[number][name]['spectre number'])
+                obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level(f'{particle}', f'{name}', 'name', name)
+                obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
+                obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
+
+                if load:
+                    try:
+                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
+                                               self.rs_data[number][name]['spectre'])
+                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
+                                               self.rs_data[number][name]['spectre number'])
+                    except:
+                        print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                        obj.insert_third_level(particle, name, 'spectre', None)
+                        obj.insert_third_level(particle, name, 'spectre numbers', None)
+
+        for i in self.PL_vol[number]:  # volume78
+            if i != 0 and (type == 7 or type == 8):
+                energy_type = f'Объёмный источник частиц №{number} слой №{i}'
+                name = f'Volume78_{number}_{i}'
+
+                obj.insert_second_level(f'{particle}', f'{name}', {})
+
+                obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level(f'{particle}', f'{name}', 'name', name)
+                obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
+                obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
+
+                if load:
+                    try:
+                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
+                                               self.rs_data[number][name]['spectre'])
+                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
+                                               self.rs_data[number][name]['spectre number'])
+                    except:
+                        print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                        obj.insert_third_level(particle, name, 'spectre', None)
+                        obj.insert_third_level(particle, name, 'spectre numbers', None)
 
         for i in range(len(self.PL_bound[number])):
-            if self.PL_bound[number][i] == 1:
+            if self.PL_bound[number][i] != 0:
                 energy_type = 'Boundaries'
                 name = f'{energy_type}_{number}_{boundaries_decode[i]}'
 
-                obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
+                obj.insert_second_level(f'{particle}', f'{name}', {})
 
-                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-                obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
+                obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level(f'{particle}', f'{name}', 'name', name)
+                obj.insert_third_level(particle, name, 'spectre', None)
+                obj.insert_third_level(particle, name, 'spectre numbers', None)
 
-                sp = self.rs_data[number][name]['spectre'].split()
-                obj.insert_third_level(part_list[0], name, 'spectre', sp)
+                try:
+                    for j in boundaries_decode_f.items():
+                        if j[0] == boundaries_decode[i]:
+                            file = j[1]
+                            sp_number = b_list[file]
+                            break
 
-                sp_n = self.rs_data[number][name]['spectre number'].split()
-                obj.insert_third_level(part_list[0], name, 'spectre numbers', sp_n)
+                    obj.insert_third_level(particle, name, 'spectre', file)
+                    obj.insert_third_level(particle, name, 'spectre numbers', sp_number)
 
-        obj.insert_share_data('influence_number', f'{self.global_count_gsources}')
+                except:
+                    obj.insert_third_level(particle, name, 'spectre', None)
+                    obj.insert_third_level(particle, name, 'spectre numbers', None)
 
-        print(obj.get_first_level_keys())
+                if load:
+                    try:
+                        sp = self.rs_data[number][name]['spectre']
+                        obj.insert_third_level(particle, name, 'spectre', sp)
 
-        return obj
+                        sp_n = self.rs_data[number][name]['spectre number']
+                        obj.insert_third_level(particle, name, 'spectre numbers', sp_n)
+                    except:
+                        print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                        obj.insert_third_level(particle, name, 'spectre', None)
+                        obj.insert_third_level(particle, name, 'spectre numbers', None)
 
-    # def initial(self):
-    #     try:
-    #         self.notebook.destroy()
-    #     except:
-    #         pass
-    #
-    #     self.clear_global_dicts()
-    #
-    #     self.notebook = ttk.Notebook(self.parent)
-    #     self.notebook.grid()
-    #
-    #     tok_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('TOK')))
-    #     pl_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PL')))
-    #     lay_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('LAY')))
-    #     par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
-    #
-    #     TOK = DataParcer(tok_dir).tok_decoder()
-    #     PL = DataParcer(pl_dir).pl_decoder()
-    #     LAY = DataParcer(lay_dir).lay_decoder()
-    #     PAR = DataParcer(par_dir).par_decoder()
-    #
-    #     if np.any(LAY[:, 1:] == 1):
-    #         # Класс рассчте Current,Sigma
-    #         u_tab = UnitedLayers(parent=self.parent, path=self.path, name='Current and Sigma',
-    #                              energy_type='Current and Sigma')
-    #
-    #         u_tab.lay_dir = lay_dir
-    #         u_tab.pl_dir = pl_dir
-    #
-    #         self.notebook.add(u_tab, text=f"Current and Sigma")
-    #         u_tab.notebooks()
-    #
-    #     for key in PL.keys():
-    #         ar = PL.get(key)
-    #         for i in range(ar.shape[0]):
-    #             for j in range(1, ar.shape[1]):
-    #                 if ar[i, j] == 1:
-    #                     energy_type = f'Источник электронов №{key} из {j}го в {i}й'
-    #                     name = f'Flu_e_{key}_{j}{i}'
-    #                     tab = FluTab(self.parent, self.path, name, f'{energy_type}')
-    #                     self.notebook.add(tab, text=f"{tab.name}")
-    #                     tab.notebooks()
-    #
-    #         # if ar[:, 0].any() == 1:
-    #         #     mb.showinfo('ERROR', 'Частицы в нулевом слое!')
-    #
-    #     # if TOK[0] == 1:
-    #     #     energy_type = 'Начальное поле'
-    #     #     tab = InitialField(self.parent, self.path, 'Initial_field', f'{energy_type}')
-    #     #     self.notebook.add(tab, text=f"{tab.name}")
-    #     #     tab.notebooks()
-    #     #
-    #     # if TOK[1] == 1:
-    #     #     energy_type = 'Внешнее поле'
-    #     #
-    #     #     tab = ExternalField(self.parent, self.path, 'External_field', f'{energy_type}')
-    #     #     self.notebook.add(tab, text=f"{tab.name}")
-    #     #     tab.notebooks()
-    #
-    #     if TOK[2] == 1:
-    #         part_count = PAR[0]
-    #         part_numbers = PAR[1]
-    #         part_num_name = PAR[2]
-    #
-    #         for i in range(part_count):
-    #             energy_type = part_num_name[i]
-    #             tab = Gursa(self.parent, self.path, f'Gursa_{part_num_name[i].split()[-1]}', energy_type)
-    #             self.notebook.add(tab, text=f"{tab.name}")
-    #             tab.notebooks()
-    #
-    #     if TOK[2] == 0:
-    #         energy_type = 'Koshi'
-    #
-    #         tab = Koshi(self.parent, self.path, 'PECHS', f'{energy_type}')
-    #         self.notebook.add(tab, text=f"{tab.name}")
-    #         tab.koshi_nb()
-    #
-    #     plane_check = False  # затычка перед нормальной проверкой на наличие в проекте
-    #     if plane_check is True:
-    #         tab = PlaneWave(self.parent, self.path, 'PlaneWave', 'Плоская волна')
-    #         self.notebook.add(tab, text=f"{tab.name}")
-    #         tab.notebooks()
-
-    def tree_view_constructor(self, gsource_name=None, ask_name=True, initial=False, empty=False, rs=False):
+    def tree_view_constructor(self, ask_name=True, load=False, load_data=None):
         if self.path is None:
             mb.showerror('Path', 'Сначала выберите проект')
             return
         self.global_count_gsources += 1
 
         if ask_name:
-            name = sd.askstring('Назовите воздействие', 'Введите название поздействия\nОтмена - название по умолчанию')
-            if name == '' or name is None:
+            name = sd.askstring('Назовите воздействие', 'Введите название воздействия\nОтмена - название по умолчанию')
+            if name == '':
                 name = f'Воздействие {self.global_count_gsources}'
+            if name is None:
+                return
 
-        if initial:
-            name = f'Воздействие №{self.global_count_gsources} "{gsource_name}"'
+        else:
+            name = load_data[0]
 
         try:
             if name in self.global_tree_db.keys():
@@ -603,6 +531,7 @@ class MainWindow(tk.Frame):
         fr_tree.grid(row=0, column=0, rowspan=100, columnspan=5, sticky='NWSE')
 
         self.tree.append(ttk.Treeview(fr_tree, height=36))
+
         self.tree[ind].column("#0", width=300)
         self.tree[ind].heading("#0", text="Источники")
         self.tree[ind].grid(row=0, column=0, rowspan=200, columnspan=4, sticky='NWSE')
@@ -615,22 +544,31 @@ class MainWindow(tk.Frame):
 
         source = self.tree[ind].insert('', 0, text=f'{name}', open=True)
 
-        if empty is True:
-            self.global_tree_db.update({name: self.tree_db_insert([], name, par_empty=True)})
+        if load is False:
+            self.global_tree_db.update({name: self.tree_db_insert(name)})
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
+            fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
             fr_data._notebooks()
 
-        elif rs is True:
-            self.global_tree_db.update({name: self.tree_db_load_from_rs([gsource_name], name)})
-            fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
-            fr_data.cell_numeric = self.global_tree_db[name].get_share_data('count')
-            fr_data._notebooks()
-            fr_data.load_data()
+        elif load is True:
+            self.global_tree_db.update({name: self.tree_db_insert(name)})
 
-        else:
-            self.global_tree_db.update({name: self.tree_db_insert([gsource_name], name)})
+            for i in self.PAR.keys():
+                if self.PAR[i]['number'] == load_data[1]:
+                    part_name = i
+                    break
+
+            self.tree_db_insert_particle(self.global_tree_db[name], part_name, load=True)
+            source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
+            self.particle_tree_constr(part_name, source_keys, source, ind)
+
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
-            fr_data._notebooks()
+            fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
+            if self.global_tree_db[name].get_share_data('count') is not None:
+                fr_data.cell_numeric = self.global_tree_db[name].get_share_data('count')
+                fr_data._notebooks()
+                fr_data.load_data()
+
         fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
         self.main_frame_exist = True
 
@@ -638,7 +576,7 @@ class MainWindow(tk.Frame):
             source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
             if len(source_keys) == 0:
                 continue
-            if any(['Sigma' in s_key for s_key in source_keys]):
+            if any(['Energy' in s_key for s_key in source_keys]):
                 lb = 'Энерговыделение'
                 part = self.tree[ind].insert(source, index, text=lb, open=True)
 
@@ -652,39 +590,44 @@ class MainWindow(tk.Frame):
                 for i, s_key in enumerate(source_keys):
                     self.tree[ind].insert(part, i, text=f'{s_key}', open=True)
 
-            else:
-                jj = 0
-                lb = s_type.split()[-1]
-                part = self.tree[ind].insert(source, index, text=lb, open=True)
-                if any(['Boundaries' in s_key for s_key in source_keys]):
-                    jj += 1
-                    boundary_source = self.tree[ind].insert(part, jj, text='С границ', open=True)
-                if any(['Flu' in s_key for s_key in source_keys]):
-                    jj += 1
-                    surface_source = self.tree[ind].insert(part, jj, text='Поверхностные', open=True)
-                if any(['Gursa' in s_key for s_key in source_keys]):
-                    jj += 1
-                    volume_source = self.tree[ind].insert(part, jj, text='Объёмные', open=True)
-
-                for i, s_key in enumerate(source_keys):
-                    if 'Flu' in s_key:
-                        self.tree[ind].insert(surface_source, i, text=f'{s_key}', open=True)
-
-                    elif 'Gursa' in s_key:
-                        self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
-
-                    elif 'Volume' in s_key:
-                        self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
-
-                    elif 'Boundaries' in s_key:
-                        self.tree[ind].insert(boundary_source, i, text=f'{s_key}', open=True)
-
         self.tree[ind].bind("<Button-3>", lambda _,
                                                  index=ind,
                                                  name=name: self.popup(name, index, _))
 
         self.notebook.add(fr, text=f'{name}')
         self.tabs_dict.update({name: [len(self.tabs_dict), fr]})
+
+    def particle_tree_constr(self, particle, keys, main_tree, index):
+        ind = index
+        s_type = particle
+        source_keys = keys
+        source = main_tree
+
+        jj = 0
+        lb = s_type.split()[-1]
+        part = self.tree[ind].insert(source, 2, text=lb, open=True)
+        if any(['Boundaries' in s_key for s_key in source_keys]):
+            jj += 1
+            boundary_source = self.tree[ind].insert(part, jj, text='С границ', open=True)
+        if any(['Flu' in s_key for s_key in source_keys]):
+            jj += 1
+            surface_source = self.tree[ind].insert(part, jj, text='Поверхностные', open=True)
+        if any(['Volume78' in s_key for s_key in source_keys]) or any(['Volume' in s_key for s_key in source_keys]):
+            jj += 1
+            volume_source = self.tree[ind].insert(part, jj, text='Объёмные', open=True)
+
+        for i, s_key in enumerate(source_keys):
+            if 'Flu' in s_key:
+                self.tree[ind].insert(surface_source, i, text=f'{s_key}', open=True)
+
+            elif 'Volume78' in s_key:
+                self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
+
+            elif 'Volume' in s_key:
+                self.tree[ind].insert(volume_source, i, text=f'{s_key}', open=True)
+
+            elif 'Boundaries' in s_key:
+                self.tree[ind].insert(boundary_source, i, text=f'{s_key}', open=True)
 
     def __tree_select_react(self, index, name, e):
         # print([self.tree[-1].item(x) for x in self.tree[-1].selection()])
@@ -731,10 +674,10 @@ class MainWindow(tk.Frame):
                             first_key, second_key = f_key, s_key
                             break
 
-                if 'Gursa' in self.tree[index].item(x)['text']:
+                if 'Volume' in self.tree[index].item(x)['text']:
                     self.regular_source_interface(fr_data, name, first_key, second_key)
 
-                elif 'Volume' in self.tree[index].item(x)['text']:
+                elif 'Volume78' in self.tree[index].item(x)['text']:
                     self.regular_source_interface(fr_data, name, first_key, second_key)
 
                 elif 'Flu' in self.tree[index].item(x)['text']:
@@ -743,13 +686,13 @@ class MainWindow(tk.Frame):
                 elif 'Current' in self.tree[index].item(x)['text']:
                     self.current_source_interface(fr_data, name, first_key, second_key)
 
-                elif 'Sigma' in self.tree[index].item(x)['text']:
+                elif 'Energy' in self.tree[index].item(x)['text']:
                     self.current_source_interface(fr_data, name, first_key, second_key)
 
                 elif 'Boundaries' in self.tree[index].item(x)['text']:
                     self.boundaries_interface(fr_data, name, first_key, second_key)
 
-                fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
+                fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='NWSE')
 
             else:
                 self.__destroy_data_frame(name)
@@ -757,50 +700,47 @@ class MainWindow(tk.Frame):
 
     def regular_source_interface(self, parent_widget, name, first_key, second_key):
         fr_data = parent_widget
+
         e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
         energy_type_label = tk.Label(fr_data, text=e)
         energy_type_label.grid(row=0, column=0, columnspan=4, sticky='W')
-        self.SP_number = tk.Label(fr_data, text=f'Номер спектра: Файл не выбран')
-        self.SP_number.grid(row=1, column=0, sticky='W', columnspan=4)
-        self.SP_path = tk.Label(fr_data, text=f'Путь к спектру: Файл не выбран            ')
-        self.SP_path.grid(row=2, column=0, sticky='W', columnspan=4)
+
+        SP_number = tk.Label(fr_data, text=f'Номер спектра: Файл не выбран')
+        SP_number.grid(row=1, column=0, sticky='W', columnspan=4)
+
+        SP_path = tk.Label(fr_data, text=f'Путь к спектру: Файл не выбран            ')
+        SP_path.grid(row=2, column=0, sticky='W', columnspan=4)
 
         choice_sp = tk.Button(fr_data, text='Выбрать файл', width=13,
-                              command=lambda: self.__choice_spectre(name, first_key, second_key))
-        choice_sp.grid(row=1, column=5, sticky='E', padx=20)
-        self.conf_sp = tk.Button(fr_data, text='Редактировать', width=13, state='disabled',
-                                 command=lambda: self.__start_spectre_configure(name,
-                                                                                first_key,
-                                                                                second_key,
-                                                                                self.spectre_path))
-        self.conf_sp.grid(row=2, column=5, sticky='E', padx=20)
+                              command=lambda: self.__choice_file(SP_path, SP_number, name, first_key, second_key,
+                                                                 'спектр', conf_sp))
+        choice_sp.grid(row=1, column=5, sticky='E', padx=20, pady=3)
+
+        conf_sp = tk.Button(fr_data, text='Редактировать', width=13, state='disabled',
+                            command=lambda: self.__spectre_configure(SP_path, SP_number, name, first_key, second_key,
+                                                                     configure=True))
+        conf_sp.grid(row=2, column=5, sticky='E', padx=20, pady=3)
+
         create_sp = tk.Button(fr_data, text='Создать спектр', width=13,
-                              command=lambda: self.__start_spectre_configure(name,
-                                                                             first_key,
-                                                                             second_key,
-                                                                             create=True))
-        create_sp.grid(row=3, column=5, sticky='E', padx=20)
+                              command=lambda: self.__spectre_configure(SP_path, SP_number, name, first_key, second_key,
+                                                                       create=True))
+        create_sp.grid(row=3, column=5, sticky='E', padx=20, pady=3)
 
         try:
             if self.global_tree_db[name].get_last_level_data(first_key, second_key,
                                                              "spectre numbers") is None:
                 raise Exception
-            self.SP_number['text'] = f'Номер спектра: ' \
-                                     f'{self.global_tree_db[name].get_last_level_data(first_key, second_key, "spectre numbers")}'
-            self.SP_path['text'] = f'Путь к спектру: ' \
-                                   f'{self.global_tree_db[name].get_last_level_data(first_key, second_key, "spectre")}'
-            self.conf_sp['state'] = 'normal'
-            self.spectre_path = os.path.join(self.path,
-                                             self.SP_path['text'].split("Путь к спектру: ")[-1])
+
+            number = self.global_tree_db[name].get_last_level_data(first_key, second_key, "spectre numbers")
+            sp_name = self.global_tree_db[name].get_last_level_data(first_key, second_key, "spectre")
+            SP_number['text'] = f'Номер спектра: {number}'
+            SP_path['text'] = f'Путь к спектру: {sp_name}'
+            conf_sp['state'] = 'normal'
 
         except:
             pass
 
     def flu_source_interface(self, parent_widget, name, first_key, second_key):
-        iind = self.PAR[1][self.PAR[2].index(first_key)]
-        from_l = second_key.split('_')[-1][0]
-        to_l = second_key.split('_')[-1][1]
-        spectres = DataParcer(self.path + '/').get_spectre_for_flux(iind, from_l, to_l)
 
         fr_data = parent_widget
 
@@ -808,28 +748,42 @@ class MainWindow(tk.Frame):
         en_type = tk.Label(fr_data, text=f'{e}')
         en_type.grid(row=0, column=0, columnspan=3, sticky='NW')
         spectres_label = tk.Label(fr_data)
-        spectres_label.grid(row=1, column=0, columnspan=3, rowspan=8, sticky='NW')
+        spectres_label.grid(row=1, column=0, columnspan=3, rowspan=15, sticky='NW')
 
-        if len(spectres) != 6:
-            print('Опознано неправильное количество спектров.\nПроверьте наличие файлов .spc в проекте')
-            if len(spectres) < 6:
-                t = 'Проверьте файлы .spc в проекте\nНайдено менее 6 спектров'
-            if len(spectres) > 6:
-                t = 'Проверьте файлы .spc в проекте\nНайдено более 6 спектров'
+        manual_conf_button = tk.Button(fr_data, text='Выбрать вручную', width=15,
+                                       command=lambda: self.__choice_files(spectres_label, name, first_key, second_key,
+                                                                           '.spc  тип(0 или 1 или 3)', one_file=False))
+        manual_conf_button.grid(row=1, column=4, sticky='E', padx=10)
 
-        elif len(spectres) == 6:
+        auto_conf_button = tk.Button(fr_data, text='Автом. поиск', width=15,
+                                     command=lambda: self.__flux_auto_search(name, first_key, second_key,
+                                                                             spectres_label))
+        auto_conf_button.grid(row=2, column=4, sticky='E', padx=10, pady=3)
+
+        open_notepad = tk.Button(fr_data, text='Редактировать', width=15,
+                                 command=lambda: self.__open_notepad(name, first_key, second_key, spectres_label,
+                                                                     False))
+        open_notepad.grid(row=3, column=4, sticky='E', padx=10, pady=3)
+
+        spectre = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
+        spectre_number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
+
+        if (spectre is None) or (spectre_number is None):
+            t = 'Опознано неправильное количество спектров.\nВыберите спектры вручную.'
+
+        else:
             t = 'Список спектров:\n'
 
-            for i in spectres.keys():
-                t += '№ ' + spectres[i] + '   ' + i + '\n'
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre',
-                                                         [i for i in spectres.keys()])
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers',
-                                                         [i for i in spectres.values()])
+            for i in range(len(spectre)):
+                t += '№ ' + str(spectre_number[i]) + '   ' + str(spectre[i]) + '\n'
 
         spectres_label['text'] = t
 
     def boundaries_interface(self, parent_widget, name, first_key, second_key):
+
+        boundaries_decode = {'X': 'xmax_part', 'Y': 'ymax_part', 'Z': 'zmax_part', '-X': 'xmin_part', '-Y': 'ymin_part',
+                             '-Z': 'zmin_part', }
+        distr_list = DataParcer(self.path + '/').get_spectre_for_bound()
 
         fr_data = parent_widget
 
@@ -839,25 +793,31 @@ class MainWindow(tk.Frame):
         spectres_label = tk.Label(fr_data)
         spectres_label.grid(row=1, column=0, columnspan=3, rowspan=8, sticky='N')
 
-        distr_list = DataParcer(self.path + '/').get_spectre_for_bound()
+        manual_conf_button = tk.Button(fr_data, text='Выбрать вручную',
+                                       command=lambda: self.__choice_files(spectres_label, name, first_key, second_key,
+                                                                           'xmax_part', buttons=open_notepad))
+        manual_conf_button.grid(row=1, column=4, sticky='E', padx=10)
 
-        if len(distr_list) != 6:
-            print('Опознано неправильное количество спектров.\nПроверьте наличие файлов .spc в проекте')
-            if len(distr_list) < 6:
-                t = 'Проверьте файлы xmin_part в проекте\nНайдено менее 6 подобных файлов'
-            if len(distr_list) > 6:
-                t = 'Проверьте файлы xmin_part в проекте\nНайдено более 6 подобных файлов'
+        open_notepad = tk.Button(fr_data, text='Просмотр', width=15, state='disabled',
+                                 command=lambda: self.__open_notepad(name, first_key, second_key, spectres_label, True))
+        open_notepad.grid(row=2, column=4, sticky='E', padx=10, pady=3)
 
-        elif len(distr_list) == 6:
-            t = 'Список файлов:\n'
+        t = 'Список файлов:\n'
 
-            for i in distr_list.keys():
-                t += i + '  ' + '№  ' + distr_list[i] + '\n'
+        try:
+            file = boundaries_decode[second_key.split('_')[-1]]
+            number = distr_list[file]
 
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre',
-                                                         [i for i in distr_list.keys()])
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers',
-                                                         [i for i in distr_list.values()])
+            t += file + '  №' + str(number) + '\n'
+
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file)
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
+
+        except:
+            t += 'Файлы не найдеры, выберите вручную'
+
+        if self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre') is not None:
+            open_notepad['state'] = 'normal'
 
         spectres_label['text'] = t
 
@@ -867,65 +827,63 @@ class MainWindow(tk.Frame):
         en_type = tk.Label(fr_data, text=f'{e}')
         en_type.grid(row=0, column=0, columnspan=3)
 
+        open_notepad = tk.Button(fr_data, text='Просмотр', width=15, state='disabled',
+                                 command=lambda: self.__open_notepad_distribution(name, first_key, second_key))
+        open_notepad.grid(row=2, column=4, sticky='E', padx=10, pady=3)
+
+        disable = tk.Button(fr_data, text='Отключить', width=15, state='disabled',
+                            command=lambda: self.__delete_distribution(distr_label, name, first_key,
+                                                                       second_key, (open_notepad, disable)))
+        disable.grid(row=3, column=4, sticky='E', padx=10, pady=3)
+
         try:
             d = self.global_tree_db[name].get_last_level_data(first_key, second_key, "distribution")
         except:
             d = ''
 
-        distr_label = tk.Label(fr_data, text=f'Distribution:  {d}')
+        distr_label = tk.Label(fr_data, text=f'Список файлов:\n  {d}')
         distr_label.grid(row=1, column=0, sticky='W', columnspan=4)
-        choice_distr_button = tk.Button(fr_data, text='Выбрать файл',
+        choice_distr_button = tk.Button(fr_data, text='Выбрать файл', width=15,
                                         command=lambda: self.__choice_distribution(distr_label, name, first_key,
-                                                                                   second_key))
-        choice_distr_button.grid(row=1, column=4, sticky='W', columnspan=1, padx=20)
+                                                                                   second_key, (open_notepad, disable)))
+        choice_distr_button.grid(row=1, column=4, sticky='E', columnspan=1, padx=10)
+
+        if d != '' and d is not None:
+            disable['state'] = 'normal'
+            open_notepad['state'] = 'normal'
 
     def add_part(self, index, name, id):
 
-        a = SelectParticleDialog(self.PAR[2])
+        a = SelectParticleDialog([i for i in self.PAR.keys()])
         self.wait_window(a)
         new_particle = a.lb_current
+        if new_particle is None:
+            return
+
+        for gsource in self.global_tree_db.keys():
+            for i in self.global_tree_db[gsource].get_first_level_keys():
+                if new_particle == i:
+                    ask = mb.askyesno('Внимание', f'Частица уже используется в "{gsource}"\n'
+                                                  f'Добавить частицу {new_particle} в "{name}"?')
+                    if ask is False:
+                        return
+
         source = self.tree[index].get_children()[0]
 
         if new_particle not in self.global_tree_db[name].get_first_level_keys():
-            #     for i in self.PAR[2]:
-            #         if new_particle in i:
-            #             name_for_db = i
-            #             break
 
-            self.add_part_insert_db(index, name, new_particle)
+            self.global_tree_db[name].insert_first_level(new_particle)
 
-            print(self.global_tree_db[name].get_first_level_keys())
-
-            lb = new_particle.split()[-1]
-            part = self.tree[index].insert(source, index, text=lb, open=True)
-            boundary_source = self.tree[index].insert(part, 0, text='С границ', open=True)
-            surface_source = self.tree[index].insert(part, 1, text='Поверхностные', open=True)
-            volume_source = self.tree[index].insert(part, 2, text='Объёмные', open=True)
+            self.tree_db_insert_particle(self.global_tree_db[name], new_particle)
 
             source_keys = self.global_tree_db[name].get_second_level_keys(new_particle)
-            print(source_keys)
-            for i, s_key in enumerate(source_keys):
-                self.tree[index].insert(surface_source, i, text=f'{s_key}', open=True)
+
+            self.particle_tree_constr(new_particle, source_keys, source, index)
+
+
 
         else:
             print('Объект уже существует')
-
-    def add_part_insert_db(self, index, name, name_for_db):
-        self.global_tree_db[name].insert_first_level(name_for_db)
-        number = self.PAR[1][self.PAR[2].index(name_for_db)]
-        obj = self.global_tree_db[name]
-        ar = self.PL_surf.get(number)
-        for i in range(ar.shape[0]):
-            for j in range(1, ar.shape[1]):
-                if ar[i, j] == 1:
-                    energy_type = f'Источник электронов №{number} из {j}го в {i}й'
-                    name = f'Flu_e_{number}_{j}{i}'
-
-                    obj.insert_second_level(name_for_db, f'{name}', {})
-
-                    obj.insert_third_level(name_for_db, f'{name}', 'energy_type', energy_type)
-                    obj.insert_third_level(name_for_db, f'{name}', 'name', name)
-                    obj.insert_third_level(f'{name_for_db}', f'{name}', 'spectre', 'не выбран')
 
     def popup(self, name, index, event):
 
@@ -983,8 +941,6 @@ class MainWindow(tk.Frame):
 
         else:
             print('The object can not be deleted')
-        print('ПОСЛЕ УДАЛЕНИЯ')
-        print(self.global_tree_db[name].get_first_level_keys())
 
     def __tree_view_deconstructor(self):
         data = [i for i in self.global_tree_db.keys()]
@@ -999,10 +955,44 @@ class MainWindow(tk.Frame):
         self.global_tree_db.pop(delete_gsource)
 
     def test(self):
-        self.__copy_to_project(None)
+        f = os.path.join(self.path, 'file.txt')
+        osCommandString = f"notepad.exe {f}"
+        os.system(osCommandString)
 
     def save(self):
         Save_remp(self.global_tree_db, self.path)
+
+    def __flux_auto_search(self, name, first_key, second_key, label):
+        obj = self.global_tree_db[name]
+
+        from_l = second_key.split('_')[-1][0]
+        to_l = second_key.split('_')[-1][1]
+        number = self.PAR[first_key]['number']
+        spectres = DataParcer(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
+
+        if len(spectres) == 6:
+            obj.insert_third_level(first_key, second_key, 'spectre', [i for i in spectres.keys()])
+            obj.insert_third_level(first_key, second_key, 'spectre numbers', [i for i in spectres.values()])
+
+            spectre = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
+            spectre_number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
+
+            t = 'Список спектров:\n'
+
+            for i in range(len(spectre)):
+                t += '№ ' + str(spectre_number[i]) + '   ' + str(spectre[i]) + '\n'
+
+        else:
+            t = 'Опознано неправильное количество спектров.\nВоспользуйтесь ручным выбором'
+
+        label['text'] = t
+
+    def __add_source_button(self):
+        if len(self.global_tree_db) >= len(self.PAR):
+            ask = mb.askyesno('Внимание', 'Количество частиц больше количества воздействий.\nСоздать новую чатицу?')
+            if ask is False:
+                return
+        self.tree_view_constructor()
 
     def __destroy_data_frame(self, name):
         if len(self.tabs_dict[name][-1].winfo_children()) < 2:
@@ -1020,68 +1010,136 @@ class MainWindow(tk.Frame):
     def __create_timefunc_constructor(self):
 
         self.spectre_number_data, self.spectre_path = SpectreConfigure().open_spectre(False)
-        print(self.spectre_number_data)
+        # print(self.spectre_number_data)
 
-    def __start_spectre_configure(self, name, first_key, second_key, sp_path=None, create=False):
-        ex = SpectreConfigure(self.path, self.parent)
-        ex.constructor()
-        ex.focus_set()
+    def __spectre_configure(self, name_label, num_label, name, first_key, second_key, create=False, configure=False):
 
-        if create is False:  # start as configure
-            ex.open_spectre(True, sp_path)
-            ex.button_create_spectre['state'] = 'disabled'
+        if configure:
+            sp_path = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
+            sp_path = os.path.join(self.path, sp_path)
+            ex = SpectreConfigure(self.path, self.parent)
+
             ex.button_open_spectre['state'] = 'disabled'
-            ex.spetre_type_cobbobox['state'] = 'disabled'
+            ex.button_create_spectre['state'] = 'disabled'
+            ex.open_spectre(use_chose_spectre=sp_path, use_constructor=True)
 
-        self.wait_window(ex)
+            try:
+                self.wait_window(ex)
+            except:
+                pass
 
-        try:
-            self.SP_number['text'] = f'Номер спектра: {ex.spectre_number_val.get()}'
-            self.SP_path['text'] = f'Путь к спектру: {os.path.split(ex.spectre_path)[-1]}'
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre',
-                                                         os.path.split(ex.spectre_path)[-1])
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers',
-                                                         ex.spectre_number_val.get())
+            file_name, number, sp_type = self.__read_spectre(sp_path)
+            if file_name is None:
+                return
 
-            self.conf_sp['state'] = 'normal'
-        except:
-            print('Ошибка в переотриcовке номера спектра')
+            name_label['text'] = f'Путь к файлу:  {file_name}'
+            num_label['text'] = f'Номер спектра:  {number}'
 
-    def __choice_spectre(self, name, first_key, second_key):
+        if create:
+            ex = SpectreConfigure('', self.parent)
 
-        self.spectre_path = fd.askopenfilename(title='Выберите файл spectre',
-                                               filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-        if self.spectre_path == '':
-            return
-        self.__copy_to_project(self.spectre_path)
+            self.wait_window(ex)
 
-        with open(self.spectre_path, 'r') as file:
-            lines = file.readlines()
+            file_name, number, sp_type = self.__read_spectre(ex.spectre_path)
+            if file_name is None:
+                return
 
-        self.conf_sp['state'] = 'normal'
+            name_label['text'] = f'Путь к файлу:  {file_name}'
+            num_label['text'] = f'Номер спектра:  {number}'
 
-        self.SP_number['text'] = f'Номер спектра: {lines[2].strip()}'
-        self.SP_path['text'] = f'Путь к спектру: {os.path.split(self.spectre_path)[-1]}'
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre',
-                                                     os.path.split(self.spectre_path)[-1])
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers',
-                                                     lines[2].strip())
-
-    def __choice_distribution(self, label, name, first_key, second_key):
+    def __choice_distribution(self, label, name, first_key, second_key, buttons):
         distribution_file = fd.askopenfilename(title=f'Выберите файл distribution для {second_key}',
+                                               initialdir=self.path,
                                                filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
 
         if distribution_file == '':
             return
 
+        self.__copy_to_project(distribution_file)
+
         t = os.path.split(distribution_file)[-1]
-        label['text'] = f'Distribution:  {t}'
+        label['text'] = f'Список файлов:\n  {t}'
 
         self.global_tree_db[name].insert_third_level(first_key, second_key, 'distribution', t)
 
+        buttons[0]['state'] = 'normal'
+        buttons[1]['state'] = 'normal'
+
+    def __delete_distribution(self, label, name, first_key, second_key, buttons):
+
+        label['text'] = f'Список файлов:\n  {None}'
+
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'distribution', None)
+
+        buttons[0]['state'] = 'disabled'
+        buttons[1]['state'] = 'disabled'
+
+    def __choice_files(self, label, name, first_key, second_key, format, one_file=True, buttons=None):
+
+        if one_file:
+            file = fd.askopenfilename(title=f'Выберите файлы формата {format}', initialdir=self.path)
+
+            if file == '':
+                return
+
+            file_name, number, sp_type = self.__read_spectre(file)
+            if file_name is None:
+                return
+            number = str(number)
+            t = '№ ' + str(number) + '   ' + file_name + '\n'
+
+        else:
+
+            files = fd.askopenfilenames(title=f'Выберите файлы формата {format}', initialdir=self.path)
+
+            if files == '':
+                return
+
+            file_name, number, sp_type = [], [], []
+            for i in files:
+                a, b, c = self.__read_spectre(i)
+                if a is None:
+                    return
+
+                file_name.append(a)
+                number.append(str(b))
+                sp_type.append(c)
+
+                t = ''
+                for i in range(len(number)):
+                    t += '№ ' + str(number[i]) + '   ' + file_name[i] + '\n'
+
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
+
+        label['text'] = 'Список файлов:\n' + t
+
+        if buttons is not None:
+            buttons['state'] = 'normal'
+
+    def __choice_file(self, name_label, num_label, name, first_key, second_key, format, buttons):
+
+        file = fd.askopenfilename(title=f'Выберите файлы формата {format}', initialdir=self.path)
+
+        if file == '':
+            return
+
+        file_name, number, sp_type = self.__read_spectre(file)
+        if file_name is None:
+            return
+
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
+
+        name_label['text'] = f'Путь к файлу:  {file_name}'
+        num_label['text'] = f'Номер спектра:  {number}'
+
+        buttons['state'] = 'normal'
+
     def __copy_to_project(self, target):
         t = target
-        if os.path.normpath(self.path) in os.path.normpath(t):
+        in_project = os.path.normpath(os.path.split(t)[0])
+        if os.path.normpath(self.path) == in_project:
             return
         file_name = os.path.split(t)[-1]
         save_path = os.path.join(self.path, file_name)
@@ -1101,3 +1159,89 @@ class MainWindow(tk.Frame):
                 shutil.copyfile(t, save_path)
         else:
             shutil.copyfile(t, save_path)
+
+    def __open_notepad(self, name, first_key, second_key, label, one_file):
+        d = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
+        if d is None:
+            return
+
+        if one_file is False:
+
+            a = SelectSpectreToView(d)
+
+            self.wait_window(a)
+
+            choice = a.lb_current
+            if choice is None:
+                return
+
+        elif one_file is True:
+            choice = d
+
+        f = os.path.join(self.path, choice)
+        osCommandString = f"notepad.exe {f}"
+        os.system(osCommandString)
+
+        files = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
+
+        if type(files) is list:
+            files = [os.path.join(self.path, i) for i in files]
+
+            file_name, number, sp_type = [], [], []
+            for i in files:
+                a, b, c = self.__read_spectre(i)
+                if a is None:
+                    return
+
+                file_name.append(a)
+                number.append(str(b))
+                sp_type.append(c)
+
+            t = ''
+            for i in range(len(number)):
+                t += '№ ' + str(number[i]) + '   ' + file_name[i] + '\n'
+
+        else:
+            file = os.path.join(self.path, files)
+            file_name, number, sp_type = self.__read_spectre(file)
+            if file_name is None:
+                return
+
+            t = '№ ' + str(number) + '   ' + file_name + '\n'
+
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
+        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
+
+        label['text'] = 'Список файлов:\n' + t
+
+    def __open_notepad_distribution(self, name, first_key, second_key):
+
+        choice = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'distribution')
+
+        f = os.path.join(self.path, choice)
+        osCommandString = f"notepad.exe {f}"
+        os.system(osCommandString)
+
+    def __read_spectre(self, target):
+
+        if not os.path.exists(target):
+            print('Выбранный файл не существует')
+            return None, None, None
+
+        self.__copy_to_project(target)
+        file_name = os.path.split(target)[-1]
+
+        try:
+            with open(os.path.join(self.path, file_name), 'r') as file:
+                for j, line in enumerate(file):
+                    if j == 2:
+                        number = int(line.strip())
+                    if j == 6:
+                        type = int(line.strip())
+                        break
+
+        except:
+            print('Ошибка чтения выбранных файлов')
+            return None, None, None
+
+        return file_name, number, type

@@ -151,7 +151,7 @@ class DataParcer:
 
             # exit on <Current density calculation
             line += 1 + particle_count  # <Ionization inhibition
-            line +=  1 + particle_count  # <<Ionization source
+            line += 1 + particle_count  # <<Ionization source
             line += 1 + particle_count  # <<Elastic scattering
 
             try:
@@ -251,7 +251,7 @@ class DataParcer:
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
 
-        triggers = ['Gursa', 'Current_x', 'Current_y', 'Current_z', 'Energy', 'Flux','Boundaries']
+        triggers = ['Gursa', 'Current_x', 'Current_y', 'Current_z', 'Energy', 'Flux', 'Boundaries']
         r = []
         for i, line in enumerate(lines):
             if any([line.strip() == j for j in triggers]):
@@ -390,15 +390,22 @@ class DataParcer:
 
         return out
 
+    def elph_reader(self):
+
+        path = os.path.join(os.path.dirname(__file__), 'elph.txt')
+
+        out = np.loadtxt(path, skiprows=1, dtype=float) * 10**-3
+        return out
+
 
 if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
-    #test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
+    # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
     test_file = r'C:\work\Test_projects\wpala\remp_sources'
     a = DataParcer(test_file)
     # out_surf, out_volume, out_boundaries = a.pl_decoder()
     # print(f' surf  {out_surf}')
     # print(f' vol  {out_volume}')
     # print(f' bound  {out_boundaries}')
-    x = a.remp_source_decoder()
+    x = a.elph_reader()
     print(x)

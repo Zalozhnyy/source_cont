@@ -8,6 +8,8 @@ from scipy import integrate
 import matplotlib.pyplot as plt
 import os
 
+from Project_reader import DataParcer
+
 
 class SpectreConfigure(tk.Toplevel):
     def __init__(self, path='', parent=None):
@@ -163,6 +165,7 @@ class SpectreConfigure(tk.Toplevel):
             if check == 0:
                 return
 
+            self.elph = DataParcer(self.path).elph_reader()
             self.spectre_type_cb = 'SP_5'
             self.spetre_type_cobbobox.set(self.spectre_type_cb)
             data = self.description_sp_zero(True, self.spectre_type_cb)
@@ -176,7 +179,7 @@ class SpectreConfigure(tk.Toplevel):
             os.system(osCommandString)
             self.destroy()
 
-            #mb.showerror('Spectre error', 'Тип спектра не был распознан')
+            # mb.showerror('Spectre error', 'Тип спектра не был распознан')
 
         # self.spectre_frame_constructor(data)
 
@@ -294,9 +297,10 @@ class SpectreConfigure(tk.Toplevel):
             if check == 0:
                 return
 
+            self.elph = DataParcer(self.path).elph_reader()
             self.lines = self._sp_zero_form.copy()
             self.description_sp_zero(False, self.spectre_type_cb)
-            labels = ['№', 'Энергия (кеВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г', 'Энергия электрона']
+            labels = ['№', 'Энергия (МеВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г', 'Энергия электрона']
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
 
         if self.spectre_type_cb == 'DISCRETE':
@@ -574,10 +578,11 @@ class SpectreConfigure(tk.Toplevel):
                 raise Exception
             KSI = np.interp(energy * 10 ** 6, self.photon_table[:, 0], self.photon_table[:, 1])
             self.spectre_entry_val[i][j + 2].set('{:.5g}'.format(KSI))
-            if energy <= 0.1:
-                self.spectre_entry_val[i][j + 3].set('{:.5g}'.format(energy))
-            if energy > 0.1:
-                self.spectre_entry_val[i][j + 3].set('{:.5g}'.format(energy / 2))
+
+            energy_el = np.interp(energy, self.elph[:, 0], self.elph[:, 1])
+
+            self.spectre_entry_val[i][j + 3].set('{:.5g}'.format(energy_el))
+
         except:
             self.spectre_entry_val[i][j + 2].set('')
             self.spectre_entry_val[i][j + 3].set('')
@@ -762,10 +767,9 @@ class SpectreCalculations:
 
 
 if __name__ == '__main__':
-    # root = tk.Tk()
-    #
-    # x = SpectreConfigure(parent=root)
-    #
-    # root.mainloop()
+    root = tk.Tk()
 
-    a = SpectreCalculations(r'D:\Qt_pr\Spectre_configure\spectr_3_49_norm_na_1_discr.txt')
+    x = SpectreConfigure(parent=root)
+
+    root.mainloop()
+

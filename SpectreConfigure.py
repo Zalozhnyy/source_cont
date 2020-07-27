@@ -576,10 +576,15 @@ class SpectreConfigure(tk.Toplevel):
             energy = eval(obj.get())
             if energy == 0:
                 raise Exception
+
             KSI = np.interp(energy * 10 ** 6, self.photon_table[:, 0], self.photon_table[:, 1])
             self.spectre_entry_val[i][j + 2].set('{:.5g}'.format(KSI))
 
-            energy_el = np.interp(energy, self.elph[:, 0], self.elph[:, 1])
+            if energy <= self.elph[-1, 0]:
+                energy_el = np.interp(energy, self.elph[:, 0], self.elph[:, 1])
+
+            else:
+                energy_el = self.elph_ext(energy)
 
             self.spectre_entry_val[i][j + 3].set('{:.5g}'.format(energy_el))
 
@@ -702,6 +707,20 @@ class SpectreConfigure(tk.Toplevel):
         except:
             pass
 
+    def elph_ext(self, point):
+        X = self.elph[:, 0]
+        Y = self.elph[:, 1]
+
+        x0, y0 = X[-1], Y[-1]
+        x1, y1 = X[1000], Y[1000]
+
+        k = (y0 - y1) / (x0 - x1)
+        b = y0 - k * x0
+
+        out_energy = k * point + b
+
+        return out_energy
+
 
 class SpectreCalculations:
     def __init__(self, spectre_path):
@@ -772,4 +791,3 @@ if __name__ == '__main__':
     x = SpectreConfigure(parent=root)
 
     root.mainloop()
-

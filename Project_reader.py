@@ -394,7 +394,7 @@ class DataParcer:
 
         path = os.path.join(os.path.dirname(__file__), 'elph.txt')
 
-        out = np.loadtxt(path, skiprows=1, dtype=float) * 10**-3
+        out = np.loadtxt(path, skiprows=1, dtype=float) * 1e-3
         return out
 
 

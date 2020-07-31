@@ -10,7 +10,7 @@ import shutil
 from scipy import integrate
 
 from utility import *
-from Project_reader import DataParcer
+from Project_reader import DataParser
 from Save_for_remp import Save_remp
 from Main_frame import FrameGen
 from SpectreConfigure import SpectreConfigure
@@ -85,6 +85,8 @@ class MainWindow(tk.Frame):
         super().__init__(parent)
         self.parent = parent
 
+        self.parent.protocol("WM_DELETE_WINDOW", self.onExit)
+
         self.prj_path = None
 
         self.notebook = None
@@ -112,15 +114,15 @@ class MainWindow(tk.Frame):
 
     def from_project_reader(self):
 
-        self.tok_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('TOK')))
+        #self.tok_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('TOK')))
         self.pl_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PL')))
         self.lay_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('LAY')))
         self.par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
 
-        self.TOK = DataParcer(self.tok_dir).tok_decoder()
-        self.PL_surf, self.PL_vol, self.PL_bound = DataParcer(self.pl_dir).pl_decoder()
-        self.LAY = DataParcer(self.lay_dir).lay_decoder()
-        self.PAR = DataParcer(self.par_dir).par_decoder()
+        #self.TOK = DataParcer(self.tok_dir).tok_decoder()
+        self.PL_surf, self.PL_vol, self.PL_bound = DataParser(self.pl_dir).pl_decoder()
+        self.LAY = DataParser(self.lay_dir).lay_decoder()
+        self.PAR = DataParser(self.par_dir).par_decoder()
 
     def toolbar(self):
         self.parent.title("Sources")
@@ -140,18 +142,31 @@ class MainWindow(tk.Frame):
         self.filemenu.add_cascade(label="Недавние проекты", menu=self.recent_pr_menu)
 
         # self.filemenu.add_command(label="Сохранить (output dicts)", command=lambda: timef_global_save(self.path))
-        self.filemenu.add_command(label="Сохранение для РЭМП", command=self.save)
+        self.filemenu.add_command(label="Сохранение для РЭМП", command=self.save, state='disabled')
 
-        self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder)
+        self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder, state='disabled')
         # self.filemenu.add_command(label="Очистить папку time functions", command=lambda: tf_global_del(self.path))
         # self.filemenu.add_command(label='Перезагрузка', command=self.reset)
         self.filemenu.add_command(label="Exit", command=self.onExit)
 
         self.menubar.add_command(label='Добавить воздействие',
-                                 command=self.__add_source_button, state='normal')
-        self.menubar.add_command(label='Удалить воздействие', command=self.__tree_view_deconstructor, state='normal')
-        self.menubar.add_command(label='Справка')
-        self.menubar.add_command(label='test', command=self.test)
+                                 command=self.__add_source_button, state='disabled')
+        self.menubar.add_command(label='Удалить воздействие', command=self.__tree_view_deconstructor, state='disabled')
+        # self.menubar.add_command(label='Справка')
+        # self.menubar.add_command(label='test', command=self.test)
+
+    def menubar_activate(self):
+        add_index = self.menubar.index('Добавить воздействие')
+        del_index = self.menubar.index('Удалить воздействие')
+
+        open_folder_index = self.filemenu.index('Открыть папку с проектом')
+        save_for_remp_index = self.filemenu.index('Сохранение для РЭМП')
+
+        self.menubar.entryconfigure(open_folder_index, state='normal')
+        self.menubar.entryconfigure(save_for_remp_index, state='normal')
+
+        self.filemenu.entryconfigure(add_index, state='normal')
+        self.filemenu.entryconfigure(del_index, state='normal')
 
     def onExit(self):
         self.parent.quit()
@@ -234,7 +249,7 @@ class MainWindow(tk.Frame):
         self.notebook.grid(sticky='NWSE')
 
         self.from_project_reader()
-        self.lag = DataParcer(self.path).pech_check()
+        self.lag = DataParser(self.path).pech_check()
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
 
         if 'remp_sources' in os.listdir(self.path):
@@ -243,7 +258,7 @@ class MainWindow(tk.Frame):
 
             if ask is True:
 
-                self.rs_data = DataParcer(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
+                self.rs_data = DataParser(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
                 self.remp_source_exist = True
 
                 for p_number in self.rs_data.keys():
@@ -251,6 +266,8 @@ class MainWindow(tk.Frame):
                     part_number = self.rs_data[p_number]['particle number']
 
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(load_name, part_number))
+
+        self.menubar_activate()
 
     def reset(self):
         if self.path is None:
@@ -276,9 +293,9 @@ class MainWindow(tk.Frame):
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
-                energy_type = 'Current'
                 for axis in create_list:
-                    name = f'{energy_type}_{axis}_layer_{i}'
+                    energy_type = f'Ток по оси {axis} слой {i}'
+                    name = f'Current_{axis}_layer_{i}'
                     d = f'J{axis.upper()}_{i}'
                     obj.insert_second_level('Current', f'{name}', {})
 
@@ -317,12 +334,11 @@ class MainWindow(tk.Frame):
         obj = obj_name
 
         boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
-        boundaries_decode_f = {'X': 'xmax_part', 'Y': 'ymax_part', 'Z': 'zmax_part', '-X': 'xmin_part',
-                               '-Y': 'ymin_part',
-                               '-Z': 'zmin_part', }
+        boundaries_decode_f = {'X': 'xmax_part', 'Y': 'ymax_part', 'Z': 'zmax_part',
+                               '-X': 'xmin_part', '-Y': 'ymin_part', '-Z': 'zmin_part', }
 
-        distr_list = DataParcer(self.path + '/').distribution_reader()
-        b_list = DataParcer(self.path + '/').get_spectre_for_bound()
+        distr_list = DataParser(self.path + '/').distribution_reader()
+        b_list = DataParser(self.path + '/').get_spectre_for_bound()
 
         number = self.PAR[particle]['number']
         type = self.PAR[particle]['type']
@@ -392,7 +408,7 @@ class MainWindow(tk.Frame):
 
                     from_l = name.split('_')[-1][0]
                     to_l = name.split('_')[-1][1]
-                    spectres = DataParcer(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
+                    spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
 
                     if len(spectres) == 6:
                         obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
@@ -726,6 +742,14 @@ class MainWindow(tk.Frame):
                                                                        create=True))
         create_sp.grid(row=3, column=5, sticky='E', padx=20, pady=3)
 
+        d_text = 'Подсказка:\nВыберите один файл:\n' \
+                 'тип 0, тип 1, тип 5\n' \
+                 'Для типов 0 и 5 доступно создание'
+
+        description_label = tk.Label(fr_data, text=d_text, justify='left')
+        description_label.grid(row=1, column=6, columnspan=3, rowspan=5, padx=10)
+
+
         try:
             if self.global_tree_db[name].get_last_level_data(first_key, second_key,
                                                              "spectre numbers") is None:
@@ -765,6 +789,12 @@ class MainWindow(tk.Frame):
                                                                      False))
         open_notepad.grid(row=3, column=4, sticky='E', padx=10, pady=3)
 
+        d_text = 'Подсказка:\nВыберите от 1го до 6ти файлов типа 3'
+
+        description_label = tk.Label(fr_data, text=d_text)
+        description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
+
+
         spectre = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
         spectre_number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
 
@@ -781,10 +811,6 @@ class MainWindow(tk.Frame):
 
     def boundaries_interface(self, parent_widget, name, first_key, second_key):
 
-        boundaries_decode = {'X': 'xmax_part', 'Y': 'ymax_part', 'Z': 'zmax_part', '-X': 'xmin_part', '-Y': 'ymin_part',
-                             '-Z': 'zmin_part', }
-        distr_list = DataParcer(self.path + '/').get_spectre_for_bound()
-
         fr_data = parent_widget
 
         e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
@@ -793,7 +819,7 @@ class MainWindow(tk.Frame):
         spectres_label = tk.Label(fr_data)
         spectres_label.grid(row=1, column=0, columnspan=3, rowspan=8, sticky='N')
 
-        manual_conf_button = tk.Button(fr_data, text='Выбрать вручную',
+        manual_conf_button = tk.Button(fr_data, text='Выбрать вручную', width=15,
                                        command=lambda: self.__choice_files(spectres_label, name, first_key, second_key,
                                                                            'xmax_part', buttons=open_notepad))
         manual_conf_button.grid(row=1, column=4, sticky='E', padx=10)
@@ -802,19 +828,24 @@ class MainWindow(tk.Frame):
                                  command=lambda: self.__open_notepad(name, first_key, second_key, spectres_label, True))
         open_notepad.grid(row=2, column=4, sticky='E', padx=10, pady=3)
 
+        d_text = 'Подсказка:\nВыберите файл (спектр) типа 4'
+
+        description_label = tk.Label(fr_data, text=d_text)
+        description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
+
         t = 'Список файлов:\n'
 
         try:
-            file = boundaries_decode[second_key.split('_')[-1]]
-            number = distr_list[file]
+            file = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
+            number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
+
+            if (file is None) or (number is None):
+                raise Exception
 
             t += file + '  №' + str(number) + '\n'
 
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file)
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
-
         except:
-            t += 'Файлы не найдеры, выберите вручную'
+            t += 'Файлы не найдены, выберите вручную'
 
         if self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre') is not None:
             open_notepad['state'] = 'normal'
@@ -835,6 +866,14 @@ class MainWindow(tk.Frame):
                             command=lambda: self.__delete_distribution(distr_label, name, first_key,
                                                                        second_key, (open_notepad, disable)))
         disable.grid(row=3, column=4, sticky='E', padx=10, pady=3)
+
+        d_text = 'Подсказка:\nВыберите файл типа:\n - "energy distribution" для энерговыделения (Energy)\n' \
+                 ' - "JX/JY/JZ" для токов (Current)\n\n' \
+                 'Отключить - отключает сохранение данного источника'
+
+        description_label = tk.Label(fr_data, text=d_text, justify='left')
+        description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
+
 
         try:
             d = self.global_tree_db[name].get_last_level_data(first_key, second_key, "distribution")
@@ -948,6 +987,8 @@ class MainWindow(tk.Frame):
         a = DeleteGSourceDialog(data)
         self.wait_window(a)
         delete_gsource = a.lb_current
+        if delete_gsource is None:
+            return
 
         self.notebook.forget(self.tabs_dict[delete_gsource][0])
         self.tree.pop(self.tabs_dict[delete_gsource][0])
@@ -955,9 +996,11 @@ class MainWindow(tk.Frame):
         self.global_tree_db.pop(delete_gsource)
 
     def test(self):
-        f = os.path.join(self.path, 'file.txt')
-        osCommandString = f"notepad.exe {f}"
-        os.system(osCommandString)
+        add_index = self.menubar.index('Добавить воздействие')
+        del_index = self.menubar.index('Удалить воздействие')
+
+        self.menubar.entryconfigure(add_index, state='disabled')
+        self.menubar.entryconfigure(del_index, state='disabled')
 
     def save(self):
         Save_remp(self.global_tree_db, self.path)
@@ -968,7 +1011,7 @@ class MainWindow(tk.Frame):
         from_l = second_key.split('_')[-1][0]
         to_l = second_key.split('_')[-1][1]
         number = self.PAR[first_key]['number']
-        spectres = DataParcer(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
+        spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
 
         if len(spectres) == 6:
             obj.insert_third_level(first_key, second_key, 'spectre', [i for i in spectres.keys()])
@@ -1036,7 +1079,7 @@ class MainWindow(tk.Frame):
             num_label['text'] = f'Номер спектра:  {number}'
 
         if create:
-            ex = SpectreConfigure('', self.parent)
+            ex = SpectreConfigure(self.path, self.parent)
 
             self.wait_window(ex)
 
@@ -1084,7 +1127,12 @@ class MainWindow(tk.Frame):
 
             file_name, number, sp_type = self.__read_spectre(file)
             if file_name is None:
+                t = 'Тип файла не распознан, добавление невозможно'
+                label['text'] = t
+                self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', None)
+                self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', None)
                 return
+
             number = str(number)
             t = '№ ' + str(number) + '   ' + file_name + '\n'
 
@@ -1099,6 +1147,11 @@ class MainWindow(tk.Frame):
             for i in files:
                 a, b, c = self.__read_spectre(i)
                 if a is None:
+                    t = 'Тип файла не распознан, добавление невозможно'
+                    label['text'] = t
+                    self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', None)
+                    self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', None)
+
                     return
 
                 file_name.append(a)
@@ -1122,6 +1175,7 @@ class MainWindow(tk.Frame):
         file = fd.askopenfilename(title=f'Выберите файлы формата {format}', initialdir=self.path)
 
         if file == '':
+            name_label['text'] = 'Файл не опознан. Выберите файл правильного формата.'
             return
 
         file_name, number, sp_type = self.__read_spectre(file)
@@ -1239,6 +1293,9 @@ class MainWindow(tk.Frame):
                     if j == 6:
                         type = int(line.strip())
                         break
+
+                if len(file.readlines()) < 2:
+                    raise Exception
 
         except:
             print('Ошибка чтения выбранных файлов')

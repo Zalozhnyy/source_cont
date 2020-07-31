@@ -97,7 +97,7 @@ def open_button():
 def set_recent_projects(path, path_dict):
     unic_path = {}
     try:
-        with open('properties.ini', 'r', encoding='utf-8') as file:
+        with open('sources_properties.ini', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         for i in lines:
             unic_path.update({i.strip(): ''})
@@ -109,7 +109,7 @@ def set_recent_projects(path, path_dict):
     for i in path_dict.keys():
         unic_path.update({i.strip(): ''})
 
-    with open('properties.ini', 'w', encoding='utf-8') as file:
+    with open('sources_properties.ini', 'w', encoding='utf-8') as file:
         for i, key in enumerate(unic_path.keys()):
             file.write(key + '\n')
 
@@ -117,7 +117,7 @@ def set_recent_projects(path, path_dict):
 def get_recent_projects():
     out = {}
     try:
-        with open('properties.ini', 'r', encoding='utf-8') as file:
+        with open('sources_properties.ini', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         for i in lines:
             out.update({i.strip(): ''})

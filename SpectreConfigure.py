@@ -8,18 +8,18 @@ from scipy import integrate
 import matplotlib.pyplot as plt
 import os
 
-from Project_reader import DataParcer
+from Project_reader import DataParser
+from Spectre_one_interface import SpectreOneInterface
 
 
 class SpectreConfigure(tk.Toplevel):
     def __init__(self, path='', parent=None):
         super().__init__(parent)
 
-        self.parent = parent
         self.path = path
 
         self.title('Редактор спектра')
-        self.grab_set()
+        # self.grab_set()
 
         self.spectre_frame = None
         self.spectre_path = ''
@@ -32,6 +32,7 @@ class SpectreConfigure(tk.Toplevel):
 
         self.spectre_type_cb = None
         self.sp_type_dict = {'Фиксированный': 'SP_0',
+                             'Разыгрывание': 'SP_1',
                              'Пятый': 'SP_5',
                              'DISCRETE': 'DISCRETE',
                              'CONTINUOUS': 'CONTINUOUS'}
@@ -53,6 +54,8 @@ class SpectreConfigure(tk.Toplevel):
                               'Количество элементов в таблице(ниже)',
                               '',
                               'Таблица частиц  ( №,  Энергия (MeВ), TETA(град.), FI(град.), Доля(не нормируется))']
+
+        self.sp_one_interface = None
 
         self.constructor()
 
@@ -99,7 +102,7 @@ class SpectreConfigure(tk.Toplevel):
         self.save_as_button = tk.Button(self, text='Сохранить как', command=lambda: self._save_data(True), width=13)
         self.save_as_button.grid(row=2, column=1, pady=3, padx=3, sticky='WN')
 
-        combobox_values = ['Фиксированный', 'Пятый', 'DISCRETE', 'CONTINUOUS']
+        combobox_values = ['Фиксированный', 'Разыгрывание', 'Пятый', 'DISCRETE', 'CONTINUOUS']
         self.spetre_type_cobbobox = ttk.Combobox(self, value=[val for val in combobox_values], width=13,
                                                  state='readonly')
         self.spetre_type_cobbobox.grid(row=0, column=3)
@@ -165,13 +168,24 @@ class SpectreConfigure(tk.Toplevel):
             if check == 0:
                 return
 
-            self.elph = DataParcer(self.path).elph_reader()
+            self.elph = DataParser(self.path).elph_reader()
             self.spectre_type_cb = 'SP_5'
             self.spetre_type_cobbobox.set(self.spectre_type_cb)
             data = self.description_sp_zero(True, self.spectre_type_cb)
             labels = ['№', 'Энергия (кеВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г', 'Энергия электрона']
             self.spectre_frame_constructor(data, labels, 'SP_5')
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
+
+        elif 'Номер спектра' in lines[1] and lines[6].strip() == '1':
+            self.spectre_type_cb = 'SP_1'
+            self.spetre_type_cobbobox.set('Разыгрывание')
+
+            self.sp_one_interface = SpectreOneInterface(self, self.spectre_path)
+            self.sp_one_interface.data_load()
+
+            self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
+
+
 
         else:
             f = self.spectre_path
@@ -297,11 +311,15 @@ class SpectreConfigure(tk.Toplevel):
             if check == 0:
                 return
 
-            self.elph = DataParcer(self.path).elph_reader()
+            self.elph = DataParser(self.path).elph_reader()
             self.lines = self._sp_zero_form.copy()
             self.description_sp_zero(False, self.spectre_type_cb)
             labels = ['№', 'Энергия (МеВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г', 'Энергия электрона']
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
+
+        if self.spectre_type_cb == 'SP_1':
+            sp_one_interface = SpectreOneInterface(self, None)
+            sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
 
         if self.spectre_type_cb == 'DISCRETE':
             self.description_discrete_cont(False, 1)
@@ -695,8 +713,18 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_frame.destroy()
             self.spectre_entry.clear()
             self.spectre_entry_val.clear()
+
         except:
             pass
+
+        if self.sp_one_interface is not None:
+            try:
+                self.sp_one_interface.destroy_widget()
+                self.sp_one_interface = None
+            except:
+                pass
+
+
 
     def __destroy_sp_frame(self):
         try:
@@ -720,69 +748,6 @@ class SpectreConfigure(tk.Toplevel):
         out_energy = k * point + b
 
         return out_energy
-
-
-class SpectreCalculations:
-    def __init__(self, spectre_path):
-        self.path = spectre_path
-
-        self.calculations()
-
-    def type_checker(self):
-        with open(self.path, 'r') as file:
-            lines = file.readlines()
-
-        if 'SP_TYPE=CONTINUOUS' in lines[0]:
-            with open(self.path, 'r') as file:
-                lines = file.readlines()
-            out = []
-            for i in range(len(lines)):
-                if i == 2:
-                    a = [lines[i].strip(), '0']
-                    out.append(a)
-                elif i > 2:
-                    out.append(lines[i].strip().split())
-            data = np.array(out, dtype=float)
-
-        elif 'SP_TYPE=DISCRETE' in lines[0]:
-            data = np.loadtxt(self.path, skiprows=2)
-
-        elif 'Номер спектра' in lines[1] and '0' in lines[6]:
-            data = np.loadtxt(self.path, skiprows=14)
-            data = np.column_stack((data[:, 1], data[:, -1]))
-
-        elif 'Номер спектра' in lines[1] and '5' in lines[6]:
-            data = np.loadtxt(self.path, skiprows=14)
-            data = data[:, 1:3]
-
-        else:
-            return None
-
-        return data
-
-    def calculations(self):
-        data = self.type_checker()
-        if data is None:
-            print('Спектр не распознан')
-            return
-        print(data)
-
-        E_avg = np.sum(data[:, 0] * data[:, 1], axis=0) / np.sum(data[:, 1])
-
-        tf_intergal = integrate.simps(y=data[:, 1], x=data[:, 0], dx=data[:, 0])
-        c = tf_intergal / (data[-1, 0] - data[0, 0])
-        print(c)
-        print(E_avg)
-
-        plt.title(f'Просто интеграл без деления на отрезок {tf_intergal}\n'
-                  f'с делением (на графике) {c}\n'
-                  f'Eср из письма {E_avg}')
-        plt.ylabel('ДОЛЯ')
-        plt.xlabel('энергия')
-        plt.plot(data[:, 0], data[:, 1], label='спектр')
-        plt.plot(data[:, 0], [c for _ in range(data.shape[0])], label='интеграл делённый на отрезок')
-        plt.legend()
-        plt.show()
 
 
 if __name__ == '__main__':

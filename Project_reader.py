@@ -5,7 +5,7 @@ from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 
 
-class DataParcer:
+class DataParser:
     def __init__(self, path):
         self.path = path
         self.dir_path = os.path.dirname(self.path)
@@ -251,7 +251,7 @@ class DataParcer:
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
 
-        triggers = ['Gursa', 'Current_x', 'Current_y', 'Current_z', 'Energy', 'Flux', 'Boundaries']
+        triggers = ['Volume', 'Volume78', 'Current_x', 'Current_y', 'Current_z', 'Energy', 'Flux', 'Boundaries']
         r = []
         for i, line in enumerate(lines):
             if any([line.strip() == j for j in triggers]):
@@ -308,10 +308,11 @@ class DataParcer:
 
         if os.path.exists(self.source_path):
             lag = self.pech_check_utility(self.source_path)
-            mb.showinfo('Info', fr'lag/parameters взят из {self.source_path}')
+            # mb.showinfo('Info', fr'lag/parameters взят из {os.path.normpath(self.source_path)}')
+            print(fr'lag/parameters взят из {os.path.normpath(self.source_path)}')
         else:
             ask = mb.askyesno('Проект pechs не найден',
-                              f'Путь {self.source_path} не найден. Проект pechs не обнаружен.\n'
+                              f'Путь {os.path.normpath(self.source_path)} не найден. Проект pechs не обнаружен.\n'
                               f'Продолжить без проекта pechs? (lag/parameters будет равен нулю)')
             if ask is True:
                 self.source_path = None
@@ -381,11 +382,18 @@ class DataParcer:
         create_list = ['xmax_part', 'xmin_part', 'ymax_part', 'ymin_part', 'zmax_part', 'zmin_part']
         for file in os.listdir(os.path.split(self.path)[0]):
             if any(file in i for i in create_list):
-                with open(os.path.join(self.dir_path, file), 'r') as f:
-                    for i, line in enumerate(f):
-                        if i == 2:
-                            number = line.strip()
-                            break
+                try:
+                    with open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding) as f:
+                        for i, line in enumerate(f):
+                            if i == 2:
+                                number = line.strip()
+                                break
+                except:
+                    with open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding_def) as f:
+                        for i, line in enumerate(f):
+                            if i == 2:
+                                number = line.strip()
+                                break
                 out.update({file: number})
 
         return out
@@ -398,14 +406,203 @@ class DataParcer:
         return out
 
 
+class SpOneReader:
+    def __init__(self, path):
+        self.path = path
+        self.dir_path = os.path.dirname(self.path)
+        self.decoding_def = locale.getpreferredencoding()
+        self.decoding = 'utf-8'
+
+        self.sp_type = 1
+
+        self.description = ''
+
+        self.phi_angles = []
+        self.phi_parts = []
+
+        self.theta_angles = []
+        self.theta_parts = []
+
+        self.energy_angles = []
+        self.energy_parts = []
+
+        self.sp_number = 0
+        self.sp_power = 0.
+        self.sp_part_count = 0
+
+        self.phi_count = 0
+        self.theta_count = 0
+        self.energy_count = 0
+
+        self.phi_type = 0
+        self.theta_type = 0
+        self.energy_type = 0
+
+    def start_read(self):
+        if not os.path.exists(self.path):
+            return
+        with open(rf'{self.path}', 'r', encoding='cp1251') as file:
+            self.description_reader(file)
+
+            self.phi_reader(file)
+
+            self.theta_reader(file)
+
+            self.energy_reader(file)
+
+    def description_reader(self, file):
+
+        for i in range(13):
+            d = file.readline()
+            if i == 0:
+                self.description = d.strip()
+            if i == 2:
+                self.sp_number = int(d.strip())
+            if i == 4:
+                self.sp_power = float(d.strip())
+            if i == 8:
+                self.sp_part_count = int(d.strip())
+            if i == 10:
+                d = d.strip().split()
+                self.phi_count = int(d[0])
+                self.theta_count = int(d[1])
+                self.energy_count = int(d[2])
+
+    def phi_reader(self, file):
+        line = 0
+        while True:
+            line += 1
+            d = file.readline()
+
+            if line == 1:
+                continue
+
+            if line == 2:
+                self.phi_type = int(d.strip())
+
+            if self.phi_type == 0:
+
+                if line == 5:
+                    for i in range(self.phi_count):
+                        d = file.readline()
+                        d = d.strip().split()
+                        self.phi_angles.append(float(d[0]))
+                        self.phi_parts.append(float(d[1]))
+
+                    break
+
+            elif self.phi_type == 1:
+                if line == 3:
+                    for i in range(self.phi_count):
+                        d = file.readline()
+                        self.phi_angles.append(float(d.strip()))
+                    break
+
+            elif self.phi_type == 3:
+                if line == 4:
+                    self.phi_angles.append(float(d.strip()))
+                if line == 6:
+                    self.phi_angles.append(float(d.strip()))
+                    break
+
+    def theta_reader(self, file):
+        line = 0
+        while True:
+            line += 1
+            d = file.readline()
+
+            if line == 1:
+                continue
+
+            if line == 2:
+                self.theta_type = int(d.strip())
+
+            if self.theta_type == 0:
+
+                if line == 5:
+                    for i in range(self.theta_count):
+                        d = file.readline()
+                        d = d.strip().split()
+                        self.theta_angles.append(float(d[0]))
+                        self.theta_parts.append(float(d[1]))
+
+                    break
+
+            elif self.theta_type == 1 or self.theta_type == -1:
+                if line == 3:
+                    for i in range(self.theta_count):
+                        d = file.readline()
+                        self.theta_angles.append(float(d.strip()))
+                    break
+
+            elif self.energy_type == 3:
+                if line == 4:
+                    self.theta_angles.append(float(d.strip()))
+                if line == 6:
+                    self.theta_angles.append(float(d.strip()))
+                    break
+
+    def energy_reader(self, file):
+        line = 0
+        while True:
+            line += 1
+            d = file.readline()
+
+            if line == 1:
+                continue
+
+            if line == 2:
+                self.energy_type = int(d.strip())
+
+            if self.energy_type == 0:
+
+                if line == 5:
+                    for i in range(self.energy_count):
+                        d = file.readline()
+                        d = d.strip().split()
+                        self.energy_angles.append(float(d[0]))
+                        self.energy_parts.append(float(d[1]))
+                    break
+
+            elif self.energy_type == 1:
+                if line == 3:
+                    for i in range(self.energy_count):
+                        d = file.readline()
+                        self.energy_angles.append(float(d.strip()))
+                    break
+
+            elif self.energy_type == 2:
+
+                if line == 5:
+                    for i in range(self.energy_count):
+                        d = file.readline()
+                        d = d.strip().split()
+                        self.energy_angles.append((float(d[0]), float(d[1])))
+                        self.energy_parts.append(float(d[2]))
+
+                    break
+
+            elif self.energy_type == 3:
+                if line == 4:
+                    self.energy_angles.append(float(d.strip()))
+                if line == 6:
+                    self.energy_angles.append(float(d.strip()))
+                    break
+
+
 if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
     # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
-    test_file = r'C:\work\Test_projects\wpala\remp_sources'
-    a = DataParcer(test_file)
-    # out_surf, out_volume, out_boundaries = a.pl_decoder()
-    # print(f' surf  {out_surf}')
-    # print(f' vol  {out_volume}')
-    # print(f' bound  {out_boundaries}')
-    x = a.elph_reader()
-    print(x)
+    # test_file = r'C:\work\Test_projects\wpala\remp_sources'
+    test_file = r'D:\Qt_pr\Spectre_configure\SP_1_2'
+    # a = DataParcer(test_file)
+    # # out_surf, out_volume, out_boundaries = a.pl_decoder()
+    # # print(f' surf  {out_surf}')
+    # # print(f' vol  {out_volume}')
+    # # print(f' bound  {out_boundaries}')
+    # x = a.elph_reader()
+    # print(x)
+
+    a = SpOneReader(test_file)
+    print(a.energy_angles)
+    print(a.energy_parts)

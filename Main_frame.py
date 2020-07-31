@@ -17,7 +17,7 @@ from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
 from utility import *
-from Project_reader import DataParcer
+from Project_reader import DataParser
 from Save_for_remp import Save_remp
 from Exceptions import *
 
@@ -744,7 +744,7 @@ class FrameGen(ttk.LabelFrame):
                         f'Сохранено стандартной в time functions/user configuration/default.dtf')
 
     def time_grid(self):
-        a = DataParcer(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
+        a = DataParser(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
         return f'[{a[0]} : {a[-1]}]', a
 
     def spectr_choice_classifier(self, path):
@@ -896,7 +896,7 @@ class FrameGen(ttk.LabelFrame):
                 mb.showerror('Value error', f'Значение временной функции {item} выходит за пределы')
 
     def child_parcecer_grid(self):
-        return DataParcer(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
+        return DataParser(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
 
     def __painter(self):
         try:

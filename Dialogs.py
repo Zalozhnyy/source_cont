@@ -132,3 +132,21 @@ class SelectSpectreToView(tk.Toplevel):
     def onExit(self):
         self.lb_current = None
         self.destroy()
+
+
+class FAQ(tk.Toplevel):
+    def __init__(self):
+        super().__init__()
+
+        self.grab_set()
+
+        self.protocol("WM_DELETE_WINDOW", self.onExit)
+
+        self.init_ui()
+
+    def onExit(self):
+        self.destroy()
+
+    def init_ui(self):
+        text = 'Программа служит для создания абстракций типа "Воздействие"'
+

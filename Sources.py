@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 
 import tkinter as tk
-from MainWindow import MainWindow
+from source_MainWindow import MainWindow
 
 if __name__ == '__main__':
     root = tk.Tk()

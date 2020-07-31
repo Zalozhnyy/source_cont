@@ -6,7 +6,7 @@ from tkinter import simpledialog
 
 import os
 
-from Project_reader import SpOneReader
+from source_Project_reader import SpOneReader
 
 
 class SpectreOneInterface(tk.Frame):

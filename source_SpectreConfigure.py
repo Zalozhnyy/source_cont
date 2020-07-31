@@ -8,8 +8,8 @@ from scipy import integrate
 import matplotlib.pyplot as plt
 import os
 
-from Project_reader import DataParser
-from Spectre_one_interface import SpectreOneInterface
+from source_Project_reader import DataParser
+from source_Spectre_one_interface import SpectreOneInterface
 
 
 class SpectreConfigure(tk.Toplevel):

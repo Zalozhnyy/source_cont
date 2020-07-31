@@ -9,12 +9,12 @@ import locale
 import shutil
 from scipy import integrate
 
-from utility import *
-from Project_reader import DataParser
-from Save_for_remp import Save_remp
-from Main_frame import FrameGen
-from SpectreConfigure import SpectreConfigure
-from Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView
+from source_utility import *
+from source_Project_reader import DataParser
+from source_Save_for_remp import Save_remp
+from source_Main_frame import FrameGen
+from source_SpectreConfigure import SpectreConfigure
+from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView
 
 
 class TreeDataStructure:

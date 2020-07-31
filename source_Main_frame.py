@@ -16,10 +16,10 @@ import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
-from utility import *
-from Project_reader import DataParser
-from Save_for_remp import Save_remp
-from Exceptions import *
+from source_utility import *
+from source_Project_reader import DataParser
+from source_Save_for_remp import Save_remp
+from source_Exceptions import *
 
 
 class FrameGen(ttk.LabelFrame):

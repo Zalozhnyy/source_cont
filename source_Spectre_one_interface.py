@@ -23,7 +23,7 @@ class SpectreOneInterface(tk.Frame):
         self.row = 0
 
         self.cf = ScrolledWidget(self, (800, 700))
-        self.cf.grid(row=3, columnspan=12, pady=5, sticky="NWSE")
+        self.cf.grid(row=3, columnspan=12, pady=5, sticky="NWSE", rowspan=100)
 
         # self.energy_frame_entry = ttk.Frame(cf.frame)
         # self.energy_frame_entry.grid(row=phi_row + 1, column=0, columnspan=12, sticky="NWSE")
@@ -32,9 +32,13 @@ class SpectreOneInterface(tk.Frame):
         self.frame_description.grid(row=3, column=0, columnspan=12, rowspan=13, sticky="NWSE")
 
         # commentary
+        commentary_label = tk.Label(self.frame_description, text='Комментарий', justify='left')
+        commentary_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.row += 1
+
         self.spectre_note_val = tk.StringVar()
         self.spectre_note_val.set('')
-        self.spectre_note = tk.Entry(self.frame_description, textvariable=self.spectre_note_val, width=50)
+        self.spectre_note = tk.Entry(self.frame_description, textvariable=self.spectre_note_val, width=80)
         # self.spectre_note.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.spectre_note.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
@@ -69,8 +73,9 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         self.spectre_type_val = tk.StringVar()
-        self.spectre_type_val.set('')
-        self.spectre_type_entry = tk.Entry(self.frame_description, textvariable=self.spectre_type_val, width=10)
+        self.spectre_type_val.set('1')
+        self.spectre_type_entry = tk.Entry(self.frame_description, textvariable=self.spectre_type_val, width=10,
+                                           state='readonly')
         self.spectre_type_entry.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
@@ -82,7 +87,7 @@ class SpectreOneInterface(tk.Frame):
 
         self.part_count_val = tk.StringVar()
         self.part_count_val.set('0')
-        self.part_count = tk.Entry(self.frame_description, textvariable=self.part_count_val, width=10)
+        self.part_count = tk.Entry(self.frame_description, textvariable=self.part_count_val, width=10, state='readonly')
         self.part_count.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
@@ -94,6 +99,9 @@ class SpectreOneInterface(tk.Frame):
 
         self.elem_count_val = tk.StringVar()
         self.elem_count_val.set('0 0 0')
+        self.elem_count_val.trace('w',
+                                  lambda name, index, mode: self.__change_count_callback())
+
         self.elem_count = tk.Entry(self.frame_description, textvariable=self.elem_count_val, width=10, state='readonly')
         self.elem_count.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
@@ -119,7 +127,7 @@ class SpectreOneInterface(tk.Frame):
         # theta type
         p = 'Тип спектра по theta (0-детерминированный,1-равномерный,-1 -равномерный по площади,3-нормальное распределение)'
         theta_label = tk.Label(self.frame_description, text=p, justify='left')
-        theta_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        theta_label.grid(row=18, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
         t_num = ['0', '1', '-1', '3']
@@ -128,7 +136,7 @@ class SpectreOneInterface(tk.Frame):
         self.theta_type_cobbobox = ttk.Combobox(self.frame_description, value=[val for val in combobox_values],
                                                 width=20,
                                                 state='readonly')
-        self.theta_type_cobbobox.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.theta_type_cobbobox.grid(row=19, column=0, columnspan=12, sticky='NW')
         self.theta_type_cobbobox.set('Тип спектра theta')
 
         self.bind_class(self.theta_type_cobbobox, "<<ComboboxSelected>>", self.__theta_constructor)
@@ -137,7 +145,7 @@ class SpectreOneInterface(tk.Frame):
         # energy type
         p = 'Тип спектра по энергии (0-детерминированный, 1-равномерный, 2-по распределению, 3-нормальное распределение)'
         energy_label = tk.Label(self.frame_description, text=p, justify='left')
-        energy_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        energy_label.grid(row=28, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
         e_num = ['0', '1', '2', '3']
@@ -146,7 +154,7 @@ class SpectreOneInterface(tk.Frame):
         self.energy_type_cobbobox = ttk.Combobox(self.frame_description, value=[val for val in combobox_values],
                                                  width=20,
                                                  state='readonly')
-        self.energy_type_cobbobox.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.energy_type_cobbobox.grid(row=29, column=0, columnspan=12, sticky='NW')
         self.energy_type_cobbobox.set('Тип спектра energy')
 
         self.bind_class(self.energy_type_cobbobox, "<<ComboboxSelected>>", self.__energy_constructor)
@@ -163,7 +171,7 @@ class SpectreOneInterface(tk.Frame):
         cb = self.energy_decode[self.energy_type_cobbobox.get()]
 
         self.energy_frame_description = ttk.Frame(self.frame_description)
-        self.energy_frame_description.grid(row=17, column=0, columnspan=12, sticky="NWSE", pady=5)
+        self.energy_frame_description.grid(row=30, column=0, columnspan=12, sticky="NWSE", pady=5)
         self.row += 1
         energy_row += 1
 
@@ -175,6 +183,9 @@ class SpectreOneInterface(tk.Frame):
             energy_row += 1
 
             self.energy_levels_val = tk.StringVar()
+            self.energy_levels_val.trace('w',
+                                         lambda name, index, mode: self.__change_count_callback(True))
+
             self.energy_levels_val.set('0')
             self.energy_levels = tk.Entry(self.energy_frame_description, textvariable=self.energy_levels_val, width=10)
             self.energy_levels.grid(row=energy_row, column=0, columnspan=2, sticky='NW')
@@ -241,7 +252,7 @@ class SpectreOneInterface(tk.Frame):
         cb = self.theta_decode[self.theta_type_cobbobox.get()]
 
         self.theta_frame_description = ttk.Frame(self.frame_description)
-        self.theta_frame_description.grid(row=15, column=0, columnspan=12, sticky="NWSE", pady=5)
+        self.theta_frame_description.grid(row=20, column=0, columnspan=12, sticky="NWSE", pady=5)
         self.row += 1
         theta_row += 1
 
@@ -312,14 +323,17 @@ class SpectreOneInterface(tk.Frame):
         phi_row = 0
         try:
             self.phi_frame_description.destroy()
+            self.phi_frame_description.grid_forget()
             self.phi_frame_entry.destroy()
+            self.phi_frame_entry.grid_forget()
+
         except:
             pass
 
         cb = self.phi_decode[self.phi_type_cobbobox.get()]
 
         self.phi_frame_description = ttk.Frame(self.frame_description)
-        self.phi_frame_description.grid(row=13, column=0, columnspan=12, sticky="NWSE", pady=5)
+        self.phi_frame_description.grid(row=14, column=0, columnspan=12, sticky="NWSE", pady=5)
         self.row += 1
 
         if cb == '0':
@@ -402,7 +416,22 @@ class SpectreOneInterface(tk.Frame):
         self.energy_frame_entry = ttk.Frame(self.energy_frame_description)
         self.energy_frame_entry.grid(row=phi_row + 1, column=0, columnspan=12, sticky="NWSE")
 
-        p = 'Значения энергии(МэВ), доля(не нормируется)'
+        if self.energy_decode[self.energy_type_cobbobox.get()] == '2':
+            p = 'Энергия(МэВ) от	до доля(не нормируется)'
+
+            self.energy_angles_entry_2 = []
+            self.energy_angles_val_2 = [tk.StringVar() for _ in range(count)]
+
+            part_count_label = tk.Label(self.energy_frame_entry, text='Заполните ячейки', justify='center')
+            part_count_label.grid(row=2 + count, column=3, padx=3, pady=3)
+
+
+        else:
+            p = 'Значения энергии(МэВ), доля(не нормируется)'
+
+            part_count_label = tk.Label(self.energy_frame_entry, text='Заполните ячейки', justify='center')
+            part_count_label.grid(row=2 + count, column=1, padx=3, pady=3)
+
         energy_label = tk.Label(self.energy_frame_entry, text=p, justify='left')
         energy_label.grid(row=0, column=0, columnspan=12, sticky='NW')
 
@@ -412,24 +441,44 @@ class SpectreOneInterface(tk.Frame):
         self.energy_angles_entry = []
         self.energy_parts_entry = []
 
-        for i in range(count):
-            self.energy_angles_entry.append(
-                tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_angles_val[i]))
-            self.energy_angles_entry[i].grid(row=1 + i, column=0, sticky='NW', padx=3, pady=3)
-
-            self.energy_parts_entry.append(
-                tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_parts_val[i]))
-            self.energy_parts_entry[i].grid(row=1 + i, column=3, sticky='NW', padx=3, pady=3)
-
         if self.energy_decode[self.energy_type_cobbobox.get()] == '2':
-            energy_label['text'] = 'Энергия(МэВ) от	до доля(не нормируется)'
-            self.energy_angles_entry_2 = []
-            self.energy_angles_val_2 = [tk.StringVar() for _ in range(count)]
-
             for i in range(count):
+                self.energy_angles_entry.append(
+                    tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_angles_val[i]))
+                self.energy_angles_entry[i].grid(row=1 + i, column=0, sticky='NW', padx=3, pady=3)
+
                 self.energy_angles_entry_2.append(
                     tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_angles_val_2[i]))
                 self.energy_angles_entry_2[i].grid(row=1 + i, column=1, sticky='NW', padx=3, pady=3)
+
+                self.energy_parts_entry.append(
+                    tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_parts_val[i]))
+                self.energy_parts_entry[i].grid(row=1 + i, column=3, sticky='NW', padx=3, pady=3)
+
+                self.energy_parts_val[i].trace('w',
+                                              lambda name, index, mode: self.__part_callback(part_count_label, count,
+                                                                                             self.energy_parts_val))
+
+                self.__add_delete_button(self.energy_frame_entry, 1 + i, 4,
+                                         [self.energy_angles_entry[i], self.energy_parts_entry[i],
+                                          self.energy_angles_entry_2[i]], 'energy')
+
+        else:
+            for i in range(count):
+                self.energy_angles_entry.append(
+                    tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_angles_val[i]))
+                self.energy_angles_entry[i].grid(row=1 + i, column=0, sticky='NW', padx=3, pady=3)
+
+                self.energy_parts_entry.append(
+                    tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_parts_val[i]))
+                self.energy_parts_entry[i].grid(row=1 + i, column=3, sticky='NW', padx=3, pady=3)
+
+                self.energy_parts_val[i].trace('w',
+                                              lambda name, index, mode: self.__part_callback(part_count_label, count,
+                                                                                             self.energy_parts_val))
+
+                self.__add_delete_button(self.energy_frame_entry, 1 + i, 4,
+                                         [self.energy_angles_entry[i], self.energy_parts_entry[i]], 'energy')
 
     def __theta_entry_constructor(self, r, event):
         try:
@@ -457,6 +506,9 @@ class SpectreOneInterface(tk.Frame):
         self.theta_angles_entry = []
         self.theta_parts_entry = []
 
+        part_count_label = tk.Label(self.theta_frame_entry, text='Заполните ячейки', justify='center')
+        part_count_label.grid(row=2 + count, column=1, padx=3, pady=3)
+
         for i in range(count):
             self.theta_angles_entry.append(
                 tk.Entry(self.theta_frame_entry, width=14, textvariable=self.theta_angles_val[i]))
@@ -465,6 +517,13 @@ class SpectreOneInterface(tk.Frame):
             self.theta_parts_entry.append(
                 tk.Entry(self.theta_frame_entry, width=14, textvariable=self.theta_parts_val[i]))
             self.theta_parts_entry[i].grid(row=1 + i, column=1, sticky='NW', padx=3, pady=3)
+
+            self.theta_parts_val[i].trace('w',
+                                          lambda name, index, mode: self.__part_callback(part_count_label, count,
+                                                                                         self.theta_parts_val))
+
+            self.__add_delete_button(self.theta_frame_entry, 1 + i, 4,
+                                     [self.theta_angles_entry[i], self.theta_parts_entry[i]], 'theta')
 
     def __phi_entry_constructor(self, r, event):
         try:
@@ -492,12 +551,22 @@ class SpectreOneInterface(tk.Frame):
         self.phi_angles_entry = []
         self.phi_parts_entry = []
 
+        part_count_label = tk.Label(self.phi_frame_entry, text='Заполните ячейки', justify='center')
+        part_count_label.grid(row=2 + count, column=1, padx=3, pady=3)
+
         for i in range(count):
             self.phi_angles_entry.append(tk.Entry(self.phi_frame_entry, width=14, textvariable=self.phi_angles_val[i]))
             self.phi_angles_entry[i].grid(row=1 + i, column=0, sticky='NW', padx=3, pady=3)
 
             self.phi_parts_entry.append(tk.Entry(self.phi_frame_entry, width=14, textvariable=self.phi_parts_val[i]))
             self.phi_parts_entry[i].grid(row=1 + i, column=1, sticky='NW', padx=3, pady=3)
+
+            self.phi_parts_val[i].trace('w',
+                                        lambda name, index, mode: self.__part_callback(part_count_label, count,
+                                                                                       self.phi_parts_entry))
+
+            self.__add_delete_button(self.phi_frame_entry, 1 + i, 4,
+                                     [self.phi_angles_entry[i], self.phi_parts_entry[i]], 'phi')
 
     def data_load(self):
         self.sp_one_constructor()
@@ -546,6 +615,180 @@ class SpectreOneInterface(tk.Frame):
         self.cf.grid_remove()
         self.cf.destroy()
 
+    def __add_delete_button(self, parent, row, column, delete_items, count_type):
+
+        button = tk.Button(parent, text='-',
+                           command=lambda: self.__delete_entry(button, delete_items, count_type, row - 1))
+        button.grid(row=row, column=column, sticky='W')
+
+    def __delete_entry(self, item, delete_items, count_type, index):
+
+        try:
+            item.grid_remove()
+            item.destroy()
+
+            delete_items[0].grid_remove()
+            delete_items[0].destroy()
+
+            delete_items[1].grid_remove()
+            delete_items[1].destroy()
+
+            delete_items[2].grid_remove()
+            delete_items[2].destroy()
+
+        except:
+            pass
+
+        if count_type == 'energy':
+            try:
+                self.energy_parts_entry.pop(index)
+                self.energy_angles_entry.pop(index)
+                self.energy_angles_entry_2.pop(index)
+            except:
+                pass
+            self.energy_levels_val.set(str(len(self.energy_parts_entry)))
+
+            counts = self.elem_count_val.get().split()
+            self.elem_count_val.set(f'{counts[0]} {counts[1]} {self.energy_levels_val.get()}')
+
+        if count_type == 'phi':
+            try:
+                self.phi_parts_entry.pop(index)
+                self.phi_angles_entry.pop(index)
+            except:
+                pass
+            self.phi_levels_val.set(str(len(self.phi_parts_entry)))
+
+            counts = self.elem_count_val.get().split()
+            self.elem_count_val.set(f'{self.phi_levels_val.get()} {counts[1]} {counts[2]}')
+
+        if count_type == 'theta':
+            try:
+                self.theta_parts_entry.pop(index)
+                self.theta_angles_entry.pop(index)
+            except:
+                pass
+            self.theta_levels_val.set(str(len(self.theta_parts_entry)))
+
+            counts = self.elem_count_val.get().split()
+            self.elem_count_val.set(f'{counts[0]} {self.theta_levels_val.get()} {counts[2]}')
+
+    def __change_count_callback(self, set=False):
+        counts = self.elem_count_val.get().split()
+        try:
+            a = int(counts[2])
+
+            b = int(counts[0])
+
+            c = int(counts[1])
+        except:
+            return
+
+        self.part_count_val.set(f'{a * b * c}')
+        if set:
+            self.elem_count_val.set(f'{b} {c} {a}')
+
+    def __part_callback(self, label, count, array):
+        sum = 0
+        try:
+            for i in range(count):
+                sum += eval(array[i].get())
+            label['text'] = 'сумма: {:.4g}'.format(sum)
+        except:
+            label['text'] = 'Заполните ячейки'
+
+    def save(self):
+
+        out = ''
+
+        out += f'{self.spectre_note_val.get()}\n'
+        out += 'Номер спектра\n'
+        out += f'{self.spectre_number_val.get()}\n'
+        out += 'Мощность спектра (шт/см**2/с)- для поверхностных, (шт/см**3/с)- для объемных\n'
+        out += f'{self.spectre_power_val.get()}\n'
+        out += 'Тип спектра (0-фиксированный, 1-разыгрывание, 2-список)\n'
+        out += '1\n'
+        out += 'Число частиц (запускаемых на каждом шаге)\n'
+        out += f'{self.part_count_val.get()}\n'
+        out += f'Количество элементов по fi, theta, энергии\n'
+        out += f'{self.elem_count_val.get()}\n'
+
+        # phi
+        out += f'Тип спектра по fi (0-детерминированный,1-равномерный,3-нормальное распределение)\n'
+        out += f'{self.phi_decode[self.phi_type_cobbobox.get()]}\n'
+
+        if int(self.phi_decode[self.phi_type_cobbobox.get()]) == 0:
+            out += 'Количество уровней по fi\n'
+            out += f'{self.phi_levels_val.get()}\n'
+            out += 'Значения угла(градусы), доля(не нормируется)\n'
+            for i in range(len(self.phi_angles_val)):
+                out += f'{self.phi_angles_val[i].get()}\t{self.phi_parts_val[i].get()}\n'
+
+        elif int(self.phi_decode[self.phi_type_cobbobox.get()]) == 1:
+            out += 'Значение (от до) (градусы)\n'
+            for i in range(len(self.phi_angles_val)):
+                out += f'{self.phi_angles_val[i].get()}\n'
+
+        elif int(self.phi_decode[self.phi_type_cobbobox.get()]) == 3:
+            out += 'Мат.ожидание (градусы)\n'
+            out += f'{self.phi_angles_val[0].get()}\n'
+            out += 'Дисперсия(корень) (градусы)\n'
+            out += f'{self.phi_angles_val[1].get()}\n'
+
+        # theta
+        out += f'Тип спектра по theta (0-детерминированный,1-равномерный,-1 -равномерный по площади,3-нормальное распределение)\n'
+        out += f'{self.theta_decode[self.theta_type_cobbobox.get()]}\n'
+
+        if int(self.theta_decode[self.theta_type_cobbobox.get()]) == 0:
+            out += 'Количество уровней по theta\n'
+            out += f'{self.theta_levels_val.get()}\n'
+            out += 'Значения угла(градусы), доля(не нормируется)\n'
+            for i in range(len(self.theta_angles_val)):
+                out += f'{self.theta_angles_val[i].get()}\t{self.theta_parts_val[i].get()}\n'
+
+        elif int(self.theta_decode[self.theta_type_cobbobox.get()]) == 1 or int(
+                self.theta_decode[self.theta_type_cobbobox.get()]) == -1:
+            out += 'Значение (от до) (градусы)\n'
+            for i in range(len(self.theta_angles_val)):
+                out += f'{self.theta_angles_val[i].get()}\n'
+
+        elif int(self.theta_decode[self.theta_type_cobbobox.get()]) == 3:
+            out += 'Мат.ожидание (градусы)\n'
+            out += f'{self.theta_angles_val[0].get()}\n'
+            out += 'Дисперсия(корень) (градусы)\n'
+            out += f'{self.theta_angles_val[1].get()}\n'
+
+        # energy
+        out += f'Тип спектра по энергии (0-детерминированный,1-равномерный,2-по распределению,3-нормальное распределение)\n'
+        out += f'{self.energy_decode[self.energy_type_cobbobox.get()]}\n'
+
+        if int(self.energy_decode[self.energy_type_cobbobox.get()]) == 0:
+            out += 'Количество уровней по энергии\n'
+            out += f'{self.energy_levels_val.get()}\n'
+            out += 'Значения энергии(МэВ), доля(не нормируется)\n'
+            for i in range(len(self.energy_angles_val)):
+                out += f'{self.energy_angles_val[i].get()}\t{self.energy_parts_val[i].get()}\n'
+
+        elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 2:
+            out += 'Число энергий в спектре\n'
+            out += f'{self.energy_levels_val.get()}\n'
+            out += 'Энергия(МэВ) от	до доля(не нормируется)\n'
+            for i in range(len(self.energy_angles_val)):
+                out += f'{self.energy_angles_val[i].get()}\t{self.energy_angles_val_2[i].get()}\t{self.energy_parts_val[i].get()}\n'
+
+        elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 1:
+            out += 'Значение(от до) (МэВ)\n'
+            for i in range(len(self.energy_angles_val)):
+                out += f'{self.energy_angles_val[i].get()}\n'
+
+        elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 3:
+            out += 'Мат.ожидание (градусы)\n'
+            out += f'{self.energy_angles_val[0].get()}\n'
+            out += 'Дисперсия(корень) (градусы)\n'
+            out += f'{self.energy_angles_val[1].get()}\n'
+
+        # print(out)
+        return out
 
 
 class ScrolledWidget(tk.Frame):
@@ -559,7 +802,7 @@ class ScrolledWidget(tk.Frame):
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
         self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.pack(side="left", fill="both")
         self.canvas.create_window((0, 0), window=self.frame, anchor="nw",
                                   tags="self.frame")
 
@@ -591,8 +834,6 @@ if __name__ == '__main__':
     # x.sp_one_constructor()
 
     x.data_load()
-
-    x.destroy_widget()
 
     root.mainloop()
 

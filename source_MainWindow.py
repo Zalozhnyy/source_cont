@@ -14,7 +14,7 @@ from source_Project_reader import DataParser
 from source_Save_for_remp import Save_remp
 from source_Main_frame import FrameGen
 from source_SpectreConfigure import SpectreConfigure
-from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView
+from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView, MarpleInterface
 
 
 class TreeDataStructure:
@@ -101,6 +101,8 @@ class MainWindow(tk.Frame):
         self.main_frame_exist = False
         self.remp_source_exist = False
 
+        self.marple = None
+
         try:
             if projectfilename is not None:
                 if os.path.exists(projectfilename):
@@ -114,12 +116,12 @@ class MainWindow(tk.Frame):
 
     def from_project_reader(self):
 
-        #self.tok_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('TOK')))
+        # self.tok_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('TOK')))
         self.pl_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PL')))
         self.lay_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('LAY')))
         self.par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
 
-        #self.TOK = DataParcer(self.tok_dir).tok_decoder()
+        # self.TOK = DataParcer(self.tok_dir).tok_decoder()
         self.PL_surf, self.PL_vol, self.PL_bound = DataParser(self.pl_dir).pl_decoder()
         self.LAY = DataParser(self.lay_dir).lay_decoder()
         self.PAR = DataParser(self.par_dir).par_decoder()
@@ -155,6 +157,12 @@ class MainWindow(tk.Frame):
         # self.menubar.add_command(label='Справка')
         # self.menubar.add_command(label='test', command=self.test)
 
+        self.marple_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Marple", menu=self.marple_menu, state='disabled')
+
+        self.marple_menu.add_command(label="Добавить Marple", command=self.__add_marple, state='normal')
+        self.marple_menu.add_command(label="Удалить  Marple", command=self.__delete_marple, state='disabled')
+
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
         del_index = self.menubar.index('Удалить воздействие')
@@ -167,6 +175,9 @@ class MainWindow(tk.Frame):
 
         self.filemenu.entryconfigure(add_index, state='normal')
         self.filemenu.entryconfigure(del_index, state='normal')
+
+        marple_index = self.menubar.index('Marple')
+        self.menubar.entryconfigure(marple_index, state='normal')
 
     def onExit(self):
         self.parent.quit()
@@ -744,11 +755,10 @@ class MainWindow(tk.Frame):
 
         d_text = 'Подсказка:\nВыберите один файл:\n' \
                  'тип 0, тип 1, тип 5\n' \
-                 'Для типов 0 и 5 доступно создание'
+                 'Для типов 0, 1 и 5 доступно создание'
 
         description_label = tk.Label(fr_data, text=d_text, justify='left')
         description_label.grid(row=1, column=6, columnspan=3, rowspan=5, padx=10)
-
 
         try:
             if self.global_tree_db[name].get_last_level_data(first_key, second_key,
@@ -793,7 +803,6 @@ class MainWindow(tk.Frame):
 
         description_label = tk.Label(fr_data, text=d_text)
         description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
-
 
         spectre = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
         spectre_number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
@@ -873,7 +882,6 @@ class MainWindow(tk.Frame):
 
         description_label = tk.Label(fr_data, text=d_text, justify='left')
         description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
-
 
         try:
             d = self.global_tree_db[name].get_last_level_data(first_key, second_key, "distribution")
@@ -1003,7 +1011,7 @@ class MainWindow(tk.Frame):
         self.menubar.entryconfigure(del_index, state='disabled')
 
     def save(self):
-        Save_remp(self.global_tree_db, self.path)
+        Save_remp(self.marple,self.global_tree_db, self.path)
 
     def __flux_auto_search(self, name, first_key, second_key, label):
         obj = self.global_tree_db[name]
@@ -1098,9 +1106,9 @@ class MainWindow(tk.Frame):
         if distribution_file == '':
             return
 
-        self.__copy_to_project(distribution_file)
+        distribution_file = self.__copy_to_project(distribution_file)
 
-        t = os.path.split(distribution_file)[-1]
+        t = os.path.basename(distribution_file)
         label['text'] = f'Список файлов:\n  {t}'
 
         self.global_tree_db[name].insert_third_level(first_key, second_key, 'distribution', t)
@@ -1194,7 +1202,7 @@ class MainWindow(tk.Frame):
         t = target
         in_project = os.path.normpath(os.path.split(t)[0])
         if os.path.normpath(self.path) == in_project:
-            return
+            return target
         file_name = os.path.split(t)[-1]
         save_path = os.path.join(self.path, file_name)
         if file_name in os.listdir(self.path + '/'):
@@ -1213,6 +1221,8 @@ class MainWindow(tk.Frame):
                 shutil.copyfile(t, save_path)
         else:
             shutil.copyfile(t, save_path)
+
+        return save_path
 
     def __open_notepad(self, name, first_key, second_key, label, one_file):
         d = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
@@ -1282,7 +1292,7 @@ class MainWindow(tk.Frame):
             print('Выбранный файл не существует')
             return None, None, None
 
-        self.__copy_to_project(target)
+        target = self.__copy_to_project(target)
         file_name = os.path.split(target)[-1]
 
         try:
@@ -1302,3 +1312,27 @@ class MainWindow(tk.Frame):
             return None, None, None
 
         return file_name, number, type
+
+    def __add_marple(self):
+        ex = MarpleInterface(self.path)
+        self.wait_window(ex)
+
+        ion = ex.ion_path
+        sigma = ex.sigma_path
+
+        if ion is None or sigma is None:
+            return
+
+        self.marple_menu.entryconfigure(0, state='disabled')
+        self.marple_menu.entryconfigure(1, state='normal')
+
+        self.marple = {'ion': ion, 'sigma': sigma}
+        mb.showinfo('Marple', 'Marple будет сохранён в remp source')
+
+    def __delete_marple(self):
+        self.marple_menu.entryconfigure(0, state='normal')
+        self.marple_menu.entryconfigure(1, state='disabled')
+
+        mb.showinfo('Marple', 'Marple не будет сохранён в remp source')
+
+        self.marple = None

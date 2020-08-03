@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
+import os
+import shutil
 
 
 class SelectParticleDialog(tk.Toplevel):
@@ -14,7 +16,6 @@ class SelectParticleDialog(tk.Toplevel):
 
         self.lb_current = None
         self.protocol("WM_DELETE_WINDOW", self.onExit)
-
 
         self.constructor()
         self.data_insert()
@@ -57,7 +58,6 @@ class DeleteGSourceDialog(tk.Toplevel):
         self.lb_current = None
 
         self.protocol("WM_DELETE_WINDOW", self.onExit)
-
 
         self.constructor()
         self.data_insert()
@@ -150,3 +150,101 @@ class FAQ(tk.Toplevel):
     def init_ui(self):
         text = 'Программа служит для создания абстракций типа "Воздействие"'
 
+
+class MarpleInterface(tk.Toplevel):
+    def __init__(self, path):
+        super().__init__()
+
+        self.grab_set()
+
+        self.path = path
+        self.protocol("WM_DELETE_WINDOW", self.onExit)
+
+        self.sigma_path = ''
+        self.ion_path = ''
+
+        self.initUi()
+
+    def initUi(self):
+        tk.Label(self, text='Создание источника Marple').grid(row=0, column=0, columnspan=3, sticky='NW')
+
+        sigma_label = tk.Label(self, text='Энерговыделение Marple:  ')
+        ion_label = tk.Label(self, text='Ионизация Marple:        ')
+
+        sigma_label.grid(row=1, column=0, columnspan=5, sticky='NW')
+        ion_label.grid(row=2, column=0, columnspan=5, sticky='NW')
+
+        title = 'Выберите файл ионизации marple'
+        sigma_but = tk.Button(self, text='Выбрать энерговыделение', width=22,
+                              command=lambda: self.__choice_file(sigma_label, 'sigma', title))
+        sigma_but.grid(row=1, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
+
+        title = 'Выберите файл ионизации marple'
+        ion_but = tk.Button(self, text='Выбрать ионизацию', width=22,
+                            command=lambda: self.__choice_file(ion_label, 'ion', title))
+        ion_but.grid(row=2, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
+
+    def onExit(self):
+        if self.ion_path == '' or self.sigma_path == '':
+            ask = mb.askyesno('Закрыть окно?', 'Выбраны не все файлы. Закрыть окно?')
+
+            if ask is True:
+                self.ion_path = None
+                self.sigma_path = None
+            if ask is False:
+                return
+        self.destroy()
+
+    def __copy_to_project(self, target):
+        t = target
+        in_project = os.path.normpath(os.path.split(t)[0])
+        if os.path.normpath(self.path) == in_project:
+            return target
+        file_name = os.path.split(t)[-1]
+        save_path = os.path.join(self.path, file_name)
+        if file_name in os.listdir(self.path + '/'):
+            ask = mb.askyesno(f'Копирование {file_name} в проект',
+                              'Файл с таким названием уже есть в проекте. Перезаписать файл?\n'
+                              'да - перезаписать\n'
+                              'нет - переименовать')
+            if ask is True:
+                shutil.copyfile(t, save_path)
+            elif ask is False:
+                while file_name in os.listdir(self.path + '/'):
+                    file_name = sd.askstring('Введите имя файла', 'Введите имя файла')
+                    if file_name in os.listdir(self.path + '/'):
+                        print('Файл уже находится в проекте. Выберите новое имя.')
+                save_path = os.path.join(self.path, file_name)
+                shutil.copyfile(t, save_path)
+
+        else:
+            shutil.copyfile(t, save_path)
+
+        return save_path
+
+    def __choice_file(self, label, type, title):
+        distribution_file = fd.askopenfilename(title=title,
+                                               initialdir=self.path,
+                                               filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+
+        if distribution_file == '':
+            return
+
+        distribution_file = self.__copy_to_project(distribution_file)
+
+        old = label['text']
+
+        label['text'] = old + f'{os.path.basename(distribution_file)}'
+
+        if type == 'ion':
+            self.ion_path = os.path.basename(distribution_file)
+        elif type == 'sigma':
+            self.sigma_path = os.path.basename(distribution_file)
+
+
+if __name__ == '__main__':
+    root = tk.Tk()
+
+    a = MarpleInterface(r'C:\work\Test_projects\wpala')
+
+    root.mainloop()

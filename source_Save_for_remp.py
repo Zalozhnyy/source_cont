@@ -7,9 +7,11 @@ import os
 
 
 class Save_remp():
-    def __init__(self, data_object=None, path=None):
+    def __init__(self, marple, data_object=None, path=None):
         self.db = data_object
         self.path = path
+
+        self.marple = marple
 
         self.calc_amplitude = 0.
 
@@ -18,6 +20,10 @@ class Save_remp():
     def save(self):
         self.numbers_control()
         out = ''
+
+        if self.marple is not None:
+            out += self.save_marple()
+
         for item in self.db.items():
             gsource_db = item[1]
             name = item[0]
@@ -176,7 +182,7 @@ class Save_remp():
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
 
         out += f'<spectre>\n'
-        out += gsource_db.get_last_level_data(f_key, s_key, "spectre") + f'\n'
+        out += str(gsource_db.get_last_level_data(f_key, s_key, "spectre")) + f'\n'
 
         out += f'<spectre number>\n'
         out += str(gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")) + '\n'
@@ -311,6 +317,17 @@ class Save_remp():
         except:
             out += 'None' + f'\n'
 
+        out += '\n'
+
+        return out
+
+    def save_marple(self):
+        out = ''
+        out += 'Marple\n'
+        out += '<sigma>\n'
+        out += f'{self.marple["sigma"]}\n'
+        out += '<ionization>\n'
+        out += f'{self.marple["ion"]}\n'
         out += '\n'
 
         return out

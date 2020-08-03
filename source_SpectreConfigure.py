@@ -318,8 +318,10 @@ class SpectreConfigure(tk.Toplevel):
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
 
         if self.spectre_type_cb == 'SP_1':
-            sp_one_interface = SpectreOneInterface(self, None)
-            sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
+            self.sp_one_interface = SpectreOneInterface(self, self.spectre_path)
+            self.sp_one_interface.sp_one_constructor()
+
+            self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
 
         if self.spectre_type_cb == 'DISCRETE':
             self.description_discrete_cont(False, 1)
@@ -367,6 +369,9 @@ class SpectreConfigure(tk.Toplevel):
                 tmp_entry[j].grid(row=1 + i, column=j)
             self.spectre_entry.append(tmp_entry)
 
+            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
+                                     self.spectre_entry_val)
+
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
 
@@ -394,6 +399,8 @@ class SpectreConfigure(tk.Toplevel):
                     tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], justify='center'))
                 tmp_entry[j].grid(row=1 + i, column=j)
             self.spectre_entry.append(tmp_entry)
+            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
+                                     self.spectre_entry_val)
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=2)
@@ -442,6 +449,8 @@ class SpectreConfigure(tk.Toplevel):
                                           justify='center'))
                 tmp_entry[j].grid(row=1 + i, column=j)
             self.spectre_entry.append(tmp_entry)
+            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
+                                     self.spectre_entry_val)
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -469,6 +478,9 @@ class SpectreConfigure(tk.Toplevel):
                                           justify='center'))
                 tmp_entry[j].grid(row=1 + i, column=j)
             self.spectre_entry.append(tmp_entry)
+            if i > 0:
+                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
+                                         self.spectre_entry_val)
 
         self.spectre_entry[0][1]['state'] = 'disabled'
 
@@ -494,9 +506,12 @@ class SpectreConfigure(tk.Toplevel):
             save_path = fd.asksaveasfilename(initialdir=self.path)
             if save_path == '':
                 return
+            self.spectre_path = save_path
+
         elif save_as is False:
             if self.spectre_path == '':
                 mb.showerror('save error', 'Воспользуйтесь кнопкой "Сохранить как"')
+                return
             save_path = self.spectre_path
 
         print(self.spectre_type_cb)
@@ -585,6 +600,11 @@ class SpectreConfigure(tk.Toplevel):
             out_data = np.array(out_data, dtype=float)
 
             np.savetxt(save_path, out_data, comments='', header=header, delimiter='\t', fmt=['%.5g', '%.8g'])
+
+        if self.spectre_type_cb == 'SP_1':
+            with open(os.path.join(save_path), 'w') as f:
+                a = self.sp_one_interface.save()
+                f.write(a)
 
     def __energy_callback_sp_five(self, index):
         i, j = index[0], index[1]
@@ -724,8 +744,6 @@ class SpectreConfigure(tk.Toplevel):
             except:
                 pass
 
-
-
     def __destroy_sp_frame(self):
         try:
             self.spectre_frame.grid_forget()
@@ -748,6 +766,33 @@ class SpectreConfigure(tk.Toplevel):
         out_energy = k * point + b
 
         return out_energy
+
+    def __add_delete_button(self, parent, row, column, array, vals_array):
+
+        index = row - 1
+
+        button = tk.Button(parent, text='-',
+                           command=lambda: self.__delete_entry(array, index, button, vals_array))
+        button.grid(row=row, column=column, sticky='W')
+
+    def __delete_entry(self, array, index, button, vals_array):
+
+        for i in range(len(array)):
+            if i == index:
+                for j in range(len(array[i])):
+                    array[i][j].grid_remove()
+                    array[i][j].destroy()
+
+        array.pop(index)
+        vals_array.pop(index)
+
+        button.grid_remove()
+        button.destroy()
+
+        if self.spectre_type_cb != 'DISCRETE' and self.spectre_type_cb != 'CONTINUOUS':
+
+            for i in range(len(vals_array)):
+                vals_array[i][0].set(str(i + 1))
 
 
 if __name__ == '__main__':

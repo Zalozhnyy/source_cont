@@ -603,6 +603,8 @@ class FrameGen(ttk.LabelFrame):
                 print(f'{i} не может быть преобразовано в float')
                 # mb.showerror('Value error', f'{i} не может быть преобразовано в float')
                 # return 0
+            except:
+                pass
 
         func_string = self.func_entry_vel.get()
         if '(' in func_string:
@@ -622,6 +624,8 @@ class FrameGen(ttk.LabelFrame):
                     print(f'{i} не может быть преобразовано в float')
                     # mb.showerror('Value error', f'{i} не может быть преобразовано в float')
                     # return 0
+                except:
+                    pass
 
         if len(self.func_list) != len(self.time_list):
             # print('Размерности не совпадают!')

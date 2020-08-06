@@ -3,22 +3,17 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog
-# import matplotlib.pyplot as plt
-# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
-# Implement the default Matplotlib key bindings.
+    FigureCanvasTkAgg)
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
-import os
 import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln
 
 from source_utility import *
 from source_Project_reader import DataParser
-from source_Save_for_remp import Save_remp
 from source_Exceptions import *
 
 
@@ -35,6 +30,9 @@ class FrameGen(ttk.LabelFrame):
         self.path = path
         self.pr_dir = path
 
+        # parent.geometry('1180x800')
+        # parent.resizable(width=False, height=False)
+
         self.entry_func = []
         self.entry_time = []
         self.func_entry_vel = []
@@ -43,6 +41,9 @@ class FrameGen(ttk.LabelFrame):
         self.time_list = []
         self.func_trace_id = []
         self.time_trace_id = []
+
+        self.backup_tf = None
+        self.backup_fu = None
 
         self.cell_numeric = tk.StringVar()
         self.entry_f_val = tk.StringVar()
@@ -170,8 +171,11 @@ class FrameGen(ttk.LabelFrame):
         else:
             from_row = False
 
-        self.entry_func_fr = tk.LabelFrame(self, text='Временная функция', width=30)
-        self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5)
+        self.cf = ScrollFrame(self)
+        self.cf.grid(row=4, column=0)
+
+        self.entry_func_fr = tk.LabelFrame(self.cf.viewPort, text='Временная функция')
+        self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, rowspan=20)
 
         # self.button_read_gen = tk.Button(self.entry_func_fr, width=12, text='Прочитать', state='disabled',
         #                                  command=self.get)
@@ -187,12 +191,12 @@ class FrameGen(ttk.LabelFrame):
         label_time = tk.Label(self.entry_func_fr, text='Время', width=15)
         label_time.grid(row=3, column=0, padx=2, pady=2)
 
-        self.add_button = tk.Button(self.entry_func_fr, width=3, text='+', state='normal',
-                                    command=lambda: self.add_entry())
-        self.del_button = tk.Button(self.entry_func_fr, width=3, text='-', state='normal',
-                                    command=lambda: self.delete_entry())
-        self.add_button.grid(row=0, column=0, sticky='e', padx=3)
-        self.del_button.grid(row=0, column=1, sticky='w', padx=3)
+        # self.add_button = tk.Button(self.entry_func_fr, width=3, text='+', state='normal',
+        #                             command=lambda: self.add_entry(len(self.entry_time) - 1, None))
+        # self.del_button = tk.Button(self.entry_func_fr, width=3, text='-', state='normal',
+        #                             command=lambda: self.delete_entry(len(self.entry_time) - 1, None))
+        # self.add_button.grid(row=0, column=0, sticky='e', padx=3)
+        # self.del_button.grid(row=0, column=1, sticky='w', padx=3)
 
         self.ent(from_row)
 
@@ -209,7 +213,9 @@ class FrameGen(ttk.LabelFrame):
             ' введите range[начало; конец; количество шагов]\n' \
             'Для применения формул в строке "Функция" введите\n' \
             'exp(t), ln(t) и т.д Так же доступны все мат. операции\n' \
-            'возведение в степерь: a**n'
+            'возведение в степерь: a**n\n\n' \
+            'Для сортировки времени переведите курсор в окно ввода\n' \
+            'временной функции и нажмите Enter'
         discription = tk.Label(self.d_fr, text=t)
         discription.grid(row=0, column=5, columnspan=3, rowspan=5)
 
@@ -259,6 +265,7 @@ class FrameGen(ttk.LabelFrame):
             self.time_entry_vel.set(tmp_t)
             self.time_trace_id = self.time_entry_vel.trace('w', lambda name, index, mode: self.__get_row_callback())
 
+        self.cf.destroy()
         self.entry_func_fr.destroy()
         self.entry_func_fr = tk.LabelFrame(self, text='Блок ввода данных временной функции')
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, sticky='NWE')
@@ -267,6 +274,9 @@ class FrameGen(ttk.LabelFrame):
         tk.Label(self.entry_func_fr, text='Время').grid(row=0, column=0, pady=3, padx=2)
         self.entry_time = tk.Entry(self.entry_func_fr, width=50, textvariable=self.time_entry_vel, justify='left')
         self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
+
+        self.entry_time.bind('<Return>', self.__row_sort_method)
+        self.entry_time.bind('<FocusOut>', self.__row_sort_method)
 
         tk.Label(self.entry_func_fr, text='Зн. функции').grid(row=2, column=0, pady=3, padx=2)
         self.entry_func = tk.Entry(self.entry_func_fr, width=50, textvariable=self.func_entry_vel, justify='left')
@@ -336,6 +346,11 @@ class FrameGen(ttk.LabelFrame):
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
             self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
 
+            self.entry_time[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
+            self.entry_time[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+
         a, A = self.time_grid()
         self.entry_time_fix_val.set(f'{A[-1]}')
         self.end_time = A
@@ -352,11 +367,16 @@ class FrameGen(ttk.LabelFrame):
                                        justify='center')
         self.entry_time_fix.grid(row=6 + len(self.func_entry_vel), column=1)
 
+        d_t = 'Shift + Down - доб. яч. ниже выбранной\n' \
+              'Shift + Up      - уд. выбранную яч.'
+        self.discrete_description_label = tk.Label(self.entry_func_fr, text=d_t, justify='left')
+        self.discrete_description_label.grid(row=8 + len(self.func_entry_vel), column=0, columnspan=3)
+
         # self.button_browse.configure(state='disabled')
         # self.button_browse_def.configure(state='disabled')
         # self.button_read_gen.configure(state='normal')
-        self.add_button.configure(state='normal')
-        self.del_button.configure(state='normal')
+        # self.add_button.configure(state='normal')
+        # self.del_button.configure(state='normal')
 
         self.__grid_configure()
 
@@ -387,8 +407,11 @@ class FrameGen(ttk.LabelFrame):
     #                            lag=self.specter_config.get(self.name)[1])
 
     def load_data(self):
-        time = self.db.get_share_data('time')
-        func = self.db.get_share_data('func')
+        # time = self.db.get_share_data('time')
+        # func = self.db.get_share_data('func')
+        time = self.db.get_share_data('time_full')
+        func = self.db.get_share_data('func_full')
+        self.entry_time_fix_val.set(self.db.get_share_data('tf_break'))
 
         for i in range(len(self.func_entry_vel)):
             self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
@@ -491,7 +514,7 @@ class FrameGen(ttk.LabelFrame):
         self.add_button.configure(state='normal')
         self.del_button.configure(state='normal')
 
-    def add_entry(self):
+    def add_entry(self, index, event):
         for i in self.entry_func:
             i.destroy()
         for i in self.entry_time:
@@ -500,20 +523,39 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time.clear()
         self.entry_func.clear()
 
-        self.func_entry_vel.append(tk.StringVar())
-        self.func_entry_vel[-1].set('')
-        self.func_trace_id.append(self.func_entry_vel[-1].trace('w', lambda name, index, mode: self.__get_callback()))
-        self.time_entry_vel.append(tk.StringVar())
-        self.time_entry_vel[-1].set('')
-        self.time_trace_id.append(self.time_entry_vel[-1].trace('w', lambda name, index, mode: self.__get_callback()))
+        self.func_entry_vel.insert(index + 1, tk.StringVar())
+        self.func_entry_vel[index + 1].set('')
+        self.func_trace_id.insert(index + 1,
+                                  self.func_entry_vel[index + 1].trace('w',
+                                                                       lambda name, index, mode: self.__get_callback()))
+        self.time_entry_vel.insert(index + 1, tk.StringVar())
+        self.time_entry_vel[index + 1].set('')
+        self.time_trace_id.insert(index + 1, self.time_entry_vel[index + 1].trace('w', lambda name, index,
+                                                                                              mode: self.__get_callback()))
+        # self.entry_time.insert(index + 1,
+        #                        tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[index + 1],
+        #                                 justify='center'))
+        # self.entry_func.insert(index + 1,
+        #                        tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[index + 1],
+        #                                 justify='center'))
 
         for i in range(len(self.time_entry_vel)):
+            # self.entry_time[i].grid_configure(row=4 + i, column=0, pady=3, padx=2)
+            # self.entry_func[i].grid_configure(row=4 + i, column=1, pady=3, padx=2)
             self.entry_time.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
             self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
             self.entry_func.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
             self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
+            self.entry_time[i].bind('<Shift-KeyPress Down>',
+                                    lambda _, index=index: self.add_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Down>',
+                                    lambda _, index=index: self.add_entry(index, _))
+            self.entry_time[i].bind('<Shift-KeyPress Up>',
+                                    lambda _, index=index: self.delete_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Up>',
+                                    lambda _, index=index: self.delete_entry(index, _))
 
         self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 4)
         self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 4)
@@ -521,9 +563,13 @@ class FrameGen(ttk.LabelFrame):
         self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 5)
         self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 5)
 
+        self.discrete_description_label.grid_configure(row=8 + len(self.func_entry_vel))
+
+        self.entry_time[index].focus_set()
+
         # self.button_calculate.configure(state='disabled')
 
-    def delete_entry(self):
+    def delete_entry(self, index, event):
         for i in self.entry_func:
             i.destroy()
         for i in self.entry_time:
@@ -532,10 +578,21 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time.clear()
         self.entry_func.clear()
 
-        self.func_entry_vel.pop(-1)
-        self.time_entry_vel.pop(-1)
+        self.func_entry_vel.pop(index)
+        self.time_entry_vel.pop(index)
+
+        # self.entry_func[index].grid_remove()
+        # self.entry_time[index].grid_remove()
+        # self.entry_func[index].destroy()
+        # self.entry_time[index].destroy()
+
+        # self.entry_func.pop(index)
+        # self.entry_time.pop(index)
 
         for i in range(len(self.time_entry_vel)):
+            # self.entry_time[i].grid_configure(row=4 + i, column=0, pady=3, padx=2)
+            # self.entry_func[i].grid_configure(row=4 + i, column=1, pady=3, padx=2)
+
             self.entry_func.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
             self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
@@ -543,13 +600,26 @@ class FrameGen(ttk.LabelFrame):
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
             self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
 
+            self.entry_time[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
+            self.entry_time[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+
         self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
         self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
 
         self.obriv_tf_lavel.grid_configure(row=len(self.func_entry_vel) + 2 + 5)
         self.entry_time_fix.grid_configure(row=len(self.func_entry_vel) + 2 + 5)
+        self.discrete_description_label.grid_configure(row=8 + len(self.func_entry_vel))
 
         # self.button_calculate.configure(state='disabled')
+
+        try:
+            self.entry_time[index].focus_set()
+        except IndexError:
+            pass
+
+        self.get()
 
     def time_range(self):
         s = self.time_entry_vel.get()
@@ -628,14 +698,19 @@ class FrameGen(ttk.LabelFrame):
                     pass
 
         if len(self.func_list) != len(self.time_list):
-            # print('Размерности не совпадают!')
+            print('Размерности не совпадают!')
+            self.entry_time.configure(bg='red')
+            self.entry_func.configure(bg='red')
             # mb.showerror('Index error', 'Размерности не совпадают!')
             return
 
         time_list, func_list, _ = self.data_control()
+
         if time_list is None:
             return
 
+        self.entry_time.configure(bg='white')
+        self.entry_func.configure(bg='white')
         self.time_list = time_list
         self.func_list = func_list
 
@@ -644,6 +719,12 @@ class FrameGen(ttk.LabelFrame):
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
+        self.db.insert_share_data('func_full', self.backup_fu)
+        self.db.insert_share_data('time_full', self.backup_tf)
+        self.db.insert_share_data('tf_break', self.user_timeset)
+        # print(f'Backup time {self.backup_tf}')
+        # print(f'Backup func {self.backup_fu}')
+
         self.__painter()
 
         # self.button_save.configure(state='disabled')
@@ -704,6 +785,11 @@ class FrameGen(ttk.LabelFrame):
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
+        self.db.insert_share_data('func_full', self.backup_fu)
+        self.db.insert_share_data('time_full', self.backup_tf)
+        self.db.insert_share_data('tf_break', self.user_timeset)
+        # print(f'Backup time {self.backup_tf}')
+        # print(f'Backup func {self.backup_fu}')
         self.__painter()
 
         # self.value_check(func=self.func_list, time=self.time_list)
@@ -853,9 +939,17 @@ class FrameGen(ttk.LabelFrame):
         entry_f = np.array(self.func_list)
         entry_t = np.array(self.time_list)
 
+        if np.any(entry_f < 0):
+            print('Значение функции не может быть отрицательным')
+            mb.showerror('Entry error', 'Значение функции не может быть отрицательным')
+            return None, None, None
+
         # блок проверки на ограничение пользователем тайм функции
         if self.grd_def[-1] == self.user_timeset:
             time_cell = self.grd_def
+            self.backup_tf = np.copy(entry_t)
+            self.backup_fu = np.copy(entry_f)
+
             # if entry_t[-1] != time_cell[-1]:
             #     entry_t = np.append(entry_t, time_cell[-1])
             #     entry_f = np.append(entry_f, 0)
@@ -865,19 +959,39 @@ class FrameGen(ttk.LabelFrame):
         else:
             try:
                 time_right_side = np.where(self.user_timeset == self.grd_def)[0]
+                # print(f'right side {time_right_side}')
+                # print(f'len array  {len(self.grd_def)}')
                 if len(time_right_side) == 0:
                     time_right_side = \
                         np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
+                    # print(f'right side 2nd try {time_right_side}')
+
                 # print(time_right_side)
                 time_cell = self.grd_def[:time_right_side[0]]
+
+                self.backup_tf = np.copy(entry_t)
+                self.backup_fu = np.copy(entry_f)
+
+                if not self.user_timeset in self.backup_tf:
+                    for i in range(len(self.backup_tf)):
+                        if self.backup_tf[i] > self.user_timeset and i != 0:
+                            self.backup_tf = np.insert(self.backup_tf, i, self.user_timeset)
+                            self.backup_fu = np.insert(self.backup_fu, i, 0)
+                            break
+
+                    for i in range(len(self.backup_tf)):
+                        if self.backup_tf[i] >= time_cell[-1]:
+                            self.backup_fu[i] = 0
+
                 for i in range(len(entry_f)):
-                    if entry_t[i] > time_cell[-1]:
+                    if entry_t[i] >= time_cell[-1]:
                         entry_t = np.delete(entry_t, np.s_[i:], 0)
                         entry_f = np.delete(entry_f, np.s_[i:], 0)
-                        break
-                # if entry_t[-1] != time_cell[-1]:
-                #     entry_t = np.append(entry_t, time_cell[-1])
-                #     entry_f = np.append(entry_f, entry_f[-1])
+                        # entry_f[i] = 0
+
+                if entry_t[-1] != time_cell[-1]:
+                    entry_t = np.append(entry_t, time_cell[-1])
+                    entry_f = np.append(entry_f, entry_f[-1])
                 # if entry_t[0] != 0 and entry_f[0] != 0:
                 #     entry_t = np.insert(entry_t, 0, 0)
                 #     entry_f = np.insert(entry_f, 0, 0)
@@ -962,18 +1076,140 @@ class FrameGen(ttk.LabelFrame):
         elif op == "moveto":
             self.entry_time.xview_moveto(howMany)
 
+    def __row_sort_method(self, event):
+        self.time_list = np.sort(self.time_list)
+        a = ''
+        for i in self.time_list:
+            a += str(i) + ' '
+
+        self.time_entry_vel.set(a)
+
+        print('Сортировка времени завершена')
+
     def onExit(self):
         self.quit()
 
 
+class ScrollFrame(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)  # create a frame (self)
+
+        self.canvas = tk.Canvas(self, borderwidth=0, width=350, height=600)  # place canvas on self
+        self.viewPort = tk.Frame(self.canvas)  # place a frame on the canvas, this frame will hold the child widgets
+        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)  # place a scrollbar on self
+        self.canvas.configure(yscrollcommand=self.vsb.set)  # attach scrollbar action to scroll of canvas
+
+        self.vsb.pack(side="right", fill="y")  # pack scrollbar to right of self
+        self.canvas.pack(side="left", fill="both", expand=True)  # pack canvas to left of self and expand to fil
+        self.canvas_window = self.canvas.create_window((4, 4), window=self.viewPort, anchor="nw",
+                                                       # add view port frame to canvas
+                                                       tags="self.viewPort")
+
+        self.viewPort.bind("<Configure>",
+                           self.onFrameConfigure)  # bind an event whenever the size of the viewPort frame changes.
+        self.canvas.bind("<Configure>",
+                         self.onCanvasConfigure)  # bind an event whenever the size of the viewPort frame changes.
+
+        self.onFrameConfigure(
+            None)  # perform an initial stretch on render, otherwise the scroll region has a tiny border until the first resize
+
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox(
+            "all"))  # whenever the size of the frame changes, alter the scroll region respectively.
+
+    def onCanvasConfigure(self, event):
+        '''Reset the canvas window to encompass inner frame when required'''
+        canvas_width = event.width
+        self.canvas.itemconfig(self.canvas_window,
+                               width=canvas_width)  # whenever the size of the canvas changes alter the window region respectively.
+
+
 if __name__ == '__main__':
+
+    class TreeDataStructure:
+        def __init__(self, obj_name, part_list=[]):
+            self.obj_name = obj_name
+
+            self.particle_list = part_list
+            self.__obj_structure = {self.obj_name: {}, 'share_data': {}}
+
+            self.__insert_first_level()
+            self.__insert_share_data()
+
+        def __insert_first_level(self):
+            for i in self.particle_list:
+                self.__obj_structure[self.obj_name].update({f'{i}': {}})
+
+            self.__obj_structure[self.obj_name].update({'Current': {}})
+            self.__obj_structure[self.obj_name].update({'Energy': {}})
+
+        def __insert_share_data(self):
+            self.__obj_structure['share_data'].update({'amplitude': None,
+                                                       'count': None,
+                                                       'time': [],
+                                                       'func': [],
+                                                       'lag': None,
+                                                       'time_full': None,
+                                                       'func_full': None,
+                                                       'tf_break': None
+                                                       })
+
+        def insert_share_data(self, key, value):
+            # if key in self.__obj_structure['share_data'].keys():
+            #     print(f'Ключ {key} был перезаписан')
+            self.__obj_structure['share_data'].update({key: value})
+
+            # print(self.__obj_structure['share_data'].values())
+
+        def insert_first_level(self, key):
+            self.__obj_structure[self.obj_name].update({key: {}})
+
+        def insert_second_level(self, first_level_key, key, val):
+            self.__obj_structure[self.obj_name][first_level_key].update({key: val})
+
+        def insert_third_level(self, first_level_key, second_level_key, key, val):
+            self.__obj_structure[self.obj_name][first_level_key][second_level_key].update({key: val})
+
+        def delete_first_level(self, first_level_key):
+            self.__obj_structure[self.obj_name].pop(first_level_key)
+
+        def delete_second_level(self, second_level_key):
+            for items in self.__obj_structure[self.obj_name].items():
+                for key in items[-1].keys():
+                    if key == second_level_key:
+                        self.__obj_structure[self.obj_name][items[0]].pop(key)
+                        return
+
+        def get_last_level_data(self, first_level_key, second_level_key, third_level_key):
+            return self.__obj_structure[self.obj_name][first_level_key][second_level_key][third_level_key]
+
+        def get_first_level_keys(self):
+            return self.__obj_structure[self.obj_name].keys()
+
+        def get_second_level_keys(self, first_key):
+            return self.__obj_structure[self.obj_name][first_key].keys()
+
+        def get_share_data(self, key):
+            return self.__obj_structure['share_data'][key]
+
+
     root = tk.Tk()
 
-    ex = FrameGen(root, r'C:\work\Test_projects\wpala')
-    ex._notebooks()
-    ex.grid()
+    data = TreeDataStructure('test')
+    time = [0, 1e-7, 5e-7, 1e-6, 1.5e-6, 2e-6]
+    func = [0, 1, 0.9, 0.5, 0.6, 0]
 
-    print(type(ex))
-    print(root.winfo_children())
+    data.insert_share_data('amplitude', 123)
+    data.insert_share_data('time_full', time)
+    data.insert_share_data('func_full', func)
+    data.insert_share_data('tf_break', time[-1])
+
+    ex = FrameGen(root, r'C:\work\Test_projects\wpala', data)
+    ex.cell_numeric = len(time)
+    ex._notebooks()
+    ex.grid(row=0, column=0, rowspan=30, columnspan=30, sticky='nwse')
+
+    ex.load_data()
 
     root.mainloop()

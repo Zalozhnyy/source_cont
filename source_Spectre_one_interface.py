@@ -39,7 +39,6 @@ class SpectreOneInterface(tk.Frame):
         self.spectre_note_val = tk.StringVar()
         self.spectre_note_val.set('')
         self.spectre_note = tk.Entry(self.frame_description, textvariable=self.spectre_note_val, width=80)
-        # self.spectre_note.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.spectre_note.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
@@ -61,23 +60,23 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         self.spectre_power_val = tk.StringVar()
-        self.spectre_power_val.set('')
+        self.spectre_power_val.set('1')
         self.spectre_power = tk.Entry(self.frame_description, textvariable=self.spectre_power_val, width=10)
         self.spectre_power.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
-        # SP_type
-        t_t = 'Тип спектра (0-фиксированный, 1-разыгрывание, 3-от координат, 4-от времени, 5-с учетом ослабления)'
-        type_label = tk.Label(self.frame_description, text=t_t, justify='left')
-        type_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
-        self.row += 1
+        # # SP_type
+        # t_t = 'Тип спектра (0-фиксированный, 1-разыгрывание, 3-от координат, 4-от времени, 5-с учетом ослабления)'
+        # type_label = tk.Label(self.frame_description, text=t_t, justify='left')
+        # type_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        # self.row += 1
 
         self.spectre_type_val = tk.StringVar()
         self.spectre_type_val.set('1')
-        self.spectre_type_entry = tk.Entry(self.frame_description, textvariable=self.spectre_type_val, width=10,
-                                           state='readonly')
-        self.spectre_type_entry.grid(row=self.row, column=0, columnspan=12, sticky='NW')
-        self.row += 1
+        # self.spectre_type_entry = tk.Entry(self.frame_description, textvariable=self.spectre_type_val, width=10,
+        #                                    state='readonly')
+        # self.spectre_type_entry.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        # self.row += 1
 
         # part_count
         p = 'Число частиц (запускаемых на каждом шаге)'
@@ -107,7 +106,7 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         # phi type
-        p = 'Тип спектра по fi (0-детерминированный,1-равномерный,3-нормальное распределение)'
+        p = 'Тип спектра по fi'
         phy_label = tk.Label(self.frame_description, text=p, justify='left')
         phy_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
@@ -125,7 +124,7 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         # theta type
-        p = 'Тип спектра по theta (0-детерминированный,1-равномерный,-1 -равномерный по площади,3-нормальное распределение)'
+        p = 'Тип спектра по theta'
         theta_label = tk.Label(self.frame_description, text=p, justify='left')
         theta_label.grid(row=18, column=0, columnspan=12, sticky='NW')
         self.row += 1
@@ -143,7 +142,7 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         # energy type
-        p = 'Тип спектра по энергии (0-детерминированный, 1-равномерный, 2-по распределению, 3-нормальное распределение)'
+        p = 'Тип спектра по энергии'
         energy_label = tk.Label(self.frame_description, text=p, justify='left')
         energy_label.grid(row=28, column=0, columnspan=12, sticky='NW')
         self.row += 1
@@ -430,7 +429,7 @@ class SpectreOneInterface(tk.Frame):
             p = 'Значения энергии(МэВ), доля(не нормируется)'
 
             part_count_label = tk.Label(self.energy_frame_entry, text='Заполните ячейки', justify='center')
-            part_count_label.grid(row=2 + count, column=1, padx=3, pady=3)
+            part_count_label.grid(row=2 + count, column=3, padx=3, pady=3)
 
         energy_label = tk.Label(self.energy_frame_entry, text=p, justify='left')
         energy_label.grid(row=0, column=0, columnspan=12, sticky='NW')
@@ -456,8 +455,8 @@ class SpectreOneInterface(tk.Frame):
                 self.energy_parts_entry[i].grid(row=1 + i, column=3, sticky='NW', padx=3, pady=3)
 
                 self.energy_parts_val[i].trace('w',
-                                              lambda name, index, mode: self.__part_callback(part_count_label, count,
-                                                                                             self.energy_parts_val))
+                                               lambda name, index, mode: self.__part_callback(part_count_label, count,
+                                                                                              self.energy_parts_val))
 
                 self.__add_delete_button(self.energy_frame_entry, 1 + i, 4,
                                          [self.energy_angles_entry[i], self.energy_parts_entry[i],
@@ -474,8 +473,8 @@ class SpectreOneInterface(tk.Frame):
                 self.energy_parts_entry[i].grid(row=1 + i, column=3, sticky='NW', padx=3, pady=3)
 
                 self.energy_parts_val[i].trace('w',
-                                              lambda name, index, mode: self.__part_callback(part_count_label, count,
-                                                                                             self.energy_parts_val))
+                                               lambda name, index, mode: self.__part_callback(part_count_label, count,
+                                                                                              self.energy_parts_val))
 
                 self.__add_delete_button(self.energy_frame_entry, 1 + i, 4,
                                          [self.energy_angles_entry[i], self.energy_parts_entry[i]], 'energy')
@@ -580,32 +579,56 @@ class SpectreOneInterface(tk.Frame):
         self.part_count_val.set(data_struct.sp_part_count)
         self.elem_count_val.set(f'{data_struct.phi_count} {data_struct.theta_count} {data_struct.energy_count}')
 
+        '''PHI'''
         [self.phi_type_cobbobox.set(key) for key in self.phi_decode.keys() if
          self.phi_decode[key] == str(data_struct.phi_type)]
         self.__phi_constructor(None)
-        self.phi_levels_val.set(str(data_struct.phi_count))
+
+        if data_struct.phi_type == 0:
+            self.phi_levels_val.set(str(data_struct.phi_count))
+
         self.__phi_entry_constructor(2, None)
         for i in range(data_struct.phi_count):
             self.phi_angles_val[i].set(str(data_struct.phi_angles[i]))
-            self.phi_parts_val[i].set(str(data_struct.phi_parts[i]))
+            if data_struct.phi_type == 0:
+                self.phi_parts_val[i].set(str(data_struct.phi_parts[i]))
 
+        if data_struct.phi_type == 0:
+            self.phi_parts_val[-1].set(str(data_struct.phi_parts[-1]))
+
+        '''Theta'''
         [self.theta_type_cobbobox.set(key) for key in self.theta_decode.keys() if
          self.theta_decode[key] == str(data_struct.theta_type)]
         self.__theta_constructor(None)
-        self.theta_levels_val.set(str(data_struct.theta_count))
+
+        if data_struct.theta_type == 0:
+            self.theta_levels_val.set(str(data_struct.theta_count))
+
         self.__theta_entry_constructor(2, None)
         for i in range(data_struct.theta_count):
             self.theta_angles_val[i].set(str(data_struct.theta_angles[i]))
-            self.theta_parts_val[i].set(str(data_struct.theta_parts[i]))
+            if data_struct.theta_type == 0:
+                self.theta_parts_val[i].set(str(data_struct.theta_parts[i]))
 
+        '''Energy'''
         [self.energy_type_cobbobox.set(key) for key in self.energy_decode.keys() if
          self.energy_decode[key] == str(data_struct.energy_type)]
         self.__energy_constructor(None)
-        self.energy_levels_val.set(str(data_struct.energy_count))
+
+        if data_struct.energy_type == 0 or data_struct.energy_type == 2:
+            self.energy_levels_val.set(str(data_struct.energy_count))
+
         self.__energy_entry_constructor(2, None)
         for i in range(data_struct.energy_count):
-            self.energy_angles_val[i].set(str(data_struct.energy_angles[i]))
-            self.energy_parts_val[i].set(str(data_struct.energy_parts[i]))
+            if data_struct.energy_type == 0:
+                self.energy_angles_val[i].set(str(data_struct.energy_angles[i]))
+                self.energy_parts_val[i].set(str(data_struct.energy_parts[i]))
+            elif data_struct.energy_type == 2:
+                self.energy_angles_val[i].set(str(data_struct.energy_angles[i][0]))
+                self.energy_angles_val_2[i].set(str(data_struct.energy_angles[i][1]))
+                self.energy_parts_val[i].set(str(data_struct.energy_parts[i]))
+            else:
+                self.energy_angles_val[i].set(str(data_struct.energy_angles[i]))
 
     def destroy_widget(self):
 
@@ -644,6 +667,9 @@ class SpectreOneInterface(tk.Frame):
                 self.energy_parts_entry.pop(index)
                 self.energy_angles_entry.pop(index)
                 self.energy_angles_entry_2.pop(index)
+                self.energy_parts_val.pop(index)
+                self.energy_angles_val.pop(index)
+                self.energy_angles_val_2.pop(index)
             except:
                 pass
             self.energy_levels_val.set(str(len(self.energy_parts_entry)))
@@ -653,8 +679,15 @@ class SpectreOneInterface(tk.Frame):
 
         if count_type == 'phi':
             try:
+                print(len(self.phi_parts_val))
                 self.phi_parts_entry.pop(index)
                 self.phi_angles_entry.pop(index)
+                self.phi_parts_val.pop(index)
+                self.phi_angles_val.pop(index)
+                self.phi_parts_val[index].destroy()
+                self.phi_angles_val[index].destroy()
+                print(len(self.phi_parts_val))
+
             except:
                 pass
             self.phi_levels_val.set(str(len(self.phi_parts_entry)))
@@ -666,6 +699,8 @@ class SpectreOneInterface(tk.Frame):
             try:
                 self.theta_parts_entry.pop(index)
                 self.theta_angles_entry.pop(index)
+                self.theta_parts_val.pop(index)
+                self.theta_angles_val.pop(index)
             except:
                 pass
             self.theta_levels_val.set(str(len(self.theta_parts_entry)))
@@ -722,7 +757,8 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.phi_levels_val.get()}\n'
             out += 'Значения угла(градусы), доля(не нормируется)\n'
             for i in range(len(self.phi_angles_val)):
-                out += f'{self.phi_angles_val[i].get()}\t{self.phi_parts_val[i].get()}\n'
+                out += '{:.5g}'.format(self.phi_angles_val[i].get()) + '\t' '{:.5g}'.format(
+                    self.phi_parts_val[i].get()) + '\n'
 
         elif int(self.phi_decode[self.phi_type_cobbobox.get()]) == 1:
             out += 'Значение (от до) (градусы)\n'
@@ -744,7 +780,9 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.theta_levels_val.get()}\n'
             out += 'Значения угла(градусы), доля(не нормируется)\n'
             for i in range(len(self.theta_angles_val)):
-                out += f'{self.theta_angles_val[i].get()}\t{self.theta_parts_val[i].get()}\n'
+                out += '{:.5g}'.format(self.theta_angles_val[i].get()) + '\t' '{:.5g}'.format(
+                    self.theta_parts_val[i].get()) + '\n'
+
 
         elif int(self.theta_decode[self.theta_type_cobbobox.get()]) == 1 or int(
                 self.theta_decode[self.theta_type_cobbobox.get()]) == -1:
@@ -767,14 +805,18 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.energy_levels_val.get()}\n'
             out += 'Значения энергии(МэВ), доля(не нормируется)\n'
             for i in range(len(self.energy_angles_val)):
-                out += f'{self.energy_angles_val[i].get()}\t{self.energy_parts_val[i].get()}\n'
+                out += '{:.5g}'.format(self.energy_angles_val[i].get()) + '\t' '{:.5g}'.format(
+                    self.energy_parts_val[i].get()) + '\n'
+
 
         elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 2:
             out += 'Число энергий в спектре\n'
             out += f'{self.energy_levels_val.get()}\n'
             out += 'Энергия(МэВ) от	до доля(не нормируется)\n'
             for i in range(len(self.energy_angles_val)):
-                out += f'{self.energy_angles_val[i].get()}\t{self.energy_angles_val_2[i].get()}\t{self.energy_parts_val[i].get()}\n'
+                out += '{:.5g}'.format(self.energy_angles_val[i].get()) + '\t' '{:.5g}'.format(
+                    self.energy_angles_val_2[i].get()) + '\t' + '{:.5g}'.format(
+                    self.energy_parts_val[i].get()) + '\n'
 
         elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 1:
             out += 'Значение(от до) (МэВ)\n'
@@ -794,16 +836,16 @@ class SpectreOneInterface(tk.Frame):
 class ScrolledWidget(tk.Frame):
     def __init__(self, parent, size=(300, 100)):
         tk.Frame.__init__(self, parent)
-        self.canvas = tk.Canvas(self, borderwidth=0, width=size[0], height=size[1])
+        self.canvas = tk.Canvas(self, borderwidth=0, width=size[0], height=size[1], bg='red')
         self.frame = tk.Frame(self.canvas)
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.mw_scroll = self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
         self.vsb.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both")
-        self.canvas.create_window((0, 0), window=self.frame, anchor="nw",
+        self.canvas.create_window((4, 4), window=self.frame, anchor="nw",
                                   tags="self.frame")
 
         self.frame.bind("<Configure>", self.onFrameConfigure)

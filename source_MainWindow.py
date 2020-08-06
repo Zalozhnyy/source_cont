@@ -3,11 +3,9 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
-import numpy as np
-import os
-import locale
+
 import shutil
-from scipy import integrate
+import pickle
 
 from source_utility import *
 from source_Project_reader import DataParser
@@ -39,7 +37,10 @@ class TreeDataStructure:
                                                    'count': None,
                                                    'time': [],
                                                    'func': [],
-                                                   'lag': None})
+                                                   'lag': None,
+                                                   'time_full': None,
+                                                   'func_full': None,
+                                                   'tf_break': None})
 
     def insert_share_data(self, key, value):
         # if key in self.__obj_structure['share_data'].keys():
@@ -98,7 +99,6 @@ class MainWindow(tk.Frame):
 
         self.global_count_gsources = 0
 
-        self.main_frame_exist = False
         self.remp_source_exist = False
 
         self.marple = None
@@ -265,18 +265,31 @@ class MainWindow(tk.Frame):
 
         if 'remp_sources' in os.listdir(self.path):
 
-            ask = mb.askyesno('Обнаружен rems source', 'Обнаружен файл remp source\nЗагрузить данные из remp source?')
+            ask = mb.askyesno('Обнаружен rems source', 'Обнаружен файл remp source\nЗагрузить данные?')
 
             if ask is True:
 
-                self.rs_data = DataParser(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
+                # self.rs_data = DataParser(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
                 self.remp_source_exist = True
 
-                for p_number in self.rs_data.keys():
-                    load_name = self.rs_data[p_number]['influence name']
-                    part_number = self.rs_data[p_number]['particle number']
+                if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
+                    print('Загрузка невозможна. Файл Sources.pkl не найден')
+                    return
 
-                    self.tree_view_constructor(load=True, ask_name=False, load_data=(load_name, part_number))
+                with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
+                    self.global_tree_db = pickle.load(f)
+
+                for i in self.global_tree_db.items():
+                    self.tree_db_delete_old(i[1])
+
+                    part_number = self.global_tree_db[i[0]].get_share_data('particle number')
+                    self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
+
+                # for p_number in self.rs_data.keys():
+                #     load_name = self.rs_data[p_number]['influence name']
+                #     part_number = self.rs_data[p_number]['particle number']
+                #
+                #     self.tree_view_constructor(load=True, ask_name=False, load_data=(load_name, part_number))
 
         self.menubar_activate()
 
@@ -294,6 +307,49 @@ class MainWindow(tk.Frame):
         if self.path is None:
             return
         os.startfile(self.path)
+
+    def tree_db_delete_old(self, obj):
+        part_number = obj.get_share_data('particle number')
+
+        # удаление из базы данных несуществующих частиц
+        for f_key in obj.get_first_level_keys():
+            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Energy':
+                obj.delete_first_level(f_key)
+                continue
+
+        db_s_keys = []
+
+        for f_key in obj.get_first_level_keys():
+            for s_key in obj.get_second_level_keys(f_key):
+                db_s_keys.append(s_key)
+
+        for key in db_s_keys:
+            if 'Current' in key:
+                cur_lay = int(key.split('_')[-1])
+                if self.LAY[cur_lay, 1] == 0:
+                    obj.delete_second_level(key)
+            if 'Energy' in key:
+                cur_lay = int(key.split('_')[-1])
+                if self.LAY[cur_lay, 2] == 0:
+                    obj.delete_second_level(key)
+            if 'Flu' in key:
+                from_l = int(key.split('_')[-1][0])
+                to_l = int(key.split('_')[-1][1])
+                if self.PL_surf[part_number][to_l, from_l] == 0:
+                    obj.delete_second_level(key)
+            if 'Volume' in key:
+                vol_lay = int(key.split('_')[-1])
+                if self.PL_vol[part_number][vol_lay] == 0:
+                    obj.delete_second_level(key)
+            if 'Boundaries' in key:
+                boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
+                bo_lay_k = key.split('_')[-1]
+                for i in boundaries_decode.items():
+                    if i[1] == bo_lay_k:
+                        bo_lay = i[0]
+                        break
+                if self.PL_bound[part_number][bo_lay] == 0:
+                    obj.delete_second_level(key)
 
     def tree_db_insert(self, obj_name):
         obj = TreeDataStructure(obj_name)
@@ -319,7 +375,7 @@ class MainWindow(tk.Frame):
 
             if self.LAY[i, 2] == 1:
                 energy_type = 'Energy'
-                name = f'{energy_type}_layer_{i}'
+                name = f'Energy_layer_{i}'
                 obj.insert_second_level('Energy', f'{name}', {})
 
                 obj.insert_third_level('Energy', f'{name}', 'name', name)
@@ -359,48 +415,34 @@ class MainWindow(tk.Frame):
         if load:
             if particle not in obj.get_first_level_keys():
                 obj.insert_first_level(f'{particle}')
-
-            for i in self.rs_data[number].keys():
-                if i == 'particle number' or i == 'influence name':
-                    continue
-                obj.insert_share_data('count', self.rs_data[number][i]['count'])
-                time = self.rs_data[number][i]['time']
-                obj.insert_share_data('time', time)
-                func = self.rs_data[number][i]['func']
-                obj.insert_share_data('func', func)
-                obj.insert_share_data('amplitude',
-                                      self.rs_data[number][i]['amplitude'] * integrate.trapz(
-                                          x=np.array(time, dtype=float),
-                                          y=np.array(func, dtype=float)))
+            create_list = ['x', 'y', 'z']
 
             for i in range(self.LAY.shape[0]):
                 if self.LAY[i, 1] == 1:
-                    for axis in ['x', 'y', 'z']:
-                        energy_type = 'Current'
-                        name = f'{energy_type}_{axis}_layer_{i}'
-                        try:
-                            f = self.rs_data[number][name]['distribution']
-                            if f in os.listdir(self.path):
-                                obj.insert_third_level('Current', f'{name}', 'distribution', f)
-                            else:
-                                print(f'Файл {f} для источника {name} не обнаружен в проекте')
-                                raise Exception
-                        except:
-                            obj.insert_third_level('Current', f'{name}', 'distribution', None)
+                    for axis in create_list:
+                        energy_type = f'Ток по оси {axis} слой {i}'
+                        name = f'Current_{axis}_layer_{i}'
+                        d = f'J{axis.upper()}_{i}'
+                        if name in obj.get_second_level_keys('Current'):
+                            continue
+
+                        obj.insert_second_level('Current', f'{name}', {})
+
+                        obj.insert_third_level('Current', f'{name}', 'name', name)
+                        obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
+                        obj.insert_third_level('Current', f'{name}', 'distribution', None)
 
                 if self.LAY[i, 2] == 1:
                     energy_type = 'Energy'
-                    name = f'{energy_type}_layer_{i}'
+                    name = f'Energy_layer_{i}'
+                    if name in obj.get_second_level_keys('Energy'):
+                        continue
 
-                    try:
-                        f = self.rs_data[number][name]['distribution']
-                        if f in os.listdir(self.path):
-                            obj.insert_third_level('Energy', f'{name}', 'distribution', f)
-                        else:
-                            print(f'Файл {f} для источника {name} не обнаружен в проекте')
-                            raise Exception
-                    except:
-                        obj.insert_third_level('Energy', f'{name}', 'distribution', None)
+                    obj.insert_second_level('Energy', f'{name}', {})
+
+                    obj.insert_third_level('Energy', f'{name}', 'name', name)
+                    obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level('Energy', f'{name}', 'distribution', None)
 
         ar = self.PL_surf.get(number)
 
@@ -410,6 +452,8 @@ class MainWindow(tk.Frame):
                     energy_type = f'Источник частиц №{number} из {j}-го слоя в {i}-й'
                     name = f'Flu_e_{number}_{j}{i}'
 
+                    if name in obj.get_second_level_keys(particle):
+                        continue
                     obj.insert_second_level(f'{particle}', f'{name}', {})
 
                     obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
@@ -425,30 +469,33 @@ class MainWindow(tk.Frame):
                         obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
                         obj.insert_third_level(particle, name, 'spectre numbers', [i for i in spectres.values()])
 
-                    if load:
-                        try:
-                            spectre = [i for i in self.rs_data[number][name]['spectre'].split(' ')]
-                            obj.insert_third_level(f'{particle}', f'{name}', 'spectre', spectre)
-
-                            spectre_number = [i for i in self.rs_data[number][name]['spectre number'].split(' ')]
-                            obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', spectre_number)
-
-                        except:
-                            print(
-                                f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                            if len(spectres) == 6:
-                                obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
-                                obj.insert_third_level(particle, name, 'spectre numbers',
-                                                       [i for i in spectres.values()])
-                            else:
-                                obj.insert_third_level(particle, name, 'spectre', None)
-                                obj.insert_third_level(particle, name, 'spectre numbers', None)
+                    # if load:
+                    #     try:
+                    #         spectre = [i for i in self.rs_data[number][name]['spectre'].split(' ')]
+                    #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre', spectre)
+                    #
+                    #         spectre_number = [i for i in self.rs_data[number][name]['spectre number'].split(' ')]
+                    #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', spectre_number)
+                    #
+                    #     except:
+                    #         print(
+                    #             f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                    #         if len(spectres) == 6:
+                    #             obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
+                    #             obj.insert_third_level(particle, name, 'spectre numbers',
+                    #                                    [i for i in spectres.values()])
+                    #         else:
+                    #             obj.insert_third_level(particle, name, 'spectre', None)
+                    #             obj.insert_third_level(particle, name, 'spectre numbers', None)
 
         for i in range(len(self.PL_vol[number])):  # volume
             if self.PL_vol[number][i] != 0 and type != 7 and type != 8:
                 energy_type = f'Объёмный источник частиц №{number} слой №{i}'
                 name = f'Volume_{number}_{i}'
 
+                if name in obj.get_second_level_keys(particle):
+                    continue
+
                 obj.insert_second_level(f'{particle}', f'{name}', {})
 
                 obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
@@ -456,22 +503,25 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
                 obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
 
-                if load:
-                    try:
-                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
-                                               self.rs_data[number][name]['spectre'])
-                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
-                                               self.rs_data[number][name]['spectre number'])
-                    except:
-                        print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                        obj.insert_third_level(particle, name, 'spectre', None)
-                        obj.insert_third_level(particle, name, 'spectre numbers', None)
+                # if load:
+                #     try:
+                #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
+                #                                self.rs_data[number][name]['spectre'])
+                #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
+                #                                self.rs_data[number][name]['spectre number'])
+                #     except:
+                #         print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                #         obj.insert_third_level(particle, name, 'spectre', None)
+                #         obj.insert_third_level(particle, name, 'spectre numbers', None)
 
         for i in self.PL_vol[number]:  # volume78
             if i != 0 and (type == 7 or type == 8):
                 energy_type = f'Объёмный источник частиц №{number} слой №{i}'
                 name = f'Volume78_{number}_{i}'
 
+                if name in obj.get_second_level_keys(particle):
+                    continue
+
                 obj.insert_second_level(f'{particle}', f'{name}', {})
 
                 obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
@@ -479,21 +529,24 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
                 obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
 
-                if load:
-                    try:
-                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
-                                               self.rs_data[number][name]['spectre'])
-                        obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
-                                               self.rs_data[number][name]['spectre number'])
-                    except:
-                        print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                        obj.insert_third_level(particle, name, 'spectre', None)
-                        obj.insert_third_level(particle, name, 'spectre numbers', None)
+                # if load:
+                #     try:
+                #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
+                #                                self.rs_data[number][name]['spectre'])
+                #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
+                #                                self.rs_data[number][name]['spectre number'])
+                #     except:
+                #         print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                #         obj.insert_third_level(particle, name, 'spectre', None)
+                #         obj.insert_third_level(particle, name, 'spectre numbers', None)
 
         for i in range(len(self.PL_bound[number])):
             if self.PL_bound[number][i] != 0:
                 energy_type = 'Boundaries'
                 name = f'{energy_type}_{number}_{boundaries_decode[i]}'
+
+                if name in obj.get_second_level_keys(particle):
+                    continue
 
                 obj.insert_second_level(f'{particle}', f'{name}', {})
 
@@ -516,17 +569,17 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level(particle, name, 'spectre', None)
                     obj.insert_third_level(particle, name, 'spectre numbers', None)
 
-                if load:
-                    try:
-                        sp = self.rs_data[number][name]['spectre']
-                        obj.insert_third_level(particle, name, 'spectre', sp)
-
-                        sp_n = self.rs_data[number][name]['spectre number']
-                        obj.insert_third_level(particle, name, 'spectre numbers', sp_n)
-                    except:
-                        print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                        obj.insert_third_level(particle, name, 'spectre', None)
-                        obj.insert_third_level(particle, name, 'spectre numbers', None)
+                # if load:
+                #     try:
+                #         sp = self.rs_data[number][name]['spectre']
+                #         obj.insert_third_level(particle, name, 'spectre', sp)
+                #
+                #         sp_n = self.rs_data[number][name]['spectre number']
+                #         obj.insert_third_level(particle, name, 'spectre numbers', sp_n)
+                #     except:
+                #         print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
+                #         obj.insert_third_level(particle, name, 'spectre', None)
+                #         obj.insert_third_level(particle, name, 'spectre numbers', None)
 
     def tree_view_constructor(self, ask_name=True, load=False, load_data=None):
         if self.path is None:
@@ -543,13 +596,13 @@ class MainWindow(tk.Frame):
 
         else:
             name = load_data[0]
-
-        try:
-            if name in self.global_tree_db.keys():
-                print('Данное имя занято другим воздействием')
-                return
-        except:
-            pass
+        if not load:
+            try:
+                if name in self.global_tree_db.keys():
+                    print('Данное имя занято другим воздействием')
+                    return
+            except:
+                pass
 
         ind = len(self.tabs_dict)
 
@@ -578,26 +631,26 @@ class MainWindow(tk.Frame):
             fr_data._notebooks()
 
         elif load is True:
-            self.global_tree_db.update({name: self.tree_db_insert(name)})
+            # self.global_tree_db.update({name: self.tree_db_insert(name)})
 
             for i in self.PAR.keys():
                 if self.PAR[i]['number'] == load_data[1]:
                     part_name = i
                     break
 
-            self.tree_db_insert_particle(self.global_tree_db[name], part_name, load=True)
+            self.tree_db_insert_particle(self.global_tree_db[name], part_name, True)
             source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
             self.particle_tree_constr(part_name, source_keys, source, ind)
 
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
             if self.global_tree_db[name].get_share_data('count') is not None:
-                fr_data.cell_numeric = self.global_tree_db[name].get_share_data('count')
+                fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
                 fr_data._notebooks()
                 fr_data.load_data()
 
         fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
-        self.main_frame_exist = True
+        # self.main_frame_exist = True
 
         for index, s_type in enumerate(self.global_tree_db[name].get_first_level_keys()):
             source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
@@ -622,7 +675,7 @@ class MainWindow(tk.Frame):
                                                  name=name: self.popup(name, index, _))
 
         self.notebook.add(fr, text=f'{name}')
-        self.tabs_dict.update({name: [len(self.tabs_dict), fr]})
+        self.tabs_dict.update({name: [len(self.tabs_dict), fr, True]})
 
     def particle_tree_constr(self, particle, keys, main_tree, index):
         ind = index
@@ -671,23 +724,23 @@ class MainWindow(tk.Frame):
             # print(self.tree[index].item(x))
             # time function frame creation
             if self.tree[index].item(x)['text'] in self.global_tree_db.keys():
-                if self.main_frame_exist is False:
+                if self.tabs_dict[name][2] is False:
                     self.__destroy_data_frame(name)
-                    fr_data = FrameGen(self.tabs_dict[name][-1], self.path, self.global_tree_db[name])
+                    fr_data = FrameGen(self.tabs_dict[name][1], self.path, self.global_tree_db[name])
                     if self.global_tree_db[name].get_share_data('count') is not None:
-                        fr_data.cell_numeric = self.global_tree_db[name].get_share_data('count')
+                        fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
                         fr_data._notebooks()
                         fr_data.load_data()
                     else:
                         fr_data._notebooks()
                         fr_data.set_amplitude()
 
-                    self.main_frame_exist = True
+                    self.tabs_dict[name][2] = True
                     fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
             elif self.tree[index].item(x)['text'] in s_list:
                 self.__destroy_data_frame(name)
-                self.main_frame_exist = False
+                self.tabs_dict[name][2] = False
 
                 fr_data = self.__create_data_frame(name)
 
@@ -723,7 +776,7 @@ class MainWindow(tk.Frame):
 
             else:
                 self.__destroy_data_frame(name)
-                self.main_frame_exist = False
+                self.tabs_dict[name][2] = False
 
     def regular_source_interface(self, parent_widget, name, first_key, second_key):
         fr_data = parent_widget
@@ -1011,7 +1064,7 @@ class MainWindow(tk.Frame):
         self.menubar.entryconfigure(del_index, state='disabled')
 
     def save(self):
-        Save_remp(self.marple,self.global_tree_db, self.path)
+        Save_remp(self.marple, self.global_tree_db, self.path)
 
     def __flux_auto_search(self, name, first_key, second_key, label):
         obj = self.global_tree_db[name]
@@ -1046,14 +1099,14 @@ class MainWindow(tk.Frame):
         self.tree_view_constructor()
 
     def __destroy_data_frame(self, name):
-        if len(self.tabs_dict[name][-1].winfo_children()) < 2:
+        if len(self.tabs_dict[name][1].winfo_children()) < 2:
             return
-        d_frame = self.tabs_dict[name][-1].winfo_children()[-1]
+        d_frame = self.tabs_dict[name][1].winfo_children()[-1]
         d_frame.grid_forget()
         d_frame.destroy()
 
     def __create_data_frame(self, name):
-        fr_data = ttk.Frame(self.tabs_dict[name][-1])
+        fr_data = ttk.Frame(self.tabs_dict[name][1])
         fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
         return fr_data

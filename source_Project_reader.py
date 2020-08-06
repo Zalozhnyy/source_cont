@@ -571,6 +571,7 @@ class SpOneReader:
                         self.energy_angles.append(float(d.strip()))
                     break
 
+
             elif self.energy_type == 2:
 
                 if line == 5:

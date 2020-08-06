@@ -4,6 +4,7 @@ from tkinter import messagebox as mb
 import numpy as np
 from scipy import integrate
 import os
+import pickle
 
 
 class Save_remp():
@@ -95,6 +96,9 @@ class Save_remp():
                             return
 
         self.save_file(out)
+
+        with open(os.path.join(self.path, 'Sources.pkl'), 'wb') as f:
+            pickle.dump(self.db, f)
 
     def flux_save(self, gsource_db, f_key, s_key, name):
 

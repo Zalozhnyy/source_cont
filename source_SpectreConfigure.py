@@ -804,7 +804,9 @@ class SpectreConfigure(tk.Toplevel):
         except:
             return
 
-        old_data = self.data_struct.data.copy()
+        old_data = None
+        if self.data_struct.data is not None:
+            old_data = self.data_struct.data.copy()
 
         if type == 'DISCRETE' or type == 'CONTINUOUS':
             labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
@@ -815,6 +817,8 @@ class SpectreConfigure(tk.Toplevel):
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Точечный':
             labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
+            self.data_struct.create_empty_data((rows, 5))
+
 
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Непрерывный':
             self.cf.canvas.configure(width=950)
@@ -825,18 +829,28 @@ class SpectreConfigure(tk.Toplevel):
                       'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
 
-        # try:
-        # if len(self.spectre_entry_val) > 0:
-        #     for i in range(self.data_struct.data.shape[0]):
-        #         for j in range(self.data_struct.data.shape[1]):
-        #             try:
-        #                 self.data_struct.data[i, j] = self.spectre_entry_val[i][j].get()
-        #             except:
-        #                 pass
-        # if type == 'SP_5':
-        #     if old_data.shape[1] != self.data_struct.data.shape[1]:
-        #         if self.data_struct.data.shape[1] == 5:
+        if type == 'SP_5' and old_data is not None:
+            if old_data.shape[1] != self.data_struct.data.shape[1]:
+                if self.data_struct.data.shape[1] == 5 and old_data.shape[1] == 7:
+                    for i in range(len(self.spectre_entry_val)):
+                        for j in range(len(self.spectre_entry_val[i])):
+                            if j == 1:
+                                self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
+                            if j == 4:
+                                self.data_struct.data[i][2] = self.spectre_entry_val[i][j].get()
 
+                if self.data_struct.data.shape[1] == 7 and old_data.shape[1] == 5:
+                    for i in range(len(self.spectre_entry_val)):
+                        for j in range(len(self.spectre_entry_val[i])):
+                            if j == 1:
+                                self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
+                            if j == 2:
+                                self.data_struct.data[i][4] = self.spectre_entry_val[i][j].get()
+
+        if type != 'SP_5':
+            for i in range(len(self.spectre_entry_val)):
+                for j in range(len(self.spectre_entry_val[i])):
+                    self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
 
         self.spectre_frame_constructor(labels, type)
 

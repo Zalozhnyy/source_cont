@@ -163,6 +163,9 @@ class MainWindow(tk.Frame):
         self.marple_menu.add_command(label="Добавить Marple", command=self.__add_marple, state='normal')
         self.marple_menu.add_command(label="Удалить  Marple", command=self.__delete_marple, state='disabled')
 
+        self.pechs_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Pechs", menu=self.pechs_menu, state='normal')
+
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
         del_index = self.menubar.index('Удалить воздействие')
@@ -1110,11 +1113,6 @@ class MainWindow(tk.Frame):
         fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
         return fr_data
-
-    def __create_timefunc_constructor(self):
-
-        self.spectre_number_data, self.spectre_path = SpectreConfigure().open_spectre(False)
-        # print(self.spectre_number_data)
 
     def __spectre_configure(self, name_label, num_label, name, first_key, second_key, create=False, configure=False):
 

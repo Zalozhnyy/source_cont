@@ -836,7 +836,7 @@ class SpectreOneInterface(tk.Frame):
 class ScrolledWidget(tk.Frame):
     def __init__(self, parent, size=(300, 100)):
         tk.Frame.__init__(self, parent)
-        self.canvas = tk.Canvas(self, borderwidth=0, width=size[0], height=size[1], bg='red')
+        self.canvas = tk.Canvas(self, borderwidth=0, width=size[0], height=size[1])
         self.frame = tk.Frame(self.canvas)
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)

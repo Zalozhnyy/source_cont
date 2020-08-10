@@ -37,9 +37,6 @@ class SpectreConfigure(tk.Toplevel):
                              'DISCRETE': 'DISCRETE',
                              'CONTINUOUS': 'CONTINUOUS'}
 
-        self.row_changer = None
-
-        self.lines = None
         self._sp_zero_form = ['Пример фиксированного спектра',
                               'Номер спектра',
                               '1',
@@ -54,6 +51,8 @@ class SpectreConfigure(tk.Toplevel):
                               'Количество элементов в таблице(ниже)',
                               '',
                               'Таблица частиц  ( №,  Энергия (MeВ), TETA(град.), FI(град.), Доля(не нормируется))']
+
+        self.lines = []
 
         self.sp_one_interface = None
 
@@ -126,41 +125,48 @@ class SpectreConfigure(tk.Toplevel):
         with open(self.spectre_path, 'r') as file:
             lines = file.readlines()
 
-        self.lines = lines
-        self.spectre_number_data = int(lines[2])
-
         if use_constructor is False:
+            self.spectre_number_data = int(lines[2])
             return self.spectre_number_data, self.spectre_path
 
         if 'SP_TYPE=CONTINUOUS' in lines[0]:
-            with open(self.spectre_path, 'r') as file:
-                lines = file.readlines()
-            out = []
-            for i in range(len(lines)):
-                if i == 2:
-                    a = [lines[i].strip(), '0']
-                    out.append(a)
-                elif i > 2:
-                    out.append(lines[i].strip().split())
 
-            data = np.array(out, dtype=float)
             self.spectre_type_cb = 'CONTINUOUS'
             labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
-            self.description_discrete_cont(True, data.shape[0])
-            self.spectre_frame_constructor(data, labels, 'CONTINUOUS')
+
+            self.data_struct = SpectreDataStructure(self.spectre_path)
+            self.data_struct.spectre_type_identifier()
+
+            self.description_discrete_cont()
+
+            self.rows_count_val.set(str(self.data_struct.data.shape[0]))
+
+            self.spectre_frame_constructor(labels, 'CONTINUOUS')
 
         elif 'SP_TYPE=DISCRETE' in lines[0]:
-            data = np.loadtxt(self.spectre_path, skiprows=2)
+
             self.spectre_type_cb = 'DISCRETE'
             labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
-            self.description_discrete_cont(True, data.shape[0])
-            self.spectre_frame_constructor(data, labels, 'DISCRETE')
-            # self.rows_count_val.trace('r', lambda name, index, mode: self.__creator('DISCRETE', labels, 2))
+
+            self.data_struct = SpectreDataStructure(self.spectre_path)
+            self.data_struct.spectre_type_identifier()
+
+            self.description_discrete_cont()
+
+            self.rows_count_val.set(str(self.data_struct.data.shape[0]))
+
+            self.spectre_frame_constructor(labels, 'DISCRETE')
 
         elif 'Номер спектра' in lines[1] and lines[6].strip() == '0':
             self.spectre_type_cb = 'SP_0'
             self.spetre_type_cobbobox.set('Фиксированный')
-            self.data_struct = SpectreDataStructure(self.path)
+
+            self.data_struct = SpectreDataStructure(self.spectre_path)
+            self.data_struct.spectre_type_identifier()
+            self.description_sp_zero()
+
+            self.from_data_struct_to_interface()
+
             labels = ['№', 'Энергия (MеВ)', 'TETA(град.)', 'FI(град.)', 'Доля(не нормируется)']
             self.spectre_frame_constructor(labels, 'SP_0')
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_0', labels, 5))
@@ -173,9 +179,23 @@ class SpectreConfigure(tk.Toplevel):
             self.elph = DataParser(self.path).elph_reader()
             self.spectre_type_cb = 'SP_5'
             self.spetre_type_cobbobox.set(self.spectre_type_cb)
-            data = self.description_sp_zero(True, self.spectre_type_cb)
-            labels = ['№', 'Энергия (кеВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г', 'Энергия электрона']
-            self.spectre_frame_constructor(data, labels, 'SP_5')
+
+            self.data_struct = SpectreDataStructure(self.spectre_path)
+            self.data_struct.spectre_type_identifier()
+            self.description_sp_zero()
+
+            self.from_data_struct_to_interface()
+
+            if self.data_struct.sp_5_type == 1:
+                labels = ['№', 'Эн. фотона (MeВ) от', 'Эн. фотона (MeВ) до', 'Средняя эн. фотона (MeВ)',
+                          'Доля(не нормируется)',
+                          'Сечение см\u00b2/г',
+                          'Энергия электрона (MeВ)']
+            elif self.data_struct.sp_5_type == 0:
+                labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
+                          'Энергия электрона (MeВ)']
+
+            self.spectre_frame_constructor(labels, 'SP_5')
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
 
         elif 'Номер спектра' in lines[1] and lines[6].strip() == '1':
@@ -188,7 +208,6 @@ class SpectreConfigure(tk.Toplevel):
             self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
 
 
-
         else:
             f = self.spectre_path
             osCommandString = f"notepad.exe {f}"
@@ -197,7 +216,50 @@ class SpectreConfigure(tk.Toplevel):
 
             # mb.showerror('Spectre error', 'Тип спектра не был распознан')
 
-        # self.spectre_frame_constructor(data)
+    def create_spectre(self):
+        if self.spectre_type_cb is None:
+            print('Выберите тип создаваемого спектра')
+            return
+
+        self.__destroy_frames()
+
+        if type(self.lines) is list:
+            self.lines.clear()
+
+        if self.spectre_type_cb == 'SP_0':
+            self.data_struct = SpectreDataStructure()
+            self.data_struct.spectre_type = 0
+
+            self.description_sp_zero()
+
+        if self.spectre_type_cb == 'SP_5':
+            check = self.pechs_check()
+            if check == 0:
+                return
+
+            self.elph = DataParser(self.path).elph_reader()
+            self.data_struct = SpectreDataStructure()
+            self.data_struct.spectre_type = 5
+
+            self.description_sp_zero()
+
+        if self.spectre_type_cb == 'SP_1':
+            self.sp_one_interface = SpectreOneInterface(self, self.spectre_path)
+            self.sp_one_interface.sp_one_constructor()
+
+            self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
+
+        if self.spectre_type_cb == 'DISCRETE':
+            self.data_struct = SpectreDataStructure()
+            self.data_struct.spectre_type = 'DISCRETE'
+
+            self.description_discrete_cont()
+
+        if self.spectre_type_cb == 'CONTINUOUS':
+            self.data_struct = SpectreDataStructure()
+            self.data_struct.spectre_type = 'CONTINUOUS'
+
+            self.description_discrete_cont()
 
     def description_sp_zero(self):
 
@@ -303,65 +365,23 @@ class SpectreConfigure(tk.Toplevel):
 
             self.bind_class(self.sp_5_combobox, "<<ComboboxSelected>>", self.__creator)
 
-    def description_discrete_cont(self, from_data, data_shape):
-        self.rowsp = 2
+    def description_discrete_cont(self):
 
-        self.frame_description = ttk.Frame(self)
-        self.frame_description.grid(row=3, column=0, columnspan=12, rowspan=self.rowsp, sticky="W", padx=10)
+        self.cf = ScrolledWidget(self, (850, 600))
+        self.cf.grid(row=3, columnspan=12, pady=5, sticky="NWSE", rowspan=100)
+
+        self.frame_description = ttk.Frame(self.cf.frame)
+        self.frame_description.grid(row=3, column=0, sticky="W", padx=10)
 
         tk.Label(self.frame_description, text='Число ячеек таблици (ниже)').grid(row=0, column=0, columnspan=12,
                                                                                  sticky='NW')
 
         self.rows_count_val = tk.StringVar()
         self.rows_count = tk.Entry(self.frame_description, textvariable=self.rows_count_val, width=10)
-        self.rows_count.grid(row=1, column=0, columnspan=2, sticky='NW')
-        tk.Label(self.frame_description, text='Нажмите Enter для применения').grid(row=1, column=2,
+        self.rows_count.grid(row=0, column=0, columnspan=2, sticky='NW')
+        tk.Label(self.frame_description, text='Нажмите Enter для применения').grid(row=0, column=2,
                                                                                    columnspan=6, sticky='NW')
         self.rows_count.bind('<Return>', self.__creator)
-
-        if from_data is True:
-            self.rows_count_val.set(f'{data_shape}')
-        else:
-            self.rows_count_val.set('')
-
-    def create_spectre(self):
-        if self.spectre_type_cb is None:
-            print('Выберите тип создаваемого спектра')
-            return
-
-        self.__destroy_frames()
-
-        if type(self.lines) is list:
-            self.lines.clear()
-
-        if self.spectre_type_cb == 'SP_0':
-            self.data_struct = SpectreDataStructure()
-            self.description_sp_zero()
-            labels = ['№', 'Энергия (MеВ)', 'TETA(град.)', 'FI(град.)', 'Доля(не нормируется)']
-            # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_0', labels, 5))
-
-        if self.spectre_type_cb == 'SP_5':
-            check = self.pechs_check()
-            if check == 0:
-                return
-
-            self.elph = DataParser(self.path).elph_reader()
-            self.data_struct = SpectreDataStructure()
-            self.description_sp_zero()
-            labels = ['№', 'Энергия (МеВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г', 'Энергия электрона']
-            # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
-
-        if self.spectre_type_cb == 'SP_1':
-            self.sp_one_interface = SpectreOneInterface(self, self.spectre_path)
-            self.sp_one_interface.sp_one_constructor()
-
-            self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
-
-        if self.spectre_type_cb == 'DISCRETE':
-            self.description_discrete_cont(False, 1)
-
-        if self.spectre_type_cb == 'CONTINUOUS':
-            self.description_discrete_cont(False, 1)
 
     def spectre_frame_constructor(self, labels, type):
         self.__destroy_sp_frame()
@@ -376,10 +396,26 @@ class SpectreConfigure(tk.Toplevel):
             self.data_insert_sp_zero()
         if type == 'SP_5':
             self.data_insert_sp_five()
-        # if type == 'DISCRETE':
-        #     self.data_insert_discrete()
-        # if type == 'CONTINUOUS':
-        #     self.data_insert_cont()
+        if type == 'DISCRETE':
+            self.data_insert_discrete()
+        if type == 'CONTINUOUS':
+            self.data_insert_cont()
+
+    def from_data_struct_to_interface(self):
+
+        self.spectre_note_val.set(self.data_struct.description)
+        self.spectre_number_val.set(str(self.data_struct.sp_number))
+        self.spectre_number_val.set(str(self.data_struct.sp_number))
+        self.spectre_power_val.set(str(self.data_struct.sp_power))
+        self.starts_count_val.set(str(self.data_struct.starts_count))
+
+        self.rows_count_val.set(str(self.data_struct.data.shape[0]))
+
+        if self.data_struct.spectre_type == 5:
+            if self.data_struct.sp_5_type == 0:
+                self.sp_5_combobox.set('Точечный')
+            elif self.data_struct.sp_5_type == 1:
+                self.sp_5_combobox.set('Непрерывный')
 
     def data_insert_sp_zero(self):
         row_count = self.data_struct.data.shape[0]
@@ -388,7 +424,8 @@ class SpectreConfigure(tk.Toplevel):
         for i in range(row_count):
             tmp_val = []
             for j in range(column_count):
-                tmp_val.append(tk.StringVar())
+                a = tk.StringVar()
+                tmp_val.append(a)
             self.spectre_entry_val.append(tmp_val)
 
         for i in range(row_count):
@@ -397,10 +434,11 @@ class SpectreConfigure(tk.Toplevel):
                 tmp_entry.append(tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], width=15,
                                           justify='center'))
                 tmp_entry[j].grid(row=1 + i, column=j)
+                tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
+
             self.spectre_entry.append(tmp_entry)
 
-            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
-                                     self.spectre_entry_val)
+            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -410,9 +448,8 @@ class SpectreConfigure(tk.Toplevel):
                 if j == 4:
                     self.spectre_entry_val[i][j].trace('w',
                                                        lambda name, index, mode: self.__energy_part_callback(-1))
-                    self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
-                else:
-                    self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+
+                self.__insert_to_interface_from_data_struct(i, j)
 
         [self.spectre_entry[i][0].configure(state='readonly', width=5) for i in range(len(self.spectre_entry))]
         [self.spectre_entry[i][2].configure(state='normal', width=8) for i in range(len(self.spectre_entry))]
@@ -438,9 +475,10 @@ class SpectreConfigure(tk.Toplevel):
                     tmp_entry.append(
                         tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], justify='center'))
                     tmp_entry[j].grid(row=1 + i, column=j)
+                    tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
+
                 self.spectre_entry.append(tmp_entry)
-                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
-                                         self.spectre_entry_val)
+                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
 
             self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
             self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=2)
@@ -448,7 +486,7 @@ class SpectreConfigure(tk.Toplevel):
             for i in range(row_count):  # Нааполнение данными
                 for j in range(column_count):
                     if j == 0:
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 1:
                         self.spectre_entry_val[i][j].trace('w',
@@ -456,15 +494,12 @@ class SpectreConfigure(tk.Toplevel):
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__energy_callback_sp_five(
                                                                sv))
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 2:
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode: self.__energy_part_callback(2))
-
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
-                    else:
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
             [self.spectre_entry[i][0].configure(state='readonly', width=5) for i in range(len(self.spectre_entry))]
             [self.spectre_entry[i][1].configure(state='normal', width=13) for i in range(len(self.spectre_entry))]
@@ -473,6 +508,7 @@ class SpectreConfigure(tk.Toplevel):
             [self.spectre_entry[i][4].configure(state='readonly', width=13) for i in range(len(self.spectre_entry))]
 
         elif self.sp_5_combobox.get() == 'Непрерывный':
+            self.cf.canvas.configure(width=950)
             column_count = 7
 
             for i in range(row_count):
@@ -488,10 +524,10 @@ class SpectreConfigure(tk.Toplevel):
                     tmp_entry.append(
                         tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], justify='center'))
                     tmp_entry[j].grid(row=2 + i, column=j)
+                    tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
 
                 self.spectre_entry.append(tmp_entry)
-                self.__add_delete_button(self.spectre_frame, 2 + i, column_count + 1, self.spectre_entry,
-                                         self.spectre_entry_val)
+                self.__add_delete_button(self.spectre_frame, 2 + i, column_count + 1, i)
 
             self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
             self.sum_energy_part.grid(row=len(self.spectre_entry) + 2, column=4)
@@ -499,7 +535,7 @@ class SpectreConfigure(tk.Toplevel):
             for i in range(row_count):  # Нааполнение данными
                 for j in range(column_count):
                     if j == 0:
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 1:
                         self.spectre_entry_val[i][j].trace('w',
@@ -507,26 +543,26 @@ class SpectreConfigure(tk.Toplevel):
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__energy_callback_sp_five_cont(
                                                                sv))
+
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode, sv=(
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__avg_energy_callback(
                                                                sv))
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 2:
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode, sv=(
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__avg_energy_callback(
                                                                sv))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 4:
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode: self.__energy_part_callback(4))
-
-                        self.spectre_entry_val[i][j].set(str(self.data_struct.data[i, j]))
+                        self.__insert_to_interface_from_data_struct(i, j)
 
             [self.spectre_entry[i][0].configure(state='readonly', width=5) for i in range(len(self.spectre_entry))]
             [self.spectre_entry[i][1].configure(state='normal', width=13) for i in range(len(self.spectre_entry))]
@@ -536,19 +572,28 @@ class SpectreConfigure(tk.Toplevel):
             [self.spectre_entry[i][5].configure(state='readonly', width=13) for i in range(len(self.spectre_entry))]
             [self.spectre_entry[i][6].configure(state='readonly', width=13) for i in range(len(self.spectre_entry))]
 
-    def data_insert_discrete(self, data):
-        row_count = data.shape[0]
-        column_count = data.shape[1]
+    def data_insert_discrete(self):
+        row_count = self.data_struct.data.shape[0]
+        column_count = self.data_struct.data.shape[1]
+
+        for i in range(row_count):
+            tmp_val = []
+            for j in range(column_count):
+                a = tk.StringVar()
+                tmp_val.append(a)
+            self.spectre_entry_val.append(tmp_val)
+
         for i in range(row_count):
 
             tmp_entry = []
             for j in range(column_count):
-                tmp_entry.append(tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], width=15,
+                tmp_entry.append(tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], width=20,
                                           justify='center'))
-                tmp_entry[j].grid(row=1 + i, column=j)
+                tmp_entry[j].grid(row=1 + i, column=j, padx=5)
+                tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
+
             self.spectre_entry.append(tmp_entry)
-            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
-                                     self.spectre_entry_val)
+            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -559,28 +604,37 @@ class SpectreConfigure(tk.Toplevel):
                     self.spectre_entry_val[i][j].trace('w',
                                                        lambda name, index, mode: self.__energy_part_callback(-1))
 
-                try:
-                    self.spectre_entry_val[i][j].set('{:.6g}'.format(data[i, j]))
-                except ValueError:
-                    self.spectre_entry_val[i][j].set(data[i, j])
+                self.__insert_to_interface_from_data_struct(i, j, 'float')
 
-    def data_insert_cont(self, data):
-        row_count = data.shape[0]
-        column_count = data.shape[1]
+    def data_insert_cont(self):
+        row_count = self.data_struct.data.shape[0]
+        column_count = self.data_struct.data.shape[1]
+
+        for i in range(row_count):
+            tmp_val = []
+            for j in range(column_count):
+                if i == 0 and j == 1:
+                    continue
+
+                a = tk.StringVar()
+                tmp_val.append(a)
+
+            self.spectre_entry_val.append(tmp_val)
 
         for i in range(row_count):
 
             tmp_entry = []
             for j in range(column_count):
-                tmp_entry.append(tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], width=15,
+                if i == 0 and j == 1:
+                    continue
+                tmp_entry.append(tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], width=20,
                                           justify='center'))
-                tmp_entry[j].grid(row=1 + i, column=j)
+                tmp_entry[j].grid(row=1 + i, column=j, padx=5)
+                tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
+
             self.spectre_entry.append(tmp_entry)
             if i > 0:
-                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, self.spectre_entry,
-                                         self.spectre_entry_val)
-
-        self.spectre_entry[0][1]['state'] = 'disabled'
+                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -591,12 +645,10 @@ class SpectreConfigure(tk.Toplevel):
                     if j == column_count - 1:
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode: self.__energy_part_callback(-1))
-                try:
-                    self.spectre_entry_val[i][j].set('{:.6g}'.format(data[i, j]))
-                except ValueError:
-                    self.spectre_entry_val[i][j].set(data[i, j])
+                if i == 0 and j == 1:
+                    continue
 
-        self.spectre_entry_val[0][1].set('')
+                self.__insert_to_interface_from_data_struct(i, j, 'float')
 
     def _save_data(self, save_as):
         if save_as is True:
@@ -840,93 +892,76 @@ class SpectreConfigure(tk.Toplevel):
     def __energy_part_callback(self, index):
         sum = 0
         try:
-            for i in range(len(self.spectre_entry_val)):
-                sum += eval(self.spectre_entry_val[i][index].get())
+            if self.spectre_type_cb == 'CONTINUOUS':
+                for i in range(1, len(self.spectre_entry_val)):
+                    sum += eval(self.spectre_entry_val[i][index].get())
+            else:
+                for i in range(len(self.spectre_entry_val)):
+                    sum += eval(self.spectre_entry_val[i][index].get())
             self.sum_energy_part['text'] = '{:.4g}'.format(sum)
         except:
             self.sum_energy_part['text'] = 'Заполните ячейки'
-
-    # def __creator(self, type, labels, column):
-    #
-    #     try:
-    #         rows = int(self.rows_count_val.get())
-    #         if rows > 80:
-    #             raise Exception
-    #         old_elems = self.spectre_entry_val.copy()
-    #         data = np.empty((rows, column), dtype=str)
-    #         self.spectre_frame_constructor(data, labels, type)
-    #         if type == 'SP_0' or type == 'SP_5':
-    #             self.rows_count_ag['text'] = self.rows_count_val.get()
-    #
-    #         for i in range(len(self.spectre_entry_val)):
-    #             for j in range(len(self.spectre_entry_val[i])):
-    #                 try:
-    #                     self.spectre_entry_val[i][j].set(old_elems[i][j].get())
-    #                 except IndexError:
-    #                     self.spectre_entry_val[i][j].set('erro')
-    #
-    #         if type == 'SP_0' or type == 'SP_5':
-    #             [self.spectre_entry_val[i][0].set(str(i + 1)) for i in range(int(self.rows_count_val.get()))]
-    #
-    #     except:
-    #         print('err')
-    #         pass
 
     def __creator(self, event):
         type = self.spectre_type_cb
         try:
             rows = int(self.rows_count_val.get())
-            if rows > 80 or rows < 0:
+            if rows > 120 or rows < 0:
                 return
         except:
             return
 
-        old_data = None
-        if self.data_struct.data is not None:
-            old_data = self.data_struct.data.copy()
-
         if type == 'DISCRETE' or type == 'CONTINUOUS':
-            labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
-            column = 2
+            labels = ['Энергия (кэВ)', 'Доля(не нормируется)']
+            if self.data_struct.data is None or self.data_struct.spectre_type != type:
+                self.data_struct.create_empty_data((rows, 2))
+                self.data_struct.data[:, :] = None
+            else:
+                self.data_struct.change_shape(rows, 2)
+
         if type == 'SP_0':
             labels = ['№', 'Энергия (MеВ)', 'TETA(град.)', 'FI(град.)', 'Доля(не нормируется)']
-            self.data_struct.create_empty_data((rows, 5))
+            if self.data_struct.data is None or self.data_struct.spectre_type != 0:
+                self.data_struct.create_empty_data((rows, 5))
+            else:
+                self.data_struct.change_shape(rows, 5)
+
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Точечный':
             labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
-            self.data_struct.create_empty_data((rows, 5))
+            if self.data_struct.sp_5_type == 1:
+                self.data_struct.five_sp_convert(rows)
+
+            if self.data_struct.data is None or self.data_struct.spectre_type != 5:
+                self.data_struct.create_empty_data((rows, 5))
+                self.data_struct.sp_5_type = 0
+            else:
+                self.data_struct.change_shape(rows, 5)
 
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Непрерывный':
-            self.cf.canvas.configure(width=950)
-            self.data_struct.create_empty_data((rows, 7))
+            if self.data_struct.sp_5_type == 0:
+                self.data_struct.five_sp_convert(rows)
+
+            if self.data_struct.data is None or self.data_struct.spectre_type != 5:
+                self.data_struct.create_empty_data((rows, 7))
+                self.data_struct.sp_5_type = 1
+
+            else:
+                self.data_struct.change_shape(rows, 7)
 
             labels = ['№', 'Эн. фотона (MeВ) от', 'Эн. фотона (MeВ) до', 'Средняя эн. фотона (MeВ)',
                       'Доля(не нормируется)',
                       'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
 
-        if type == 'SP_5' and old_data is not None:
-            if old_data.shape[1] != self.data_struct.data.shape[1]:
-                if self.data_struct.data.shape[1] == 5 and old_data.shape[1] == 7:
-                    for i in range(len(self.spectre_entry_val)):
-                        for j in range(len(self.spectre_entry_val[i])):
-                            if j == 1:
-                                self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
-                            if j == 4:
-                                self.data_struct.data[i][2] = self.spectre_entry_val[i][j].get()
-
-                if self.data_struct.data.shape[1] == 7 and old_data.shape[1] == 5:
-                    for i in range(len(self.spectre_entry_val)):
-                        for j in range(len(self.spectre_entry_val[i])):
-                            if j == 1:
-                                self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
-                            if j == 2:
-                                self.data_struct.data[i][4] = self.spectre_entry_val[i][j].get()
-
-        if type != 'SP_5':
-            for i in range(len(self.spectre_entry_val)):
-                for j in range(len(self.spectre_entry_val[i])):
-                    self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
+        # if type != 'SP_5' and old_data is not None:
+        #     if old_data_type == self.data_struct.spectre_type:
+        #         for i in range(self.data_struct.data.shape[0]):
+        #             for j in range(self.data_struct.data.shape[1]):
+        #                 try:
+        #                     self.data_struct.data[i, j] = old_data[i][j]
+        #                 except IndexError:
+        #                     self.data_struct.data[i, j] = ''
 
         self.spectre_frame_constructor(labels, type)
 
@@ -962,18 +997,18 @@ class SpectreConfigure(tk.Toplevel):
             print('starts_count_val error')
 
     def __destroy_frames(self):
+
         try:
-            self.frame_description.grid_forget()
-            self.frame_description.destroy()
             self.cf.grid_forget()
             self.cf.destroy()
-            self.spectre_frame.grid_forget()
-            self.spectre_frame.destroy()
-            self.spectre_entry.clear()
-            self.spectre_entry_val.clear()
-
         except:
             pass
+
+        # self.spectre_frame.grid_forget()
+        # self.spectre_frame.destroy()
+
+        # self.frame_description.grid_forget()
+        # self.frame_description.destroy()
 
         if self.sp_one_interface is not None:
             try:
@@ -1005,30 +1040,57 @@ class SpectreConfigure(tk.Toplevel):
 
         return out_energy
 
-    def __add_delete_button(self, parent, row, column, array, vals_array):
-        index = row - 1
+    def __add_delete_button(self, parent, row, column, index):
 
         button = tk.Button(parent, text='-',
-                           command=lambda: self.__delete_entry(array, index, button, vals_array))
+                           command=lambda: self.__delete_entry(index, button))
         button.grid(row=row, column=column, sticky='W')
 
-    def __delete_entry(self, array, index, button, vals_array):
-        for i in range(len(array)):
-            if i == index:
-                for j in range(len(array[i])):
-                    array[i][j].grid_remove()
-                    array[i][j].destroy()
+    def __delete_entry(self, index, button):
 
-        array.pop(index)
-        vals_array.pop(index)
+        for k in range(len(self.spectre_entry_val[index])):
+            self.spectre_entry[index][k].grid_remove()
+            self.spectre_entry[index][k].destroy()
+
+        self.spectre_entry_val.pop(index)
+        self.spectre_entry.pop(index)
+
+        self.data_struct.data = np.delete(self.data_struct.data, index, axis=0)
 
         button.grid_remove()
         button.destroy()
 
         if self.spectre_type_cb != 'DISCRETE' and self.spectre_type_cb != 'CONTINUOUS':
 
-            for i in range(len(vals_array)):
-                vals_array[i][0].set(str(i + 1))
+            for i in range(len(self.spectre_entry_val)):
+                self.spectre_entry_val[i][0].set(str(i + 1))
+                self.data_struct.data[i, 0] = i + 1
+
+    def __insert_to_interface_from_data_struct(self, i, j, type='float'):
+        if type == 'float':
+            if self.data_struct.data[i, j] is None:
+                self.spectre_entry_val[i][j].set('')
+            else:
+                self.spectre_entry_val[i][j].set('{:.6g}'.format(self.data_struct.data[i, j]))
+
+        if 'nan' in self.spectre_entry_val[i][j].get():
+            self.spectre_entry_val[i][j].set('')
+
+    def __insert_data_to_data_struct(self, i, j, event):
+
+        a = self.spectre_entry_val[i][j].get()
+
+        if a == '':
+            self.data_struct.data[i, j] = None
+        else:
+            try:
+                if ',' in a:
+                    a = a.replace(',', '.')
+
+                a = float(a)
+                self.data_struct.data[i, j] = a
+            except ValueError:
+                self.data_struct.data[i, j] = None
 
 
 class SpectreDataStructure:
@@ -1050,7 +1112,14 @@ class SpectreDataStructure:
         with open(self.spectre_path, 'r') as file:
             lines = file.readlines()
 
-        self.spectre_type = int(lines[6].strip())
+        if 'SP_TYPE=CONTINUOUS' in lines[0]:
+            self.spectre_type = 'CONTINUOUS'
+
+        elif 'SP_TYPE=DISCRETE' in lines[0]:
+            self.spectre_type = 'DISCRETE'
+
+        else:
+            self.spectre_type = int(lines[6].strip())
 
         self.start_read()
 
@@ -1064,12 +1133,12 @@ class SpectreDataStructure:
             self.sp_power = float(lines[4].strip())
             self.starts_count = int(lines[10].strip())
 
+            tmp = []
             for line in lines[14:]:
                 line = line.strip().split()
-                self.data_energy.append(float(line[1]))
-                self.data_theta.append(float(line[2]))
-                self.data_phi.append(float(line[3]))
-                self.data_part.append(float(line[4]))
+                tmp.append(line)
+
+            self.data = np.array(tmp, dtype=float)
 
         if self.spectre_type == 5:
             self.description = lines[0].strip()
@@ -1078,36 +1147,121 @@ class SpectreDataStructure:
             self.starts_count = int(lines[10].strip())
             self.sp_5_type = int(lines[14].strip())
 
-            if self.sp_5_type == 0:
-                start_read_data = 16
-            elif self.sp_5_type == 1:
-                start_read_data = 17
-                self.data_energy.append(float(lines[16].strip()))
-
-            for line in lines[start_read_data:]:
+            tmp = []
+            for line in lines[16:]:
                 line = line.strip().split()
-                self.data_energy.append(float(line[1]))
-                self.data_theta.append(float(line[2]))
-                self.data_phi.append(float(line[3]))
-                self.data_part.append(float(line[4]))
+                tmp.append(line)
+
+            self.data = np.array(tmp, dtype=float)
+
+        if self.spectre_type == 'DISCRETE':
+            self.data = np.loadtxt(self.spectre_path, skiprows=2, dtype=float)
+
+        if self.spectre_type == 'CONTINUOUS':
+            self.data = np.loadtxt(self.spectre_path, skiprows=3, dtype=float)
+
+            with open(self.spectre_path, 'r') as file:
+                lines = file.readlines()
+
+            start = (lines[2].strip())
+
+            self.data = np.insert(self.data, 0, [start, None], axis=0)
 
     def create_empty_data(self, shape=(0, 0)):
-        self.data = np.empty((shape[0], shape[1]), dtype=str)
+        self.data = np.empty((shape[0], shape[1]), dtype=float)
+
+        if self.spectre_type != 'DISCRETE' and self.spectre_type != 'CONTINUOUS':
+            self.data[:, 1:] = None
+            for i in range(self.data.shape[0]):
+                self.data[i, 0] = i + 1
+
+    def change_shape(self, rows, append_shape):
+        d = [None for _ in range(append_shape)]
+
+        if rows < self.data.shape[0]:
+            delta = self.data.shape[0] - rows
+            for i in range(delta):
+                self.data = np.delete(self.data, -1, axis=0)
+        elif rows > self.data.shape[0]:
+            delta = rows - self.data.shape[0]
+            for i in range(delta):
+                self.data = np.append(self.data, [d], axis=0)
+
+        if self.spectre_type == 0 or self.spectre_type == 5:
+            for i in range(self.data.shape[0]):
+                self.data[i, 0] = i + 1
+
+    def five_sp_convert(self, rows):
+
+        # if type == 'SP_5' and old_data is not None:
+        #     if old_data.shape[1] != self.data_struct.data.shape[1]:
+        #         if self.data_struct.data.shape[1] == 5 and old_data.shape[1] == 7:
+        #             for i in range(len(self.spectre_entry_val)):
+        #                 for j in range(len(self.spectre_entry_val[i])):
+        #                     if j == 1:
+        #                         self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
+        #                     if j == 4:
+        #                         self.data_struct.data[i][2] = self.spectre_entry_val[i][j].get()
+        #
+        #         if self.data_struct.data.shape[1] == 7 and old_data.shape[1] == 5:
+        #             for i in range(len(self.spectre_entry_val)):
+        #                 for j in range(len(self.spectre_entry_val[i])):
+        #                     if j == 1:
+        #                         self.data_struct.data[i][j] = self.spectre_entry_val[i][j].get()
+        #                     if j == 2:
+        #                         self.data_struct.data[i][4] = self.spectre_entry_val[i][j].get()
+
+        if self.sp_5_type == 0:
+            self.zero_to_one_convert(rows)
+        elif self.sp_5_type == 1:
+            self.one_to_zero_convert(rows)
+
+    def zero_to_one_convert(self, rows):
+        old_data = self.data.copy()
+
+        self.create_empty_data((rows, 7))
+        self.sp_5_type = 1
 
         for i in range(self.data.shape[0]):
-            self.data[i, 0] = str(i + 1)
+            for j in range(self.data.shape[1]):
+                if j == 1:
+                    try:
+                        self.data[i][j] = old_data[i, j]
+                    except IndexError:
+                        self.data[i][j] = None
+                if j == 4:
+                    try:
+                        self.data[i][j] = old_data[i, 2]
+                    except IndexError:
+                        self.data[i][j] = None
+
+    def one_to_zero_convert(self, rows):
+        old_data = self.data.copy()
+
+        self.create_empty_data((rows, 5))
+        self.sp_5_type = 0
+
+        for i in range(self.data.shape[0]):
+            for j in range(self.data.shape[1]):
+                if j == 1:
+                    try:
+                        self.data[i][j] = old_data[i, j]
+                    except IndexError:
+                        self.data[i][j] = None
+                if j == 2:
+                    try:
+                        self.data[i][j] = old_data[i, 4]
+                    except IndexError:
+                        self.data[i][j] = None
 
 
 if __name__ == '__main__':
     root = tk.Tk()
 
     x = SpectreConfigure(parent=root, path=r'C:\work\Test_projects\wpala')
-    x.spetre_type_cobbobox.set('Пятый')
-    x.spectre_type_cb = x.sp_type_dict.get(x.spetre_type_cobbobox.get())
-
-    x.create_spectre()
-    x.rows_count_val.set('5')
 
     root.mainloop()
 
-    # a = SpectreDataStructure(r'D:\Qt_pr\Spectre_configure\SP_5')
+    # a = SpectreDataStructure(r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1.txt')
+    # a.spectre_type_identifier()
+    # print(a.data)

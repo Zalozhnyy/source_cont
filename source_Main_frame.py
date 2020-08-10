@@ -256,14 +256,16 @@ class FrameGen(ttk.LabelFrame):
                 tmp_f += val.get() + ' '
             self.func_entry_vel = tk.StringVar()
             self.func_entry_vel.set(tmp_f)
-            self.func_trace_id = self.func_entry_vel.trace('w', lambda name, index, mode: self.__get_row_callback())
+            self.func_entry_vel.trace_id = self.func_entry_vel.trace('w', lambda name, index,
+                                                                                 mode: self.__get_row_callback())
 
             tmp_t = ''
             for val in self.time_entry_vel:
                 tmp_t += val.get() + ' '
             self.time_entry_vel = tk.StringVar()
             self.time_entry_vel.set(tmp_t)
-            self.time_trace_id = self.time_entry_vel.trace('w', lambda name, index, mode: self.__get_row_callback())
+            self.time_entry_vel.trace_id = self.time_entry_vel.trace('w', lambda name, index,
+                                                                                 mode: self.__get_row_callback())
 
         self.cf.destroy()
         self.entry_func_fr.destroy()
@@ -276,7 +278,6 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
 
         self.entry_time.bind('<Return>', self.__row_sort_method)
-        self.entry_time.bind('<FocusOut>', self.__row_sort_method)
 
         tk.Label(self.entry_func_fr, text='Зн. функции').grid(row=2, column=0, pady=3, padx=2)
         self.entry_func = tk.Entry(self.entry_func_fr, width=50, textvariable=self.func_entry_vel, justify='left')
@@ -335,9 +336,10 @@ class FrameGen(ttk.LabelFrame):
             pass
 
         for i in self.func_entry_vel:
-            self.func_trace_id.append(i.trace('w', lambda name, index, mode: self.__get_callback()))
+            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
         for i in self.time_entry_vel:
-            self.time_trace_id.append(i.trace('w', lambda name, index, mode: self.__get_callback()))
+            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
+
         for i in range(int(self.cell_numeric)):
             self.entry_time.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
@@ -350,6 +352,8 @@ class FrameGen(ttk.LabelFrame):
             self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
             self.entry_time[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
             self.entry_func[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+
+            self.entry_time[i].bind('<Return>', self.__sort_method)
 
         a, A = self.time_grid()
         self.entry_time_fix_val.set(f'{A[-1]}')
@@ -368,7 +372,8 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time_fix.grid(row=6 + len(self.func_entry_vel), column=1)
 
         d_t = 'Shift + Down - доб. яч. ниже выбранной\n' \
-              'Shift + Up      - уд. выбранную яч.'
+              'Shift + Up      - уд. выбранную яч.\n' \
+              'Enter  -  сортировка'
         self.discrete_description_label = tk.Label(self.entry_func_fr, text=d_t, justify='left')
         self.discrete_description_label.grid(row=8 + len(self.func_entry_vel), column=0, columnspan=3)
 
@@ -414,8 +419,8 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time_fix_val.set(self.db.get_share_data('tf_break'))
 
         for i in range(len(self.func_entry_vel)):
-            self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
-            self.time_entry_vel[i].trace_vdelete('w', self.time_trace_id[i])
+            self.func_entry_vel[i].trace_vdelete('w', self.func_entry_vel[i].trace_id)
+            self.time_entry_vel[i].trace_vdelete('w', self.time_entry_vel[i].trace_id)
 
         for i in range(len(self.func_entry_vel)):
             self.func_entry_vel[i].set(str(func[i]))
@@ -426,9 +431,9 @@ class FrameGen(ttk.LabelFrame):
         self.get()
 
         for i in self.func_entry_vel:
-            self.func_trace_id.append(i.trace('w', lambda name, index, mode: self.__get_callback()))
+            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
         for i in self.time_entry_vel:
-            self.time_trace_id.append(i.trace('w', lambda name, index, mode: self.__get_callback()))
+            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
 
     def ent_load(self, path):
         if path == '':
@@ -516,22 +521,29 @@ class FrameGen(ttk.LabelFrame):
 
     def add_entry(self, index, event):
         for i in self.entry_func:
+            i.unbind_all('<Shift-KeyPress Down>')
+            i.unbind_all('<Shift-KeyPress Up>')
             i.destroy()
         for i in self.entry_time:
+            i.unbind_all('<Shift-KeyPress Down>')
+            i.unbind_all('<Shift-KeyPress Up>')
             i.destroy()
+
+        print(index)
 
         self.entry_time.clear()
         self.entry_func.clear()
 
         self.func_entry_vel.insert(index + 1, tk.StringVar())
         self.func_entry_vel[index + 1].set('')
-        self.func_trace_id.insert(index + 1,
-                                  self.func_entry_vel[index + 1].trace('w',
-                                                                       lambda name, index, mode: self.__get_callback()))
+        self.func_entry_vel[index + 1].trace_id = self.func_entry_vel[index + 1].trace('w', lambda name, index,
+                                                                                                   mode: self.__get_callback())
+
         self.time_entry_vel.insert(index + 1, tk.StringVar())
         self.time_entry_vel[index + 1].set('')
-        self.time_trace_id.insert(index + 1, self.time_entry_vel[index + 1].trace('w', lambda name, index,
-                                                                                              mode: self.__get_callback()))
+        self.time_entry_vel[index + 1].trace_id = self.time_entry_vel[index + 1].trace('w', lambda name, index,
+                                                                                                   mode: self.__get_callback())
+
         # self.entry_time.insert(index + 1,
         #                        tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[index + 1],
         #                                 justify='center'))
@@ -548,14 +560,13 @@ class FrameGen(ttk.LabelFrame):
             self.entry_func.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
             self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
-            self.entry_time[i].bind('<Shift-KeyPress Down>',
-                                    lambda _, index=index: self.add_entry(index, _))
-            self.entry_func[i].bind('<Shift-KeyPress Down>',
-                                    lambda _, index=index: self.add_entry(index, _))
-            self.entry_time[i].bind('<Shift-KeyPress Up>',
-                                    lambda _, index=index: self.delete_entry(index, _))
-            self.entry_func[i].bind('<Shift-KeyPress Up>',
-                                    lambda _, index=index: self.delete_entry(index, _))
+
+            self.entry_time[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
+            self.entry_time[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+            self.entry_func[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+
+            self.entry_time[i].bind('<Return>', self.__sort_method)
 
         self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 4)
         self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 4)
@@ -565,7 +576,7 @@ class FrameGen(ttk.LabelFrame):
 
         self.discrete_description_label.grid_configure(row=8 + len(self.func_entry_vel))
 
-        self.entry_time[index].focus_set()
+        self.entry_time[index].focus()
 
         # self.button_calculate.configure(state='disabled')
 
@@ -604,6 +615,8 @@ class FrameGen(ttk.LabelFrame):
             self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
             self.entry_time[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
             self.entry_func[i].bind('<Shift-KeyPress Up>', lambda _, index=i: self.delete_entry(index, _))
+
+            self.entry_time[i].bind('<Return>', self.__sort_method)
 
         self.entry_time_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
         self.entry_func_label.grid_configure(row=len(self.func_entry_vel) + 2 + 4)
@@ -1077,14 +1090,69 @@ class FrameGen(ttk.LabelFrame):
             self.entry_time.xview_moveto(howMany)
 
     def __row_sort_method(self, event):
-        self.time_list = np.sort(self.time_list)
-        a = ''
-        for i in self.time_list:
-            a += str(i) + ' '
 
-        self.time_entry_vel.set(a)
+        time = self.time_entry_vel.get().split()
+        func = self.func_entry_vel.get().split()
+        
+        if len(time) != len(func):
+            print('Размерности не сопадают, сортировка невозможна')
+            return
+
+        try:
+            time = list(map(eval, time))
+            func = list(map(eval, func))
+        except:
+            print('Заполнены не все ячейки')
+            return
+
+        d = dict(zip(time, func))
+
+        time = sorted(time)
+
+        time_sorted = ''
+        func_sorted = ''
+        for i in range(len(time)):
+            time_sorted += str(time[i]) + ' '
+            func_sorted += str(d[time[i]]) + ' '
+
+        self.time_entry_vel.set(time_sorted)
+        self.func_entry_vel.set(func_sorted)
+        print('Сортировка времени завершена')
+
+    def __sort_method(self, event):
+        if len(self.time_list) != len(self.time_entry_vel):
+            print('Размерности не сопадают, сортировка невозможна')
+            return
+
+        time = [i.get() for i in self.time_entry_vel]
+        func = [i.get() for i in self.func_entry_vel]
+
+        try:
+            time = list(map(eval, time))
+            func = list(map(eval, func))
+        except:
+            print('Заполнены не все ячейки')
+            return
+
+        d = dict(zip(time, func))
+
+        time = sorted(time)
+
+        for i in range(len(self.func_entry_vel)):
+            self.func_entry_vel[i].trace_vdelete('w', self.func_entry_vel[i].trace_id)
+            self.time_entry_vel[i].trace_vdelete('w', self.time_entry_vel[i].trace_id)
+
+        for i in range(len(time)):
+            self.time_entry_vel[i].set(str(time[i]))
+            self.func_entry_vel[i].set(str(d[time[i]]))
+
+        for i in self.func_entry_vel:
+            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
+        for i in self.time_entry_vel:
+            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
 
         print('Сортировка времени завершена')
+        self.get()
 
     def onExit(self):
         self.quit()

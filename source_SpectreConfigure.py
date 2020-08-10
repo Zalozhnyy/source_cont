@@ -639,7 +639,7 @@ class SpectreConfigure(tk.Toplevel):
             out_header[6] = f'{decode_number[self.spectre_type_cb]}'
             out_header[8] = self.rows_count_calc['text']
             out_header[10] = self.starts_count_val.get()
-            out_header[12] = self.rows_count_val.get()
+            out_header[12] = str(len(self.spectre_entry_val))
 
             out_data = []
             for i, x in enumerate(self.spectre_entry_val):
@@ -660,6 +660,83 @@ class SpectreConfigure(tk.Toplevel):
 
             np.savetxt(save_path, out_data, comments='', header=header, delimiter='\t',
                        fmt=['%i', '%3.3g', '%3.4g', '%4.4g', '%3.4g'])
+
+            mb.showinfo('Save', f'Сохранено в {os.path.normpath(save_path)}')
+            self.spectre_path = save_path
+
+        if self.spectre_type_cb == 'SP_5':
+
+            decode_number = {'SP_5': 5}
+            type_decode = {'Точечный': 0, 'Непрерывный': 1}
+
+            out_header = self._sp_zero_form.copy()
+            if self.spectre_power_val.get() == '':
+                mb.showerror('SAVE', 'Не указана мощность спектра')
+                return
+            if self.spectre_number_val.get() == '':
+                mb.showerror('save', 'Не указан номер спектра')
+                return
+            if self.rows_count_calc['text'] == '':
+                mb.showerror('save', 'Не указано число частиц запускаемых на каждом шаге')
+                return
+            if self.starts_count_val.get() == '':
+                mb.showerror('save', 'Не указано количество запусков одинаковых частиц')
+                return
+            if self.rows_count_val.get() == '':
+                return
+
+            out_header[0] = self.spectre_note_val.get()
+            out_header[2] = self.spectre_number_val.get()
+            out_header[3] = 'Мощность спектра (шт/см**2/с)- для поверхностных, (шт/см**3/с)- для объемных'
+            out_header[4] = self.spectre_power_val.get()
+            out_header[6] = f'{decode_number[self.spectre_type_cb]}'
+            out_header[8] = self.rows_count_calc['text']
+            out_header[10] = self.starts_count_val.get()
+            out_header[12] = str(len(self.spectre_entry_val))
+            out_header.insert(13, 'Вид спектра (0-точечный ,1-непрерывный)')
+            s_type = type_decode[self.sp_5_combobox.get()]
+            out_header.insert(14, str(s_type))
+
+            if s_type == 0:
+                out_header[
+                    -1] = 'Таблица частиц (№, ' \
+                          'Энергия фотона (MeВ), ' \
+                          'Доля(не нормируется), ' \
+                          'Сечение см**2/г, ' \
+                          'Энергия электрона (MeВ))'
+            if s_type == 1:
+                out_header[
+                    -1] = 'Таблица частиц (' \
+                          '№, ' \
+                          'Эн. фотона (MeВ) от, ' \
+                          'Эн. фотона (MeВ) до, ' \
+                          'Средняя эн. фотона (MeВ), ' \
+                          'Доля(не нормируется), ' \
+                          'Сечение см**2/г, Энергия электрона (MeВ))'
+
+            out_data = []
+            for i, x in enumerate(self.spectre_entry_val):
+                row = []
+                for j in range(len(self.spectre_entry_val[i])):
+                    row.append(self.spectre_entry_val[i][j].get())
+                out_data.append(row)
+            out_data = np.array(out_data, dtype=float)
+
+            # print(out_header)
+            # print(out_data)
+            header = ''
+            for i, x in enumerate(out_header):
+                if i == len(out_header) - 1:
+                    header += x
+                else:
+                    header += x + '\n'
+
+            if s_type == 0:
+                np.savetxt(save_path, out_data, comments='', header=header, delimiter='\t',
+                           fmt=['%i', '%.3g', '%.4g', '%.4g', '%.4g'])
+            elif s_type == 1:
+                np.savetxt(save_path, out_data, comments='', header=header, delimiter='\t',
+                           fmt=['%i', '%.3g', '%.3g', '%.3g', '%.4g', '%.4g', '%.4g'])
 
             mb.showinfo('Save', f'Сохранено в {os.path.normpath(save_path)}')
             self.spectre_path = save_path
@@ -756,7 +833,7 @@ class SpectreConfigure(tk.Toplevel):
 
             val = (arg1 + arg2) / 2
 
-            self.spectre_entry_val[i][3].set(val)
+            self.spectre_entry_val[i][3].set('{:.5g}'.format(val))
         except:
             self.spectre_entry_val[i][3].set('')
 
@@ -818,7 +895,6 @@ class SpectreConfigure(tk.Toplevel):
             labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
             self.data_struct.create_empty_data((rows, 5))
-
 
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Непрерывный':
             self.cf.canvas.configure(width=950)

@@ -535,7 +535,7 @@ class SpOneReader:
                         self.theta_angles.append(float(d.strip()))
                     break
 
-            elif self.energy_type == 3:
+            elif self.theta_type == 3:
                 if line == 4:
                     self.theta_angles.append(float(d.strip()))
                 if line == 6:
@@ -595,7 +595,7 @@ if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
     # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
     # test_file = r'C:\work\Test_projects\wpala\remp_sources'
-    test_file = r'D:\Qt_pr\Spectre_configure\SP_1_2'
+    test_file = r'C:\Users\Nick\Desktop\sp_1_tst'
     # a = DataParcer(test_file)
     # # out_surf, out_volume, out_boundaries = a.pl_decoder()
     # # print(f' surf  {out_surf}')
@@ -605,5 +605,6 @@ if __name__ == '__main__':
     # print(x)
 
     a = SpOneReader(test_file)
+    a.start_read()
     print(a.energy_angles)
     print(a.energy_parts)

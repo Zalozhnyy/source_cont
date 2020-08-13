@@ -160,8 +160,8 @@ class MainWindow(tk.Frame):
         self.marple_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Marple", menu=self.marple_menu, state='disabled')
 
-        self.marple_menu.add_command(label="Добавить Marple", command=self.__add_marple, state='normal')
-        self.marple_menu.add_command(label="Удалить  Marple", command=self.__delete_marple, state='disabled')
+        self.marple_menu.add_command(label="Добавить задачу обтекания", command=self.__add_marple, state='normal')
+        self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
         self.pechs_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Pechs", menu=self.pechs_menu, state='normal')
@@ -179,7 +179,7 @@ class MainWindow(tk.Frame):
         self.filemenu.entryconfigure(add_index, state='normal')
         self.filemenu.entryconfigure(del_index, state='normal')
 
-        marple_index = self.menubar.index('Marple')
+        marple_index = self.menubar.index('Задача обтекания')
         self.menubar.entryconfigure(marple_index, state='normal')
 
     def onExit(self):
@@ -287,12 +287,6 @@ class MainWindow(tk.Frame):
 
                     part_number = self.global_tree_db[i[0]].get_share_data('particle number')
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
-
-                # for p_number in self.rs_data.keys():
-                #     load_name = self.rs_data[p_number]['influence name']
-                #     part_number = self.rs_data[p_number]['particle number']
-                #
-                #     self.tree_view_constructor(load=True, ask_name=False, load_data=(load_name, part_number))
 
         self.menubar_activate()
 
@@ -590,12 +584,19 @@ class MainWindow(tk.Frame):
             return
         self.global_count_gsources += 1
 
-        if ask_name:
-            name = sd.askstring('Назовите воздействие', 'Введите название воздействия\nОтмена - название по умолчанию')
-            if name == '':
-                name = f'Воздействие {self.global_count_gsources}'
-            if name is None:
-                return
+        if ask_name is True:
+            while True:
+                name = sd.askstring('Назовите воздействие', 'Введите название воздействия (Английский язык)\n'
+                                                            'Ok - название по умолчанию')
+                if name == '':
+                    name = f'Influence {self.global_count_gsources}'
+                if name is None:
+                    return
+                if rusian_words_analysis(name) == 1:
+                    break
+                else:
+                    mb.showerror('Название воздействия', 'В названии найден русский символ.\n'
+                                                         'Назовите воздействие на английском языке')
 
         else:
             name = load_data[0]

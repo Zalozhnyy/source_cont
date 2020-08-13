@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 import locale
+import re
 
 
 def check_folder(path):
@@ -125,6 +126,18 @@ def get_recent_projects():
         pass
     return out
 
+
+def rusian_words_analysis(word):
+    r = re.compile("[а-яА-Я]")
+    words = [word]
+    russian = [w for w in filter(r.findall, words)]
+
+    if len(russian) == 0:
+        return 1
+    elif len(russian) != 0:
+        return -1
+
+
 # source_list = []
 # gursa_dict = {}
 # source_number = 1
@@ -147,3 +160,8 @@ def get_recent_projects():
 #                                                                 ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
 #
 #     test.mainloop()
+
+
+if __name__ == '__main__':
+    a = rusian_words_analysis('asdas')
+    print(a)

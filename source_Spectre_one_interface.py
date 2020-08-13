@@ -105,6 +105,22 @@ class SpectreOneInterface(tk.Frame):
         self.elem_count.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
+        # starts count
+        p = 'Число частиц (сколько раз вызывается спектр)'
+        pcount_label = tk.Label(self.frame_description, text=p, justify='left')
+        pcount_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.row += 1
+
+        self.starts_count_val = tk.StringVar()
+        self.starts_count_val.set('1')
+        self.starts_count_val.trace('w',
+                                    lambda name, index, mode: self.__change_count_callback())
+
+        self.starts_count = tk.Entry(self.frame_description, textvariable=self.starts_count_val, width=10,
+                                     state='normal')
+        self.starts_count.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.row += 1
+
         # phi type
         p = 'Тип спектра по fi'
         phy_label = tk.Label(self.frame_description, text=p, justify='left')
@@ -716,10 +732,12 @@ class SpectreOneInterface(tk.Frame):
             b = int(counts[0])
 
             c = int(counts[1])
+
+            starts = int(self.starts_count_val.get())
         except:
             return
 
-        self.part_count_val.set(f'{a * b * c}')
+        self.part_count_val.set(f'{a * b * c * starts}')
         if set:
             self.elem_count_val.set(f'{b} {c} {a}')
 
@@ -734,6 +752,10 @@ class SpectreOneInterface(tk.Frame):
 
     def save(self):
 
+        if self.check_data_in_entry() == -1:
+            mb.showerror('Ошибка сохранения', 'Заполнены не все данные. Проверьте консоль вывода')
+            return
+
         out = ''
 
         out += f'{self.spectre_note_val.get()}\n'
@@ -747,6 +769,8 @@ class SpectreOneInterface(tk.Frame):
         out += f'{self.part_count_val.get()}\n'
         out += f'Количество элементов по fi, theta, энергии\n'
         out += f'{self.elem_count_val.get()}\n'
+        out += f'Число частиц (сколько раз вызывается спектр)\n'
+        out += f'{self.starts_count.get()}\n'
 
         # phi
         out += f'Тип спектра по fi (0-детерминированный,1-равномерный,3-нормальное распределение)\n'
@@ -757,8 +781,7 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.phi_levels_val.get()}\n'
             out += 'Значения угла(градусы), доля(не нормируется)\n'
             for i in range(len(self.phi_angles_val)):
-                out += '{:.5g}'.format(self.phi_angles_val[i].get()) + '\t' '{:.5g}'.format(
-                    self.phi_parts_val[i].get()) + '\n'
+                out += self.phi_angles_val[i].get() + '\t' + self.phi_parts_val[i].get() + '\n'
 
         elif int(self.phi_decode[self.phi_type_cobbobox.get()]) == 1:
             out += 'Значение (от до) (градусы)\n'
@@ -780,8 +803,7 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.theta_levels_val.get()}\n'
             out += 'Значения угла(градусы), доля(не нормируется)\n'
             for i in range(len(self.theta_angles_val)):
-                out += '{:.5g}'.format(self.theta_angles_val[i].get()) + '\t' '{:.5g}'.format(
-                    self.theta_parts_val[i].get()) + '\n'
+                out += self.theta_angles_val[i].get() + '\t' + self.theta_parts_val[i].get() + '\n'
 
 
         elif int(self.theta_decode[self.theta_type_cobbobox.get()]) == 1 or int(
@@ -805,18 +827,15 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.energy_levels_val.get()}\n'
             out += 'Значения энергии(МэВ), доля(не нормируется)\n'
             for i in range(len(self.energy_angles_val)):
-                out += '{:.5g}'.format(self.energy_angles_val[i].get()) + '\t' '{:.5g}'.format(
-                    self.energy_parts_val[i].get()) + '\n'
-
+                out += self.energy_angles_val[i].get() + '\t' + self.energy_parts_val[i].get() + '\n'
 
         elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 2:
             out += 'Число энергий в спектре\n'
             out += f'{self.energy_levels_val.get()}\n'
             out += 'Энергия(МэВ) от	до доля(не нормируется)\n'
             for i in range(len(self.energy_angles_val)):
-                out += '{:.5g}'.format(self.energy_angles_val[i].get()) + '\t' '{:.5g}'.format(
-                    self.energy_angles_val_2[i].get()) + '\t' + '{:.5g}'.format(
-                    self.energy_parts_val[i].get()) + '\n'
+                out += self.energy_angles_val[i].get() + '\t' + self.energy_angles_val_2[i].get() + \
+                       '\t' + self.energy_parts_val[i].get() + '\n'
 
         elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 1:
             out += 'Значение(от до) (МэВ)\n'
@@ -831,6 +850,20 @@ class SpectreOneInterface(tk.Frame):
 
         # print(out)
         return out
+
+    def check_data_in_entry(self):
+        try:
+            float(self.spectre_number_val.get())
+        except:
+            print('Нечитаемый символ/не задан номер спектра')
+            return -1
+        try:
+            float(self.spectre_power_val.get())
+        except:
+            print('Нечитаемый символ/не задана мощность спетра')
+            return -1
+
+        return 1
 
 
 class ScrolledWidget(tk.Frame):
@@ -870,7 +903,7 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     # x = SpectreConfigure(parent=root)
-    x = SpectreOneInterface(root, r'D:\Qt_pr\Spectre_configure\SP_1_0')
+    x = SpectreOneInterface(root, r'C:\Users\Nick\Desktop\sp_1_tst')
     x.pack()
 
     # x.sp_one_constructor()
@@ -878,6 +911,11 @@ if __name__ == '__main__':
     x.data_load()
 
     root.mainloop()
+
+    # data_struct = SpOneReader(r'C:\Users\Nick\Desktop\sp_1_tst')
+    # data_struct.start_read()
+    #
+    # print(data_struct.sp_power)
 
     # root = tk.Tk()
     # example = ScrolledWidget(root, (6, 6))

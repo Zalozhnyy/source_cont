@@ -5,7 +5,6 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog
 import numpy as np
 from scipy import integrate
-import matplotlib.pyplot as plt
 import os
 
 from source_Project_reader import DataParser
@@ -88,6 +87,11 @@ class SpectreConfigure(tk.Toplevel):
 
         self.photon_table = np.loadtxt(photon_path, skiprows=18)
         self.photon_table = 10 ** self.photon_table
+        a = np.column_stack((self.photon_table[:, 0], self.photon_table[:, 1]))
+        # print(a)
+        #
+        # plt.plot(self.photon_table[:, 0], self.photon_table[:, 1])
+        # plt.show()
 
         return 1
 
@@ -103,8 +107,9 @@ class SpectreConfigure(tk.Toplevel):
         self.save_as_button = tk.Button(self, text='Сохранить как', command=lambda: self._save_data(True), width=13)
         self.save_as_button.grid(row=2, column=1, pady=3, padx=3, sticky='WN')
 
-        combobox_values = ['Фиксированный', 'Разыгрывание', 'Пятый', 'DISCRETE', 'CONTINUOUS']
-        self.spetre_type_cobbobox = ttk.Combobox(self, value=[val for val in combobox_values], width=13,
+        self.spectre_type_combobox_values = ['Фиксированный', 'Разыгрывание', 'Пятый', 'DISCRETE', 'CONTINUOUS']
+        self.spetre_type_cobbobox = ttk.Combobox(self, value=[val for val in self.spectre_type_combobox_values],
+                                                 width=13,
                                                  state='readonly')
         self.spetre_type_cobbobox.grid(row=0, column=3)
         self.spetre_type_cobbobox.set('Тип спектра')
@@ -822,9 +827,12 @@ class SpectreConfigure(tk.Toplevel):
             np.savetxt(save_path, out_data, comments='', header=header, delimiter='\t', fmt=['%.5g', '%.8g'])
 
         if self.spectre_type_cb == 'SP_1':
+            a = self.sp_one_interface.save()
+            if a is None:
+                return
             with open(os.path.join(save_path), 'w') as f:
-                a = self.sp_one_interface.save()
                 f.write(a)
+            mb.showinfo('Сохранено', f'Сохранено в {save_path}')
 
     def __energy_callback_sp_five(self, index):
         i, j = index[0], index[1]
@@ -1001,6 +1009,9 @@ class SpectreConfigure(tk.Toplevel):
         try:
             self.cf.grid_forget()
             self.cf.destroy()
+
+            self.spectre_entry.clear()
+            self.spectre_entry_val.clear()
         except:
             pass
 
@@ -1078,7 +1089,10 @@ class SpectreConfigure(tk.Toplevel):
 
     def __insert_data_to_data_struct(self, i, j, event):
 
-        a = self.spectre_entry_val[i][j].get()
+        try:
+            a = self.spectre_entry_val[i][j].get()
+        except IndexError:
+            return
 
         if a == '':
             self.data_struct.data[i, j] = None

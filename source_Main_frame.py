@@ -3,11 +3,11 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog
+
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg)
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
-
 import numpy as np
 from numpy import exp, sin, cos, tan, log10
 from numpy import log as ln

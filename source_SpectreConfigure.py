@@ -57,6 +57,8 @@ class SpectreConfigure(tk.Toplevel):
 
         self.data_struct = None
 
+        self.delete_buttons = []
+
         self.constructor()
 
     def pechs_check(self):
@@ -279,6 +281,18 @@ class SpectreConfigure(tk.Toplevel):
         self.frame_description = ttk.Frame(self.cf.frame)
         self.frame_description.grid(row=3, column=0, sticky="W", padx=10)
 
+        # create 5 sp from perenos spectre
+        self.create_from_perenos_button = tk.Button(self.frame_description,
+                                                    text='Преобразовать из спектра переноса',
+                                                    command=self.perenos_to_five_spectre)
+        self.create_from_perenos_button.grid(row=row, column=0, columnspan=12, sticky='NW')
+
+        self.create_to_perenos_button = tk.Button(self.frame_description,
+                                                  text='Преобразовать в спектр переноса',
+                                                  command=self.five_spectre_to_perenos)
+        self.create_to_perenos_button.grid(row=row, column=6, columnspan=12, sticky='NW')
+        row += 1
+
         # commentary
         commentary_label = tk.Label(self.frame_description, text='Комментарий', justify='left')
         commentary_label.grid(row=row, column=0, columnspan=12, sticky='NW')
@@ -443,7 +457,10 @@ class SpectreConfigure(tk.Toplevel):
 
             self.spectre_entry.append(tmp_entry)
 
-            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
+            self.delete_buttons.append(tk.Button(self.spectre_frame, text='-',
+                                                 command=lambda index=i: self.__delete_entry(index, 1,
+                                                                                             column_count + 1)))
+            self.delete_buttons[i].grid(row=1 + i, column=column_count + 1, sticky='W')
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -483,7 +500,10 @@ class SpectreConfigure(tk.Toplevel):
                     tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
 
                 self.spectre_entry.append(tmp_entry)
-                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
+                self.delete_buttons.append(tk.Button(self.spectre_frame, text='-',
+                                                     command=lambda index=i: self.__delete_entry(index, 1,
+                                                                                                 column_count + 1)))
+                self.delete_buttons[i].grid(row=1 + i, column=column_count + 1, sticky='W')
 
             self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
             self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=2)
@@ -532,7 +552,10 @@ class SpectreConfigure(tk.Toplevel):
                     tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
 
                 self.spectre_entry.append(tmp_entry)
-                self.__add_delete_button(self.spectre_frame, 2 + i, column_count + 1, i)
+                self.delete_buttons.append(tk.Button(self.spectre_frame, text='-',
+                                                     command=lambda index=i: self.__delete_entry(index, 1,
+                                                                                                 column_count + 1)))
+                self.delete_buttons[i].grid(row=1 + i, column=column_count + 1, sticky='W')
 
             self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
             self.sum_energy_part.grid(row=len(self.spectre_entry) + 2, column=4)
@@ -598,7 +621,11 @@ class SpectreConfigure(tk.Toplevel):
                 tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
 
             self.spectre_entry.append(tmp_entry)
-            self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
+
+            self.delete_buttons.append(tk.Button(self.spectre_frame, text='-',
+                                                 command=lambda index=i: self.__delete_entry(index, 1,
+                                                                                             column_count + 1)))
+            self.delete_buttons[i].grid(row=1 + i, column=column_count + 1, sticky='W')
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -639,7 +666,10 @@ class SpectreConfigure(tk.Toplevel):
 
             self.spectre_entry.append(tmp_entry)
             if i > 0:
-                self.__add_delete_button(self.spectre_frame, 1 + i, column_count + 1, i)
+                self.delete_buttons.append(tk.Button(self.spectre_frame, text='-',
+                                                     command=lambda index=i: self.__delete_entry(index, 1,
+                                                                                                 column_count + 1)))
+                self.delete_buttons[-1].grid(row=1 + i, column=column_count + 1, sticky='W')
 
         self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
         self.sum_energy_part.grid(row=len(self.spectre_entry) + 1, column=column_count - 1)
@@ -902,11 +932,11 @@ class SpectreConfigure(tk.Toplevel):
         try:
             if self.spectre_type_cb == 'CONTINUOUS':
                 for i in range(1, len(self.spectre_entry_val)):
-                    sum += eval(self.spectre_entry_val[i][index].get())
+                    sum += float(self.spectre_entry_val[i][index].get())
             else:
                 for i in range(len(self.spectre_entry_val)):
-                    sum += eval(self.spectre_entry_val[i][index].get())
-            self.sum_energy_part['text'] = '{:.4g}'.format(sum)
+                    sum += float(self.spectre_entry_val[i][index].get())
+            self.sum_energy_part['text'] = '{:.5g}'.format(sum)
         except:
             self.sum_energy_part['text'] = 'Заполните ячейки'
 
@@ -1012,6 +1042,11 @@ class SpectreConfigure(tk.Toplevel):
 
             self.spectre_entry.clear()
             self.spectre_entry_val.clear()
+
+            for i in self.delete_buttons:
+                i.destroy()
+
+            self.delete_buttons.clear()
         except:
             pass
 
@@ -1051,16 +1086,10 @@ class SpectreConfigure(tk.Toplevel):
 
         return out_energy
 
-    def __add_delete_button(self, parent, row, column, index):
-
-        button = tk.Button(parent, text='-',
-                           command=lambda: self.__delete_entry(index, button))
-        button.grid(row=row, column=column, sticky='W')
-
-    def __delete_entry(self, index, button):
+    def __delete_entry(self, index, start_row, column):
 
         for k in range(len(self.spectre_entry_val[index])):
-            self.spectre_entry[index][k].grid_remove()
+            self.spectre_entry[index][k].grid_forget()
             self.spectre_entry[index][k].destroy()
 
         self.spectre_entry_val.pop(index)
@@ -1068,8 +1097,31 @@ class SpectreConfigure(tk.Toplevel):
 
         self.data_struct.data = np.delete(self.data_struct.data, index, axis=0)
 
-        button.grid_remove()
-        button.destroy()
+        if self.spectre_type_cb == 'CONTINUOUS':
+            self.delete_buttons[index - 1].destroy()
+            self.delete_buttons.pop(index - 1)
+
+        else:
+            self.delete_buttons[index].destroy()
+            self.delete_buttons.pop(index)
+
+        # print(f'index -- {index}')
+        # print(f'кнопки -- {len(self.delete_buttons)}')
+        # print(f'vars -- {len(self.spectre_entry_val)}')
+        # print(f'entrys -- {len(self.spectre_entry)}')
+
+        if self.spectre_type_cb == 'CONTINUOUS':  # в континиус первую строку удалять нельзя, отсюда танцы
+            for i in range(1, len(self.spectre_entry_val)):
+                for j in range(len(self.spectre_entry_val[i])):
+                    self.spectre_entry[i][j].grid_configure(row=start_row + i)
+                self.delete_buttons[i - 1].grid_configure(row=start_row + i)
+                self.delete_buttons[i - 1].configure(command=lambda ind=i: self.__delete_entry(ind, start_row, column))
+        else:
+            for i in range(len(self.spectre_entry_val)):
+                for j in range(len(self.spectre_entry_val[i])):
+                    self.spectre_entry[i][j].grid_configure(row=start_row + i)
+                self.delete_buttons[i].grid_configure(row=start_row + i)
+                self.delete_buttons[i].configure(command=lambda ind=i: self.__delete_entry(ind, start_row, column))
 
         if self.spectre_type_cb != 'DISCRETE' and self.spectre_type_cb != 'CONTINUOUS':
 
@@ -1106,6 +1158,95 @@ class SpectreConfigure(tk.Toplevel):
             except ValueError:
                 self.data_struct.data[i, j] = None
 
+    def perenos_to_five_spectre(self):
+        """
+        Function convert perenos spectre to five spectre and creates gui.
+
+        All data store in data struct class.
+        """
+
+        # perenos_spectre = fd.askopenfilename(title='Выберите файл spectre',
+        #                                      filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+        #
+        # if perenos_spectre == '':
+        #     return
+
+        perenos_spectre = r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1.txt'
+
+        self.data_struct = SpectreDataStructure(perenos_spectre)
+        self.data_struct.spectre_type_identifier()
+        if self.data_struct.data is None:
+            return
+        perenos_data = self.data_struct.data.copy()
+        perenos_type = self.data_struct.spectre_type
+
+        if perenos_type == 'CONTINUOUS':
+            self.sp_5_combobox.set('Непрерывный')
+
+            self.data_struct.create_empty_data((perenos_data.shape[0] - 1, 7))
+            self.data_struct.sp_5_type = 1
+
+            for i in range(1, perenos_data.shape[0]):
+                self.data_struct.data[i - 1, 1] = perenos_data[i - 1, 0] * 1e-3
+                self.data_struct.data[i - 1, 2] = perenos_data[i, 0] * 1e-3
+                self.data_struct.data[i - 1, 4] = perenos_data[i, 1]
+
+            for i in range(self.data_struct.data.shape[0]):
+                self.data_struct.data[i, 0] = i + 1
+
+            labels = ['№', 'Эн. фотона (MeВ) от', 'Эн. фотона (MeВ) до', 'Средняя эн. фотона (MeВ)',
+                      'Доля(не нормируется)',
+                      'Сечение см\u00b2/г',
+                      'Энергия электрона (MeВ)']
+            self.spectre_frame_constructor(labels, 'SP_5')
+
+        if perenos_type == 'DISCRETE':
+            self.sp_5_combobox.set('Точечный')
+
+            self.data_struct.create_empty_data((perenos_data.shape[0], 5))
+            self.data_struct.sp_5_type = 0
+
+            self.data_struct.data[:, 1] = perenos_data[:, 0] * 1e-3
+            self.data_struct.data[:, 2] = perenos_data[:, 1]
+
+            for i in range(self.data_struct.data.shape[0]):
+                self.data_struct.data[i, 0] = i + 1
+
+            labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
+                      'Энергия электрона (MeВ)']
+            self.spectre_frame_constructor(labels, 'SP_5')
+
+    def five_spectre_to_perenos(self):
+        """Convert gui from five spectre to perenos spectre"""
+        self.__destroy_frames()
+
+        five_data = self.data_struct.data.copy()
+        five_type = self.data_struct.sp_5_type
+
+        if five_type == 0:  # discrete
+            self.description_discrete_cont()
+            self.data_struct.create_empty_data((five_data.shape[0], 2))
+
+            self.data_struct.data[:, 0] = five_data[:, 1] * 1e3
+            self.data_struct.data[:, 1] = five_data[:, 2]
+
+            labels = ['Энергия (кэВ)', 'Доля(не нормируется)']
+            self.spectre_frame_constructor(labels, 'DISCRETE')
+
+        if five_type == 1:  # CONTINUOUS
+            self.description_discrete_cont()
+            self.data_struct.create_empty_data((five_data.shape[0], 2))
+
+            for i in range(1, five_data.shape[0]):
+                self.data_struct.data[i - 1, 0] = five_data[i - 1, 1] * 1e3
+                self.data_struct.data[i, 0] = five_data[i, 2] * 1e3
+                self.data_struct.data[i, 1] = five_data[i, 4]
+
+            labels = ['Энергия (кэВ)', 'Доля(не нормируется)']
+            self.spectre_frame_constructor(labels, 'CONTINUOUS')
+
+        # print(np.sum(self.data_struct.data[:, 1]))
+
 
 class SpectreDataStructure:
     def __init__(self, path=None):
@@ -1133,7 +1274,12 @@ class SpectreDataStructure:
             self.spectre_type = 'DISCRETE'
 
         else:
-            self.spectre_type = int(lines[6].strip())
+            try:
+                self.spectre_type = int(lines[6].strip())
+            except:
+                print('Тип спектра не опознан')
+                self.data = None
+                return
 
         self.start_read()
 
@@ -1273,6 +1419,13 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     x = SpectreConfigure(parent=root, path=r'C:\work\Test_projects\wpala')
+
+    # x.open_spectre(use_chose_spectre=r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1 _discr.txt')
+
+    # x.spectre_type_cb = 'SP_5'
+    # x.create_spectre()
+    # x.perenos_to_five_spectre()
+    # x.five_spectre_to_perenos()
 
     root.mainloop()
 

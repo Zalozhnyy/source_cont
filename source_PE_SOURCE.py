@@ -255,7 +255,7 @@ class PeSource:
             self.Energy0 = ar[:, 0]
             self.EnergyP = ar[:, 1]
 
-            self.N = int(round(self.R0) / 10 * 1000)
+            self.N = int(round(self.R0) / 10 * 5000)
             print(f'Число ячеек {self.N}')
 
             self._tables()
@@ -271,7 +271,7 @@ class PeSource:
                 er = self.energy_reduction_calculation(self.Energy0[i], self.EnergyP[i])
                 self.out_spectre[i, 0], self.out_spectre[i, 1] = self.Energy0[i], er
 
-            print('Расчёт завершён')
+            print('Расчёт завершен')
 
             self.save()
 

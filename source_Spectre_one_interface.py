@@ -19,6 +19,13 @@ class SpectreOneInterface(tk.Frame):
         self.parent_frame.geometry('850x790')
         self.parent_frame.resizable(width=True, height=True)
 
+        self.parts_count_db = {
+            'phi': 1,
+            'theta': 1,
+            'energy': 1,
+            'starts': 1
+        }
+
     def sp_one_constructor(self):
         self.row = 0
 
@@ -213,6 +220,7 @@ class SpectreOneInterface(tk.Frame):
         elif cb == '1':
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {a[1]} {2}')
+            self.parts_count_db['energy'] = 1
 
             self.energy_frame_entry = ttk.Frame(self.energy_frame_description)
             self.energy_frame_entry.grid(row=energy_row + 1, column=0, columnspan=12, sticky="NWSE")
@@ -233,6 +241,7 @@ class SpectreOneInterface(tk.Frame):
         elif cb == '3':
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {a[1]} {2}')
+            self.parts_count_db['energy'] = 1
 
             self.energy_angles_entry = []
             self.energy_angles_val = [tk.StringVar() for _ in range(2)]
@@ -291,6 +300,7 @@ class SpectreOneInterface(tk.Frame):
         elif cb == '1' or cb == '-1':
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {2} {a[2]}')
+            self.parts_count_db['theta'] = 1
 
             self.theta_frame_entry = ttk.Frame(self.theta_frame_description)
             self.theta_frame_entry.grid(row=theta_row + 1, column=0, columnspan=12, sticky="NWSE")
@@ -311,6 +321,7 @@ class SpectreOneInterface(tk.Frame):
         elif cb == '3':
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {2} {a[2]}')
+            self.parts_count_db['theta'] = 1
 
             self.theta_angles_entry = []
             self.theta_angles_val = [tk.StringVar() for _ in range(2)]
@@ -372,6 +383,7 @@ class SpectreOneInterface(tk.Frame):
 
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{2} {a[1]} {a[2]}')
+            self.parts_count_db['phi'] = 1
 
             self.phi_frame_entry = ttk.Frame(self.phi_frame_description)
             self.phi_frame_entry.grid(row=phi_row + 1, column=0, columnspan=12, sticky="NWSE")
@@ -392,6 +404,7 @@ class SpectreOneInterface(tk.Frame):
         elif cb == '3':
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{2} {a[1]} {a[2]}')
+            self.parts_count_db['phi'] = 1
 
             self.phi_angles_entry = []
             self.phi_angles_val = [tk.StringVar() for _ in range(2)]
@@ -418,6 +431,8 @@ class SpectreOneInterface(tk.Frame):
     def __energy_entry_constructor(self, r, event):
         try:
             count = int(self.energy_levels_val.get())
+            self.parts_count_db['energy'] = count
+
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {a[1]} {count}')
         except:
@@ -432,6 +447,7 @@ class SpectreOneInterface(tk.Frame):
         self.energy_frame_entry.grid(row=phi_row + 1, column=0, columnspan=12, sticky="NWSE")
 
         if self.energy_decode[self.energy_type_cobbobox.get()] == '2':
+            self.parts_count_db['energy'] = 1
             p = 'Энергия(МэВ) от	до доля(не нормируется)'
 
             self.energy_angles_entry_2 = []
@@ -495,11 +511,16 @@ class SpectreOneInterface(tk.Frame):
                 self.__add_delete_button(self.energy_frame_entry, 1 + i, 4,
                                          [self.energy_angles_entry[i], self.energy_parts_entry[i]], 'energy')
 
+        self.__change_count_callback()
+
     def __theta_entry_constructor(self, r, event):
         try:
             count = int(self.theta_levels_val.get())
+            self.parts_count_db['theta'] = count
+
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {count} {a[2]}')
+
         except:
             return
 
@@ -540,9 +561,13 @@ class SpectreOneInterface(tk.Frame):
             self.__add_delete_button(self.theta_frame_entry, 1 + i, 4,
                                      [self.theta_angles_entry[i], self.theta_parts_entry[i]], 'theta')
 
+        self.__change_count_callback()
+
     def __phi_entry_constructor(self, r, event):
         try:
             count = int(self.phi_levels_val.get())
+            self.parts_count_db['phi'] = count
+
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{count} {a[1]} {a[2]}')
         except:
@@ -582,6 +607,8 @@ class SpectreOneInterface(tk.Frame):
 
             self.__add_delete_button(self.phi_frame_entry, 1 + i, 4,
                                      [self.phi_angles_entry[i], self.phi_parts_entry[i]], 'phi')
+
+        self.__change_count_callback()
 
     def data_load(self):
         self.sp_one_constructor()
@@ -723,17 +750,24 @@ class SpectreOneInterface(tk.Frame):
             self.elem_count_val.set(f'{counts[0]} {self.theta_levels_val.get()} {counts[2]}')
 
     def __change_count_callback(self, set=False):
-        counts = self.elem_count_val.get().split()
         try:
-            a = int(counts[2])
-
-            b = int(counts[0])
-
-            c = int(counts[1])
-
-            starts = int(self.starts_count_val.get())
+            self.parts_count_db['starts'] = int(self.starts_count_val.get())
         except:
             return
+
+        # counts = self.elem_count_val.get().split()
+        try:
+            a = self.parts_count_db['energy']
+
+            b = self.parts_count_db['phi']
+
+            c = self.parts_count_db['theta']
+
+            starts = self.parts_count_db['starts']
+        except:
+            return
+
+        # print(self.parts_count_db.items())
 
         self.part_count_val.set(f'{a * b * c * starts}')
         if set:
@@ -901,12 +935,12 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     # x = SpectreConfigure(parent=root)
-    x = SpectreOneInterface(root, r'C:\Users\Nick\Desktop\sp_1_tst')
+    x = SpectreOneInterface(root, None)
     x.pack()
 
-    # x.sp_one_constructor()
+    x.sp_one_constructor()
 
-    x.data_load()
+    # x.data_load()
 
     root.mainloop()
 

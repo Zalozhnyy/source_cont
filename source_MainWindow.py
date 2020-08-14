@@ -164,7 +164,7 @@ class MainWindow(tk.Frame):
         self.marple_menu.add_command(label="Добавить задачу обтекания", command=self.__add_marple, state='normal')
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
-        self.menubar.add_command(label="Добавить спектр PECHS", state='disabled',command=self.start_pechs)
+        self.menubar.add_command(label="Добавить спектр PECHS", state='disabled', command=self.start_pechs)
 
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
@@ -292,7 +292,10 @@ class MainWindow(tk.Frame):
                 for i in self.global_tree_db.items():
                     self.tree_db_delete_old(i[1])
 
-                    part_number = self.global_tree_db[i[0]].get_share_data('particle number')
+                    try:
+                        part_number = self.global_tree_db[i[0]].get_share_data('particle number')
+                    except KeyError:
+                        part_number = None
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
 
         self.menubar_activate()
@@ -313,13 +316,19 @@ class MainWindow(tk.Frame):
         os.startfile(self.path)
 
     def tree_db_delete_old(self, obj):
-        part_number = obj.get_share_data('particle number')
+        try:
+            part_number = obj.get_share_data('particle number')
+        except KeyError:
+            part_number = None
 
         # удаление из базы данных несуществующих частиц
         for f_key in obj.get_first_level_keys():
             if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Energy':
                 obj.delete_first_level(f_key)
                 continue
+
+        if part_number is None:
+            return
 
         db_s_keys = []
 
@@ -644,14 +653,16 @@ class MainWindow(tk.Frame):
         elif load is True:
             # self.global_tree_db.update({name: self.tree_db_insert(name)})
 
+            part_name = None
             for i in self.PAR.keys():
                 if self.PAR[i]['number'] == load_data[1]:
                     part_name = i
                     break
 
-            self.tree_db_insert_particle(self.global_tree_db[name], part_name, True)
-            source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
-            self.particle_tree_constr(part_name, source_keys, source, ind)
+            if part_name is not None:  # костыль для загрузки в структуры воздействий без частиц
+                self.tree_db_insert_particle(self.global_tree_db[name], part_name, True)
+                source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
+                self.particle_tree_constr(part_name, source_keys, source, ind)
 
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
@@ -965,19 +976,25 @@ class MainWindow(tk.Frame):
 
     def add_part(self, index, name, id):
 
-        a = SelectParticleDialog([i for i in self.PAR.keys()])
+        part_list = [i for i in self.PAR.keys()]
+
+        for gsource in self.global_tree_db.keys():
+            for i in self.global_tree_db[gsource].get_first_level_keys():
+                if any([j == i for j in part_list]):
+                    # ask = mb.askyesno('Внимание', f'Частица уже используется в "{gsource}"\n'
+                    #                               f'Добавить частицу {new_particle} в "{name}"?')
+                    print(f'Частица {i} уже используется')
+                    part_list.pop(part_list.index(i))
+
+        if len(part_list) == 0:
+            mb.showerror('Ошибка', 'Нет доступных частиц')
+            return
+
+        a = SelectParticleDialog(part_list)
         self.wait_window(a)
         new_particle = a.lb_current
         if new_particle is None:
             return
-
-        for gsource in self.global_tree_db.keys():
-            for i in self.global_tree_db[gsource].get_first_level_keys():
-                if new_particle == i:
-                    ask = mb.askyesno('Внимание', f'Частица уже используется в "{gsource}"\n'
-                                                  f'Добавить частицу {new_particle} в "{name}"?')
-                    if ask is False:
-                        return
 
         source = self.tree[index].get_children()[0]
 
@@ -1103,10 +1120,10 @@ class MainWindow(tk.Frame):
         label['text'] = t
 
     def __add_source_button(self):
-        if len(self.global_tree_db) >= len(self.PAR):
-            ask = mb.askyesno('Внимание', 'Количество частиц больше количества воздействий.\nСоздать новую чатицу?')
-            if ask is False:
-                return
+        # if len(self.global_tree_db) >= len(self.PAR):
+        #     ask = mb.askyesno('Внимание', 'Количество частиц больше количества воздействий.\nСоздать новую чатицу?')
+        #     if ask is False:
+        #         return
         self.tree_view_constructor()
 
     def __destroy_data_frame(self, name):

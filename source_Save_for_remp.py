@@ -7,7 +7,7 @@ import os
 import pickle
 
 
-class Save_remp():
+class Save_remp:
     def __init__(self, marple, data_object=None, path=None):
         self.db = data_object
         self.path = path
@@ -108,8 +108,8 @@ class Save_remp():
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'
         out += name + '\n'
-        out += '<particle number>\n'
-        out += str(gsource_db.get_share_data('particle number')) + '\n'
+        # out += '<particle number>\n'
+        # out += str(gsource_db.get_share_data('particle number')) + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<layer index>\n'
@@ -162,8 +162,8 @@ class Save_remp():
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'
         out += name + '\n'
-        out += '<particle number>\n'
-        out += str(gsource_db.get_share_data('particle number')) + '\n'
+        # out += '<particle number>\n'
+        # out += str(gsource_db.get_share_data('particle number')) + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<layer index>\n'
@@ -205,11 +205,11 @@ class Save_remp():
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'
         out += name + '\n'
-        out += '<particle number>\n'
-        try:
-            out += str(gsource_db.get_share_data('particle number')) + '\n'
-        except:
-            return None
+        # out += '<particle number>\n'
+        # try:
+        #     out += str(gsource_db.get_share_data('particle number')) + '\n'
+        # except:
+        #     return None
 
         out += f'<source name>\n'
         out += f'{s_key}\n'
@@ -247,8 +247,8 @@ class Save_remp():
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'
         out += name + '\n'
-        out += '<particle number>\n'
-        out += str(gsource_db.get_share_data('particle number')) + '\n'
+        # out += '<particle number>\n'
+        # out += str(gsource_db.get_share_data('particle number')) + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<amplitude>\n'
@@ -289,8 +289,8 @@ class Save_remp():
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'
         out += name + '\n'
-        out += '<particle number>\n'
-        out += str(gsource_db.get_share_data('particle number')) + '\n'
+        # out += '<particle number>\n'
+        # out += str(gsource_db.get_share_data('particle number')) + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<amplitude>\n'

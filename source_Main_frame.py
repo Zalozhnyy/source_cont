@@ -100,21 +100,6 @@ class FrameGen(ttk.LabelFrame):
 
         # self.grid(sticky='NWSE')
 
-    def test_creator(self, a):
-        tk.Label(self, text=f'{a}').grid()
-
-    # def remp_source_finder(self):
-    #     if self.path is None:
-    #         return
-    #
-    #     remp_path = os.path.join(self.path, 'remp_sources')
-    #     if not os.path.exists(remp_path):
-    #         return
-    #
-    #     out = DataParcer(remp_path).remp_source_decoder()
-    #
-    #     return out
-
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
         self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
@@ -221,13 +206,13 @@ class FrameGen(ttk.LabelFrame):
         discription.grid(row=0, column=5, columnspan=3, rowspan=5)
 
     def constants_frame(self):
-        self.constants_fr = tk.LabelFrame(self, text='Амплитуда', width=15)
+        self.constants_fr = tk.Frame(self)
         self.constants_fr.grid(row=0, column=0, sticky='NWSE', padx=5, columnspan=3)
 
         self.entry_f_val.set(f'')
         self.entry_f_val.trace('w', lambda name, index, mode: self.__get_amplitude_callback())
 
-        label_f = tk.Label(self.constants_fr, text='Амплитуда, квант')
+        label_f = tk.Label(self.constants_fr, text='Суммарный выход квантов\nиз источника')
         label_f.grid(row=0, column=0, padx=3, sticky='E', pady=3)
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
@@ -305,7 +290,8 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
         self.entry_func_label.grid(row=5, column=2, sticky='W')
 
-        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв временной функции')
+        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить временную\n'
+                                                                'функцию с момента времени:')
         self.obriv_tf_lavel.grid(row=6, column=0, columnspan=2, sticky='W')
         self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_row_callback())
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
@@ -365,7 +351,8 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
         self.entry_func_label.grid(row=5 + int(self.cell_numeric), column=1)
 
-        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Обрыв временной функции')
+        self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить\n'
+                                                                'временную функ с момента вр:')
         self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel), column=0)
         self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_callback())
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,

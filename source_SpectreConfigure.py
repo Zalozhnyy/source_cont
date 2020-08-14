@@ -18,7 +18,7 @@ class SpectreConfigure(tk.Toplevel):
         self.path = path
 
         self.title('Редактор спектра')
-        # self.grab_set()
+        self.grab_set()
 
         self.spectre_frame = None
         self.spectre_path = ''
@@ -553,9 +553,9 @@ class SpectreConfigure(tk.Toplevel):
 
                 self.spectre_entry.append(tmp_entry)
                 self.delete_buttons.append(tk.Button(self.spectre_frame, text='-',
-                                                     command=lambda index=i: self.__delete_entry(index, 1,
+                                                     command=lambda index=i: self.__delete_entry(index, 2,
                                                                                                  column_count + 1)))
-                self.delete_buttons[i].grid(row=1 + i, column=column_count + 1, sticky='W')
+                self.delete_buttons[-1].grid(row=2 + i, column=column_count + 1, sticky='W')
 
             self.sum_energy_part = tk.Label(self.spectre_frame, text='0')
             self.sum_energy_part.grid(row=len(self.spectre_entry) + 2, column=4)
@@ -967,20 +967,23 @@ class SpectreConfigure(tk.Toplevel):
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Точечный':
             labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
-            if self.data_struct.sp_5_type == 1:
+
+            if self.data_struct.sp_5_type == 1 and self.data_struct.spectre_type == 5:
                 self.data_struct.five_sp_convert(rows)
 
-            if self.data_struct.data is None or self.data_struct.spectre_type != 5:
+            elif self.data_struct.data is None or self.data_struct.spectre_type != 5:
                 self.data_struct.create_empty_data((rows, 5))
                 self.data_struct.sp_5_type = 0
+
             else:
                 self.data_struct.change_shape(rows, 5)
 
         if type == 'SP_5' and self.sp_5_combobox.get() == 'Непрерывный':
-            if self.data_struct.sp_5_type == 0:
+
+            if self.data_struct.sp_5_type == 0 and self.data_struct.spectre_type == 5:
                 self.data_struct.five_sp_convert(rows)
 
-            if self.data_struct.data is None or self.data_struct.spectre_type != 5:
+            elif self.data_struct.data is None or self.data_struct.spectre_type != 5:
                 self.data_struct.create_empty_data((rows, 7))
                 self.data_struct.sp_5_type = 1
 
@@ -1069,6 +1072,12 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_frame.destroy()
             self.spectre_entry.clear()
             self.spectre_entry_val.clear()
+
+            for i in self.delete_buttons:
+                i.destroy()
+
+            self.delete_buttons.clear()
+
         except:
             pass
 
@@ -1165,13 +1174,13 @@ class SpectreConfigure(tk.Toplevel):
         All data store in data struct class.
         """
 
-        # perenos_spectre = fd.askopenfilename(title='Выберите файл spectre',
-        #                                      filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-        #
-        # if perenos_spectre == '':
-        #     return
+        perenos_spectre = fd.askopenfilename(title='Выберите файл spectre',
+                                             filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
 
-        perenos_spectre = r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1.txt'
+        if perenos_spectre == '':
+            return
+
+        # perenos_spectre = r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1.txt'
 
         self.data_struct = SpectreDataStructure(perenos_spectre)
         self.data_struct.spectre_type_identifier()
@@ -1185,6 +1194,7 @@ class SpectreConfigure(tk.Toplevel):
 
             self.data_struct.create_empty_data((perenos_data.shape[0] - 1, 7))
             self.data_struct.sp_5_type = 1
+            self.data_struct.spectre_type = 5
 
             for i in range(1, perenos_data.shape[0]):
                 self.data_struct.data[i - 1, 1] = perenos_data[i - 1, 0] * 1e-3
@@ -1205,6 +1215,7 @@ class SpectreConfigure(tk.Toplevel):
 
             self.data_struct.create_empty_data((perenos_data.shape[0], 5))
             self.data_struct.sp_5_type = 0
+            self.data_struct.spectre_type = 5
 
             self.data_struct.data[:, 1] = perenos_data[:, 0] * 1e-3
             self.data_struct.data[:, 2] = perenos_data[:, 1]
@@ -1215,6 +1226,8 @@ class SpectreConfigure(tk.Toplevel):
             labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
             self.spectre_frame_constructor(labels, 'SP_5')
+
+        self.rows_count_val.set(str(self.data_struct.data.shape[0]))
 
     def five_spectre_to_perenos(self):
         """Convert gui from five spectre to perenos spectre"""
@@ -1244,6 +1257,8 @@ class SpectreConfigure(tk.Toplevel):
 
             labels = ['Энергия (кэВ)', 'Доля(не нормируется)']
             self.spectre_frame_constructor(labels, 'CONTINUOUS')
+
+        self.rows_count_val.set(str(self.data_struct.data.shape[0]))
 
         # print(np.sum(self.data_struct.data[:, 1]))
 
@@ -1422,9 +1437,9 @@ if __name__ == '__main__':
 
     # x.open_spectre(use_chose_spectre=r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1 _discr.txt')
 
-    # x.spectre_type_cb = 'SP_5'
-    # x.create_spectre()
-    # x.perenos_to_five_spectre()
+    x.spectre_type_cb = 'SP_5'
+    x.create_spectre()
+    x.perenos_to_five_spectre()
     # x.five_spectre_to_perenos()
 
     root.mainloop()

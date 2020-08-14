@@ -695,14 +695,12 @@ class SpectreOneInterface(tk.Frame):
 
         if count_type == 'phi':
             try:
-                print(len(self.phi_parts_val))
                 self.phi_parts_entry.pop(index)
                 self.phi_angles_entry.pop(index)
                 self.phi_parts_val.pop(index)
                 self.phi_angles_val.pop(index)
                 self.phi_parts_val[index].destroy()
                 self.phi_angles_val[index].destroy()
-                print(len(self.phi_parts_val))
 
             except:
                 pass

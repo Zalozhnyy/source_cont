@@ -13,6 +13,7 @@ from source_Save_for_remp import Save_remp
 from source_Main_frame import FrameGen
 from source_SpectreConfigure import SpectreConfigure
 from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView, MarpleInterface
+from source_PE_SOURCE import PeSource
 
 
 class TreeDataStructure:
@@ -158,13 +159,12 @@ class MainWindow(tk.Frame):
         # self.menubar.add_command(label='test', command=self.test)
 
         self.marple_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="Marple", menu=self.marple_menu, state='disabled')
+        self.menubar.add_cascade(label="Задача обтекания", menu=self.marple_menu, state='disabled')
 
         self.marple_menu.add_command(label="Добавить задачу обтекания", command=self.__add_marple, state='normal')
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
-        self.pechs_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="Pechs", menu=self.pechs_menu, state='normal')
+        self.menubar.add_command(label="Добавить спектр PECHS", state='disabled',command=self.start_pechs)
 
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
@@ -181,6 +181,13 @@ class MainWindow(tk.Frame):
 
         marple_index = self.menubar.index('Задача обтекания')
         self.menubar.entryconfigure(marple_index, state='normal')
+
+        pechs_index = self.menubar.index('Добавить спектр PECHS')
+        self.menubar.entryconfigure(pechs_index, state='normal')
+
+    def start_pechs(self):
+        ex = PeSource(self.path)
+        ex.main_calculation()
 
     def onExit(self):
         self.parent.quit()

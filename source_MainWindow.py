@@ -123,9 +123,20 @@ class MainWindow(tk.Frame):
         self.par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
 
         # self.TOK = DataParcer(self.tok_dir).tok_decoder()
-        self.PL_surf, self.PL_vol, self.PL_bound = DataParser(self.pl_dir).pl_decoder()
-        self.LAY = DataParser(self.lay_dir).lay_decoder()
-        self.PAR = DataParser(self.par_dir).par_decoder()
+        if os.path.exists(self.pl_dir):
+            self.PL_surf, self.PL_vol, self.PL_bound = DataParser(self.pl_dir).pl_decoder()
+        else:
+            self.PL_surf, self.PL_vol, self.PL_bound = None, None, None
+
+        if os.path.exists(self.lay_dir):
+            self.LAY = DataParser(self.lay_dir).lay_decoder()
+        else:
+            self.LAY = DataParser('').return_empty_array((1, 3))
+
+        if os.path.exists(self.par_dir):
+            self.PAR = DataParser(self.par_dir).par_decoder()
+        else:
+            self.PAR = None
 
     def toolbar(self):
         self.parent.title("Sources")
@@ -207,22 +218,6 @@ class MainWindow(tk.Frame):
         self.path = os.path.split(self.prj_path)[0]
         self.check_project()
 
-    def folder_creator(self):
-        dir = self.path
-
-        if not os.path.exists(rf'{dir}/time functions'):
-            os.mkdir(f'{dir}/time functions')
-        if not os.path.exists(f'{dir}/time functions/user configuration'):
-            os.mkdir(os.path.join(f'{dir}/time functions/user configuration'))
-        if not os.path.exists(f'{dir}/time functions/output dicts'):
-            os.mkdir(os.path.join(f'{dir}/time functions/output dicts'))
-
-        if not os.path.exists(f'{dir}/time functions/Gursa'):
-            os.mkdir(os.path.join(f'{dir}/time functions/Gursa'))
-
-        if not os.path.exists(f'{dir}/time functions/TOK'):
-            os.mkdir(os.path.join(f'{dir}/time functions/TOK'))
-
     def check_folder(self):
 
         try:
@@ -258,13 +253,14 @@ class MainWindow(tk.Frame):
             pass
 
         self.file_dict = self.check_folder()
-        if self.file_dict is None:
-            mb.showerror('Project error', f'Файл .PRJ  не найден. Указана неправильная директория\n{self.path}')
-            return
-        set_recent_projects(self.prj_path, get_recent_projects())
+        # for i in self.file_dict.values():
+        #     path = os.path.join(self.path, i)
+        #     if not os.path.exists(path):
+        #         # mb.showerror('Project error', f'Файл PRJ повреждён. Найдены не все необходимые директории.')
+        #         [print(f'{i[0]} -- {i[1]}') for i in self.file_dict.items()]
+        #         return
 
-        # self.folder_creator()  # создаём папку time functions
-        # self.initial()
+        set_recent_projects(self.prj_path, get_recent_projects())
 
         self.notebook = ttk.Notebook(self.parent)
         self.notebook.grid(sticky='NWSE')
@@ -284,6 +280,7 @@ class MainWindow(tk.Frame):
 
                 if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
                     print('Загрузка невозможна. Файл Sources.pkl не найден')
+                    mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
                     return
 
                 with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
@@ -975,6 +972,11 @@ class MainWindow(tk.Frame):
             open_notepad['state'] = 'normal'
 
     def add_part(self, index, name, id):
+
+        if self.PAR is None:
+            print('Файл .PAR не инициализирован')
+            mb.showerror('error', 'Файл .PAR не инициализирован')
+            return
 
         part_list = [i for i in self.PAR.keys()]
 

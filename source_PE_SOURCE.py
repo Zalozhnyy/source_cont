@@ -81,7 +81,7 @@ class PeSource:
             if os.path.exists(materials_path):
                 print(f'{materials_path} exist')
                 photon_values_dir = os.path.join(materials_path, 'mat-air/photon/xtbl.23')
-                # electron_values_dir = os.path.join(materials_path, 'mat-air/electron/xtbl.23')
+                # electron_values_dir = os.path.join(mat_air_path, 'mat-air/electron/xtbl.23')
 
             else:
                 mb.showerror('Dir', f'Директория {materials_path} не найдена.')

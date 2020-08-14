@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as mb
@@ -5,7 +10,6 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog
 import numpy as np
 from scipy import integrate
-import os
 
 from source_Project_reader import DataParser
 from source_Spectre_one_interface import SpectreOneInterface, ScrolledWidget
@@ -63,22 +67,24 @@ class SpectreConfigure(tk.Toplevel):
 
     def pechs_check(self):
 
-        if self.path == '':
-            self.path == os.getcwd()
+        pech_names = ['pechs', 'temp']
+        find_mat_air = False
 
-        if os.path.exists(os.path.join(self.path, r'pechs\materials')):
-            self.materials_path = os.path.join(self.path, r'pechs\materials')
-            print(f'Materials обнаружен в {self.materials_path}')
-            # mb.showinfo('PECHS', f'Materials обнаружен в {self.materials_path}')
+        for name in pech_names:
+            if os.path.exists(os.path.join(self.path, rf'{name}\materials\mat-air')):
+                self.mat_air_path = os.path.join(self.path, r'pechs\materials\mat-air')
+                print(f'Mat_air обнаружен в {self.mat_air_path}')
+                find_mat_air = True
+                break
 
-        else:
-            mb.showinfo('PECHS', 'Папка pechs/materials не обнаружена.\nВыберите папку materials')
-            self.materials_path = fd.askdirectory(title='Выберите папку materials', initialdir=self.path)
-            print(f'Materials обнаружен в {self.materials_path}')
-            if self.materials_path == '':
+        if find_mat_air is False:
+            mb.showinfo('PECHS', 'Папка materials/mat_air не обнаружена.\nВыберите папку mat_air')
+            self.mat_air_path = fd.askdirectory(title='Выберите папку materials', initialdir=self.path)
+            print(f'mat_air обнаружен в {self.mat_air_path}')
+            if self.mat_air_path == '':
                 return 0
 
-        photon_path = os.path.join(self.materials_path, r'mat-air\photon\xtbl.23')
+        photon_path = os.path.join(self.mat_air_path, r'photon\xtbl.23')
         if not os.path.exists(photon_path):
             mb.showerror('PATH', f'Файл xtbl.23 не был найден в дирекории {os.path.normpath(photon_path)}\n'
                                  f'Укажите путь к файлу напрямую')
@@ -1430,20 +1436,18 @@ class SpectreDataStructure:
                         self.data[i][j] = None
 
 
+def onExit():
+    root.quit()
+    root.destroy()
+
+
 if __name__ == '__main__':
     root = tk.Tk()
+    root.geometry('1x1')
 
-    x = SpectreConfigure(parent=root, path=r'C:\work\Test_projects\wpala')
+    root.protocol("WM_DELETE_WINDOW", onExit)
 
-    # x.open_spectre(use_chose_spectre=r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1 _discr.txt')
-
-    x.spectre_type_cb = 'SP_5'
-    x.create_spectre()
-    x.perenos_to_five_spectre()
-    # x.five_spectre_to_perenos()
+    x = SpectreConfigure(parent=root)
+    x.grab_release()
 
     root.mainloop()
-
-    # a = SpectreDataStructure(r'C:\work\Test_projects\wpala\spectr_3_49_norm_na_1.txt')
-    # a.spectre_type_identifier()
-    # print(a.data)

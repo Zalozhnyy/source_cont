@@ -405,6 +405,9 @@ class DataParser:
         out = np.loadtxt(path, skiprows=1, dtype=float) * 1e-3
         return out
 
+    def return_empty_array(self, shape=(0, 0)):
+        return np.zeros(shape)
+
 
 class SpOneReader:
     def __init__(self, path):

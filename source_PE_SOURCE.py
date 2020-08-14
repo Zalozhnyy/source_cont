@@ -224,13 +224,13 @@ class PeSource:
             # self.target_ori = np.array([0, 0, 0])
             self.source_ori = np.array(source)
 
-            z_obj = (float(sub.subtask_struct['altitude']) - float(sub.subtask_struct['source_position']['z'])) * 1e-5
+            z_obj = (float(sub.subtask_struct['altitude']) + float(sub.subtask_struct['source_position']['z'])) * 1e-5
 
             self.target_ori = np.array([0, 0, z_obj])
 
-            self.R0 = ((self.target_ori[0] - self.source_ori[0]) ** 2 + (
-                    self.target_ori[1] - self.source_ori[1]) ** 2 + (
-                               self.target_ori[2] - self.source_ori[2]) ** 2) ** 0.5
+            self.R0 = ((self.target_ori[0] - self.source_ori[0]) ** 2 +
+                       (self.target_ori[1] - self.source_ori[1]) ** 2 +
+                       (self.target_ori[2] - self.source_ori[2]) ** 2) ** 0.5
 
             print(f'source {self.source_ori}')
             print(f'object {self.target_ori}')

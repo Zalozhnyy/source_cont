@@ -524,8 +524,8 @@ class MainWindow(tk.Frame):
                 #         obj.insert_third_level(particle, name, 'spectre', None)
                 #         obj.insert_third_level(particle, name, 'spectre numbers', None)
 
-        for i in self.PL_vol[number]:  # volume78
-            if i != 0 and (type == 7 or type == 8):
+        for i in range(len(self.PL_vol[number])):  # volume78
+            if self.PL_vol[number][i] != 0 and (type == 7 or type == 8):
                 energy_type = f'Объёмный источник частиц №{number} слой №{i}'
                 name = f'Volume78_{number}_{i}'
 
@@ -1150,6 +1150,7 @@ class MainWindow(tk.Frame):
 
             ex.button_open_spectre['state'] = 'disabled'
             ex.button_create_spectre['state'] = 'disabled'
+            ex.spetre_type_cobbobox['state'] = 'disabled'
             ex.open_spectre(use_chose_spectre=sp_path, use_constructor=True)
 
             try:

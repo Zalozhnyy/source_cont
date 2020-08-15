@@ -122,7 +122,7 @@ class SpectreConfigure(tk.Toplevel):
         self.spetre_type_cobbobox.grid(row=0, column=3)
         self.spetre_type_cobbobox.set('Тип спектра')
 
-        self.bind_class(self.spetre_type_cobbobox, "<<ComboboxSelected>>", self.__cb_react)
+        # self.bind_class(self.spetre_type_cobbobox, "<<ComboboxSelected>>", self.__cb_react)
 
     def open_spectre(self, use_constructor=True, use_chose_spectre=None):
         if use_chose_spectre is None:
@@ -145,6 +145,8 @@ class SpectreConfigure(tk.Toplevel):
         if 'SP_TYPE=CONTINUOUS' in lines[0]:
 
             self.spectre_type_cb = 'CONTINUOUS'
+            self.spetre_type_cobbobox.set('CONTINUOUS')
+
             labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
 
             self.data_struct = SpectreDataStructure(self.spectre_path)
@@ -159,6 +161,8 @@ class SpectreConfigure(tk.Toplevel):
         elif 'SP_TYPE=DISCRETE' in lines[0]:
 
             self.spectre_type_cb = 'DISCRETE'
+            self.spetre_type_cobbobox.set('DISCRETE')
+
             labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
 
             self.data_struct = SpectreDataStructure(self.spectre_path)
@@ -191,7 +195,7 @@ class SpectreConfigure(tk.Toplevel):
 
             self.elph = DataParser(self.path).elph_reader()
             self.spectre_type_cb = 'SP_5'
-            self.spetre_type_cobbobox.set(self.spectre_type_cb)
+            self.spetre_type_cobbobox.set('Пятый')
 
             self.data_struct = SpectreDataStructure(self.spectre_path)
             self.data_struct.spectre_type_identifier()
@@ -230,6 +234,8 @@ class SpectreConfigure(tk.Toplevel):
             # mb.showerror('Spectre error', 'Тип спектра не был распознан')
 
     def create_spectre(self):
+        self.__cb_react()
+
         if self.spectre_type_cb is None:
             print('Выберите тип создаваемого спектра')
             return
@@ -288,16 +294,17 @@ class SpectreConfigure(tk.Toplevel):
         self.frame_description.grid(row=3, column=0, sticky="W", padx=10)
 
         # create 5 sp from perenos spectre
-        self.create_from_perenos_button = tk.Button(self.frame_description,
-                                                    text='Преобразовать из спектра переноса',
-                                                    command=self.perenos_to_five_spectre)
-        self.create_from_perenos_button.grid(row=row, column=0, columnspan=12, sticky='NW')
+        if self.spectre_type_cb == 'SP_5':
+            self.create_from_perenos_button = tk.Button(self.frame_description,
+                                                        text='Преобразовать из спектра переноса',
+                                                        command=self.perenos_to_five_spectre)
+            self.create_from_perenos_button.grid(row=row, column=0, columnspan=12, sticky='NW')
 
-        self.create_to_perenos_button = tk.Button(self.frame_description,
-                                                  text='Преобразовать в спектр переноса',
-                                                  command=self.five_spectre_to_perenos)
-        self.create_to_perenos_button.grid(row=row, column=6, columnspan=12, sticky='NW')
-        row += 1
+            self.create_to_perenos_button = tk.Button(self.frame_description,
+                                                      text='Преобразовать в спектр переноса',
+                                                      command=self.five_spectre_to_perenos)
+            self.create_to_perenos_button.grid(row=row, column=6, columnspan=12, sticky='NW')
+            row += 1
 
         # commentary
         commentary_label = tk.Label(self.frame_description, text='Комментарий', justify='left')
@@ -1026,7 +1033,7 @@ class SpectreConfigure(tk.Toplevel):
         #     print('error')
         #     pass
 
-    def __cb_react(self, event):
+    def __cb_react(self):
         self.spectre_type_cb = self.sp_type_dict.get(self.spetre_type_cobbobox.get())
         print(self.spectre_type_cb)
 
@@ -1234,6 +1241,7 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_frame_constructor(labels, 'SP_5')
 
         self.rows_count_val.set(str(self.data_struct.data.shape[0]))
+        self.rows_count_calc['text'] = str(int(self.rows_count_val.get() * int(self.starts_count_val.get())))
 
     def five_spectre_to_perenos(self):
         """Convert gui from five spectre to perenos spectre"""

@@ -72,7 +72,8 @@ class SpectreConfigure(tk.Toplevel):
 
         for name in pech_names:
             if os.path.exists(os.path.join(self.path, rf'{name}\materials\mat-air')):
-                self.mat_air_path = os.path.join(self.path, r'pechs\materials\mat-air')
+                self.mat_air_path = os.path.join(self.path, rf'{name}\materials\mat-air')
+                self.mat_air_path = os.path.normpath(self.mat_air_path)
                 print(f'Mat_air обнаружен в {self.mat_air_path}')
                 find_mat_air = True
                 break

@@ -213,20 +213,25 @@ class PeSource:
             #           sub.subtask_struct['source_position']['y'],
             #           sub.subtask_struct['source_position']['z'])
 
-            source = (sub.subtask_struct['source_position']['x'],
-                      sub.subtask_struct['source_position']['y'],
+            source = ('0',
+                      '0',
                       sub.subtask_struct['altitude'])
 
             source = list(map(float, source))
             source = [i * 10 ** -5 for i in source]
 
+            target = (sub.subtask_struct['source_position']['x'],
+                      sub.subtask_struct['source_position']['y'],
+                      0)
+
+            target = list(map(float, target))
+            target[-1] = float(sub.subtask_struct['altitude']) + float(sub.subtask_struct['source_position']['z'])
+            target = [i * 10 ** -5 for i in target]
+
             # self.source_ori = np.array(source)
             # self.target_ori = np.array([0, 0, 0])
             self.source_ori = np.array(source)
-
-            z_obj = (float(sub.subtask_struct['altitude']) + float(sub.subtask_struct['source_position']['z'])) * 1e-5
-
-            self.target_ori = np.array([0, 0, z_obj])
+            self.target_ori = np.array(target)
 
             self.R0 = ((self.target_ori[0] - self.source_ori[0]) ** 2 +
                        (self.target_ori[1] - self.source_ori[1]) ** 2 +

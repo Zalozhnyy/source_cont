@@ -5,6 +5,7 @@ import os
 import numpy as np
 
 from source_SpectreConfigure import SpectreConfigure
+from source_Dialogs import ProgressBar
 
 
 class SubtaskDecoder:
@@ -45,10 +46,11 @@ class SubtaskDecoder:
 
 
 class PeSource:
-    def __init__(self, path):
+    def __init__(self, path, parent):
         super().__init__()
 
         self.path = path
+        self.parent = parent
 
         self.Energy0 = []
         self.EnergyP = []
@@ -260,8 +262,9 @@ class PeSource:
             self.Energy0 = ar[:, 0]
             self.EnergyP = ar[:, 1]
 
-            self.N = int(round(self.R0) / 10 * 5000)
+            self.N = int(round(self.R0) / 10 * 20000)
             print(f'Число ячеек {self.N}')
+
 
             self._tables()
             self.create_arrays()
@@ -272,9 +275,17 @@ class PeSource:
 
             self.density_calculations()
 
+            pb = ProgressBar(self.parent)
+            one_step = 100 / self.Energy0.shape[0]
+
             for i in range(self.Energy0.shape[0]):
                 er = self.energy_reduction_calculation(self.Energy0[i], self.EnergyP[i])
                 self.out_spectre[i, 0], self.out_spectre[i, 1] = self.Energy0[i], er
+
+                pb.update_progress(one_step)
+
+            pb.update_directly(100)
+            pb.onExit()
 
             print('Расчёт завершен')
 
@@ -362,6 +373,6 @@ if __name__ == '__main__':
     # ex = SpectreDataWithConvertation(path)
     # print(ex.data)
 
-    ex = PeSource(r'C:\work\Test_projects\wpala')
+    ex = PeSource(r'C:\work\Test_projects\wpala', None)
 
     ex.main_calculation()

@@ -242,6 +242,43 @@ class MarpleInterface(tk.Toplevel):
             self.sigma_path = os.path.basename(distribution_file)
 
 
+class ProgressBar(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__()
+
+        self.grab_set()
+        self.focus()
+
+        self.parent = parent
+        self.progress = None
+
+        self.protocol("WM_DELETE_WINDOW", self.onExit)
+
+        self.initUi()
+
+    def initUi(self):
+        self.progress = ttk.Progressbar(self, orient='horizontal',
+                                        length=300, mode='determinate')
+
+        self.progress.pack(fill="x")
+
+        self.percent_text = tk.Label(self, text='0 %')
+        self.percent_text.pack()
+
+    def update_progress(self, one_step_value):
+        self.progress['value'] += one_step_value
+        self.percent_text['text'] = f'{self.progress["value"]} %'
+        self.update()
+
+    def update_directly(self, val):
+        self.progress['value'] += val
+        self.percent_text['text'] = f'{self.progress["value"]} %'
+        self.update()
+
+    def onExit(self):
+        self.destroy()
+
+
 if __name__ == '__main__':
     root = tk.Tk()
 

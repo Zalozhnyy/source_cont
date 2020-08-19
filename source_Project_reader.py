@@ -175,7 +175,7 @@ class DataParser:
                     out_boundaries.update({particle_numbers[i]: np.zeros(6, dtype=int)})
 
             # print(lines_pl[line])
-            return out_surf, out_volume, out_boundaries
+            return out_surf, out_volume, out_boundaries, layers_numbers
 
         except Exception:
             print('Ошибка в чтении файла .PL')
@@ -598,16 +598,17 @@ if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
     # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
     # test_file = r'C:\work\Test_projects\wpala\remp_sources'
-    test_file = r'C:\Users\Nick\Desktop\sp_1_tst'
-    # a = DataParcer(test_file)
-    # # out_surf, out_volume, out_boundaries = a.pl_decoder()
+    test_file = r'C:\work\Test_projects\KAMERA\Ez_Kamera.pl'
+    a = DataParser(test_file)
+    out_surf, out_volume, out_boundaries, numbers = a.pl_decoder()
+    print(numbers)
     # # print(f' surf  {out_surf}')
     # # print(f' vol  {out_volume}')
     # # print(f' bound  {out_boundaries}')
     # x = a.elph_reader()
     # print(x)
 
-    a = SpOneReader(test_file)
-    a.start_read()
-    print(a.energy_angles)
-    print(a.energy_parts)
+    # a = SpOneReader(test_file)
+    # a.start_read()
+    # print(a.energy_angles)
+    # print(a.energy_parts)

@@ -15,6 +15,7 @@ class Save_remp:
         self.marple = marple
 
         self.calc_amplitude = 0.
+        self.saved = False
 
         self.save()
 
@@ -77,15 +78,6 @@ class Save_remp:
                             print(d)
                             return
 
-                    if 'Gursa' in s_key:
-                        a = self.gursa_save(gsource_db, f_key, s_key, name)
-                        out += a
-                        if 'None' in a:
-                            print(f'Введены не все данные в источнике {s_key}')
-                            mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
-                            print(a)
-                            return
-
                     if 'Boundaries' in s_key:
                         a = self.boundaries_save(gsource_db, f_key, s_key, name)
                         out += a
@@ -100,6 +92,8 @@ class Save_remp:
         with open(os.path.join(self.path, 'Sources.pkl'), 'wb') as f:
             pickle.dump(self.db, f)
 
+        self.saved = True
+
     def flux_save(self, gsource_db, f_key, s_key, name):
 
         out = ''
@@ -113,7 +107,7 @@ class Save_remp:
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<layer index>\n'
-        out += f'{s_key.split("_")[-1][0]} {s_key.split("_")[-1][1]}\n'
+        out += f'{s_key.split("_")[-2]} {s_key.split("_")[-1]}\n'
         out += f'<particle index>\n'
         out += f'{s_key.split("_")[2]}\n'
         out += f'<amplitude>\n'
@@ -167,7 +161,7 @@ class Save_remp:
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<layer index>\n'
-        out += f'{s_key.split("_")[-1][0]}\n'
+        out += f'{s_key.split("_")[-1]}\n'
         out += f'<particle index>\n'
         out += f'{s_key.split("_")[1]}\n'
         out += f'<amplitude>\n'
@@ -235,48 +229,6 @@ class Save_remp:
         # out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")}' + '\n'
         out += '<distribution>\n'
         out += f'{gsource_db.get_last_level_data(f_key, s_key, "distribution")}' + '\n'
-
-        out += '\n'
-
-        return out
-
-    def gursa_save(self, gsource_db, f_key, s_key, name):
-        out = ''
-        out += f'{s_key.split("_")[0]}\n'
-        out += '<influence number>\n'
-        out += gsource_db.get_share_data('influence number') + '\n'
-        out += '<influence name>\n'
-        out += name + '\n'
-        # out += '<particle number>\n'
-        # out += str(gsource_db.get_share_data('particle number')) + '\n'
-        out += f'<source name>\n'
-        out += f'{s_key}\n'
-        out += f'<amplitude>\n'
-        out += '{:6g}\n'.format(self.calc_amplitude)
-        out += f'<time function>\n'
-        out += f'{gsource_db.get_share_data("count")}\n'
-        time = ''
-        for i in gsource_db.get_share_data("time"):
-            time += str(i) + ' '
-        out += f'{time}\n'
-        func = ''
-        for i in gsource_db.get_share_data("func"):
-            func += str(i) + ' '
-        out += f'{func}\n'
-        out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
-        out += f'{gsource_db.get_share_data("lag").strip()}\n'
-
-        try:
-            out += f'<spectre>\n'
-            out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre")}' + f'\n'
-        except:
-            out += 'None' + f'\n'
-
-        try:
-            out += f'<spectre number>\n'
-            out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")}' + '\n'
-        except:
-            out += 'None' + f'\n'
 
         out += '\n'
 

@@ -124,9 +124,9 @@ class MainWindow(tk.Frame):
 
         # self.TOK = DataParcer(self.tok_dir).tok_decoder()
         if os.path.exists(self.pl_dir):
-            self.PL_surf, self.PL_vol, self.PL_bound = DataParser(self.pl_dir).pl_decoder()
+            self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = DataParser(self.pl_dir).pl_decoder()
         else:
-            self.PL_surf, self.PL_vol, self.PL_bound = None, None, None
+            self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = None, None, None, None
 
         if os.path.exists(self.lay_dir):
             self.LAY = DataParser(self.lay_dir).lay_decoder()
@@ -197,12 +197,27 @@ class MainWindow(tk.Frame):
         self.menubar.entryconfigure(pechs_index, state='normal')
 
     def start_pechs(self):
-        ex = PeSource(self.path)
+        ex = PeSource(self.path, self.parent)
         ex.main_calculation()
 
     def onExit(self):
-        self.parent.quit()
-        self.parent.destroy()
+        ask = mb.askyesno('Сохранение', 'Сохранить файл?')
+
+        if ask is True:
+            ex = Save_remp(self.marple, self.global_tree_db, self.path)
+
+            if ex.saved is False:
+                ask_exit = mb.askyesno('Сохранение', 'Сохранение невозможно, т.к. не заданы все параметры.\n'
+                                                     'Выйти без сохранения?')
+                if ask_exit is True:
+                    self.parent.quit()
+                    self.parent.destroy()
+
+                elif ask_exit is False:
+                    return
+            elif ex.saved is True:
+                self.parent.quit()
+                self.parent.destroy()
 
     def browse_from_recent(self, path):
         self.prj_path = path
@@ -287,6 +302,7 @@ class MainWindow(tk.Frame):
                     self.global_tree_db = pickle.load(f)
 
                 for i in self.global_tree_db.items():
+                    """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""
                     self.tree_db_delete_old(i[1])
 
                     try:
@@ -343,8 +359,8 @@ class MainWindow(tk.Frame):
                 if self.LAY[cur_lay, 2] == 0:
                     obj.delete_second_level(key)
             if 'Flu' in key:
-                from_l = int(key.split('_')[-1][0])
-                to_l = int(key.split('_')[-1][1])
+                from_l = int(key.split('_')[-2])
+                to_l = int(key.split('_')[-1])
                 if self.PL_surf[part_number][to_l, from_l] == 0:
                     obj.delete_second_level(key)
             if 'Volume' in key:
@@ -371,9 +387,9 @@ class MainWindow(tk.Frame):
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
                 for axis in create_list:
-                    energy_type = f'Ток по оси {axis} слой {i}'
-                    name = f'Current_{axis}_layer_{i}'
-                    d = f'J{axis.upper()}_{i}'
+                    energy_type = f'Ток по оси {axis} слой {self.layer_numbers[i]}'
+                    name = f'Current_{axis}_layer_{self.layer_numbers[i]}'
+                    d = f'J{axis.upper()}_{self.layer_numbers[i]}'
                     obj.insert_second_level('Current', f'{name}', {})
 
                     obj.insert_third_level('Current', f'{name}', 'name', name)
@@ -385,7 +401,7 @@ class MainWindow(tk.Frame):
 
             if self.LAY[i, 2] == 1:
                 energy_type = 'Energy'
-                name = f'Energy_layer_{i}'
+                name = f'Energy_layer_{self.layer_numbers[i]}'
                 obj.insert_second_level('Energy', f'{name}', {})
 
                 obj.insert_third_level('Energy', f'{name}', 'name', name)
@@ -430,9 +446,9 @@ class MainWindow(tk.Frame):
             for i in range(self.LAY.shape[0]):
                 if self.LAY[i, 1] == 1:
                     for axis in create_list:
-                        energy_type = f'Ток по оси {axis} слой {i}'
-                        name = f'Current_{axis}_layer_{i}'
-                        d = f'J{axis.upper()}_{i}'
+                        energy_type = f'Ток по оси {axis} слой {self.layer_numbers[i]}'
+                        name = f'Current_{axis}_layer_{self.layer_numbers[i]}'
+                        d = f'J{axis.upper()}_{self.layer_numbers[i]}'
                         if name in obj.get_second_level_keys('Current'):
                             continue
 
@@ -444,7 +460,7 @@ class MainWindow(tk.Frame):
 
                 if self.LAY[i, 2] == 1:
                     energy_type = 'Energy'
-                    name = f'Energy_layer_{i}'
+                    name = f'Energy_layer_{self.layer_numbers[i]}'
                     if name in obj.get_second_level_keys('Energy'):
                         continue
 
@@ -459,8 +475,8 @@ class MainWindow(tk.Frame):
         for i in range(ar.shape[0]):  # surfCE
             for j in range(0, ar.shape[1]):
                 if ar[i, j] != 0:
-                    energy_type = f'Источник частиц №{number} из {j}-го слоя в {i}-й'
-                    name = f'Flu_e_{number}_{j}{i}'
+                    energy_type = f'Источник частиц №{number} из {self.layer_numbers[j]}-го слоя в {self.layer_numbers[i]}-й'
+                    name = f'Flu_e_{number}_{self.layer_numbers[j]}_{self.layer_numbers[i]}'
 
                     if name in obj.get_second_level_keys(particle):
                         continue
@@ -471,8 +487,8 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
                     obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
 
-                    from_l = name.split('_')[-1][0]
-                    to_l = name.split('_')[-1][1]
+                    from_l = name.split('_')[-2]
+                    to_l = name.split('_')[-1]
                     spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
 
                     if len(spectres) == 6:
@@ -500,8 +516,8 @@ class MainWindow(tk.Frame):
 
         for i in range(len(self.PL_vol[number])):  # volume
             if self.PL_vol[number][i] != 0 and type != 7 and type != 8:
-                energy_type = f'Объёмный источник частиц №{number} слой №{i}'
-                name = f'Volume_{number}_{i}'
+                energy_type = f'Объёмный источник частиц №{number} слой №{self.layer_numbers[i]}'
+                name = f'Volume_{number}_{self.layer_numbers[i]}'
 
                 if name in obj.get_second_level_keys(particle):
                     continue
@@ -526,8 +542,8 @@ class MainWindow(tk.Frame):
 
         for i in range(len(self.PL_vol[number])):  # volume78
             if self.PL_vol[number][i] != 0 and (type == 7 or type == 8):
-                energy_type = f'Объёмный источник частиц №{number} слой №{i}'
-                name = f'Volume78_{number}_{i}'
+                energy_type = f'Объёмный источник частиц №{number} слой №{self.layer_numbers[i]}'
+                name = f'Volume78_{number}_{self.layer_numbers[i]}'
 
                 if name in obj.get_second_level_keys(particle):
                     continue
@@ -1094,12 +1110,12 @@ class MainWindow(tk.Frame):
         self.menubar.entryconfigure(del_index, state='disabled')
 
     def save(self):
-        Save_remp(self.marple, self.global_tree_db, self.path)
+        ex = Save_remp(self.marple, self.global_tree_db, self.path)
 
     def __flux_auto_search(self, name, first_key, second_key, label):
         obj = self.global_tree_db[name]
 
-        from_l = second_key.split('_')[-1][0]
+        from_l = second_key.split('_')[-2][0]
         to_l = second_key.split('_')[-1][1]
         number = self.PAR[first_key]['number']
         spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)

@@ -352,7 +352,7 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_label.grid(row=5 + int(self.cell_numeric), column=1)
 
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить\n'
-                                                                'временную функ с момента вр:')
+                                                                'временную ф-ю с момента вр:')
         self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel), column=0)
         self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_callback())
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,

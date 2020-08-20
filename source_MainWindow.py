@@ -215,9 +215,10 @@ class MainWindow(tk.Frame):
 
                 elif ask_exit is False:
                     return
-            elif ex.saved is True:
-                self.parent.quit()
-                self.parent.destroy()
+
+        elif ask is False:
+            self.parent.quit()
+            self.parent.destroy()
 
     def browse_from_recent(self, path):
         self.prj_path = path

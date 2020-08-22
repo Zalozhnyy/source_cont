@@ -157,7 +157,7 @@ class FrameGen(ttk.LabelFrame):
             from_row = False
 
         self.cf = ScrollFrame(self)
-        self.cf.grid(row=4, column=0)
+        self.cf.grid(row=4, column=0, padx=25)
 
         self.entry_func_fr = tk.LabelFrame(self.cf.viewPort, text='Временная функция')
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, rowspan=20)
@@ -352,7 +352,7 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_label.grid(row=5 + int(self.cell_numeric), column=1)
 
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить\n'
-                                                                'временную ф-ю с момента вр:')
+                                                                'временную ф-ю с момента времени:')
         self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel), column=0)
         self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_callback())
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
@@ -517,7 +517,7 @@ class FrameGen(ttk.LabelFrame):
             i.unbind_all('<Shift-KeyPress Up>')
             i.destroy()
 
-        print(index)
+        # print(index)
 
         self.entry_time.clear()
         self.entry_func.clear()
@@ -712,16 +712,16 @@ class FrameGen(ttk.LabelFrame):
 
         self.entry_time.configure(bg='white')
         self.entry_func.configure(bg='white')
-        self.time_list = time_list
-        self.func_list = func_list
+        self.time_list = list(time_list)
+        self.func_list = list(func_list)
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
-        self.db.insert_share_data('func_full', self.backup_fu)
-        self.db.insert_share_data('time_full', self.backup_tf)
+        self.db.insert_share_data('func_full', list(self.backup_fu))
+        self.db.insert_share_data('time_full', list(self.backup_tf))
         self.db.insert_share_data('tf_break', self.user_timeset)
         # print(f'Backup time {self.backup_tf}')
         # print(f'Backup func {self.backup_fu}')
@@ -778,16 +778,16 @@ class FrameGen(ttk.LabelFrame):
         if time_list is None:
             return
 
-        self.time_list = time_list
-        self.func_list = func_list
+        self.time_list = list(time_list)
+        self.func_list = list(func_list)
 
         print('time = ', self.time_list)
         print('func = ', self.func_list)
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
-        self.db.insert_share_data('func_full', self.backup_fu)
-        self.db.insert_share_data('time_full', self.backup_tf)
+        self.db.insert_share_data('func_full', list(self.backup_fu))
+        self.db.insert_share_data('time_full', list(self.backup_tf))
         self.db.insert_share_data('tf_break', self.user_timeset)
         # print(f'Backup time {self.backup_tf}')
         # print(f'Backup func {self.backup_fu}')
@@ -1081,7 +1081,7 @@ class FrameGen(ttk.LabelFrame):
 
         time = self.time_entry_vel.get().split()
         func = self.func_entry_vel.get().split()
-        
+
         if len(time) != len(func):
             print('Размерности не сопадают, сортировка невозможна')
             return
@@ -1150,7 +1150,7 @@ class ScrollFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)  # create a frame (self)
 
-        self.canvas = tk.Canvas(self, borderwidth=0, width=350, height=600)  # place canvas on self
+        self.canvas = tk.Canvas(self, borderwidth=0, width=420, height=600)  # place canvas on self
         self.viewPort = tk.Frame(self.canvas)  # place a frame on the canvas, this frame will hold the child widgets
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)  # place a scrollbar on self
         self.canvas.configure(yscrollcommand=self.vsb.set)  # attach scrollbar action to scroll of canvas

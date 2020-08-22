@@ -81,6 +81,9 @@ class TreeDataStructure:
     def get_share_data(self, key):
         return self.__obj_structure['share_data'][key]
 
+    def get_dict_object(self):
+        return self.__obj_structure
+
 
 class MainWindow(tk.Frame):
     def __init__(self, parent, path=None, projectfilename=None):
@@ -200,7 +203,53 @@ class MainWindow(tk.Frame):
         ex = PeSource(self.path, self.parent)
         ex.main_calculation()
 
+    def check_saved_ds(self, db, saved_db):
+        same = True
+        for key in saved_db.keys():
+            if db[key].get_dict_object() != saved_db[key].get_dict_object():
+                same = False
+                return same
+        return same
+
+    def set_lag(self, load):
+        if load is True:
+            for i in self.global_tree_db.items():
+                load_pech_path = i[1].get_share_data('pechs path')
+
+                if load_pech_path is None:
+                    self.lag, self._pechs_path = DataParser(self.path).pech_check()
+                    return
+
+                if os.path.exists(load_pech_path):
+                    self.lag = DataParser('').pech_check_utility(load_pech_path)
+                else:
+                    mb.showerror('Ошибка загрузки lag/parameters',
+                                 'Загружаемый путь к <pechs/initials/source> не существует')
+                    self.lag, self._pechs_path = DataParser(self.path).pech_check()
+                break
+
+            for i in self.global_tree_db.items():
+                i[1].insert_share_data('pechs path', self._pechs_path)
+                i[1].insert_share_data('lag', self.lag)
+
+        elif load is False:
+            self.lag, self._pechs_path = DataParser(self.path).pech_check()
+
     def onExit(self):
+        if len(self.global_tree_db) == 0:
+            self.parent.quit()
+            self.parent.destroy()
+
+        if 'Sources.pkl' in os.listdir(self.path):
+            with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
+                load_db = pickle.load(f)
+
+            if load_db.keys() == self.global_tree_db.keys():
+                if self.check_saved_ds(load_db, self.global_tree_db) is True:
+                    self.parent.quit()
+                    self.parent.destroy()
+                    return
+
         ask = mb.askyesno('Сохранение', 'Сохранить файл?')
 
         if ask is True:
@@ -215,6 +264,10 @@ class MainWindow(tk.Frame):
 
                 elif ask_exit is False:
                     return
+
+            elif ex.saved is True:
+                self.parent.quit()
+                self.parent.destroy()
 
         elif ask is False:
             self.parent.quit()
@@ -282,7 +335,6 @@ class MainWindow(tk.Frame):
         self.notebook.grid(sticky='NWSE')
 
         self.from_project_reader()
-        self.lag = DataParser(self.path).pech_check()
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
 
         if 'remp_sources' in os.listdir(self.path):
@@ -311,6 +363,13 @@ class MainWindow(tk.Frame):
                     except KeyError:
                         part_number = None
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
+
+                self.set_lag(True)
+
+            elif ask is False:
+                self.set_lag(False)
+        else:
+            self.set_lag(False)
 
         self.menubar_activate()
 
@@ -384,6 +443,7 @@ class MainWindow(tk.Frame):
         create_list = ['x', 'y', 'z']
         obj.insert_share_data('lag', self.lag)
         obj.insert_share_data('influence number', str(self.global_count_gsources))
+        obj.insert_share_data('pechs path', self._pechs_path)
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
@@ -842,8 +902,10 @@ class MainWindow(tk.Frame):
                                                                        create=True))
         create_sp.grid(row=3, column=5, sticky='E', padx=20, pady=3)
 
-        d_text = 'Подсказка:\nВыберите один файл:\n' \
-                 'тип 0, тип 1, тип 5\n' \
+        d_text = 'Подсказка:\nВыберите один из файлов:\n' \
+                 'типа 0 - спектр фиксированной генерации частиц;\n' \
+                 'типа 1 - спектр разыгрываемой генерации частиц;\n' \
+                 'типа 5 - упрощённый спектр учёта переноса ИИ;\n' \
                  'Для типов 0, 1 и 5 доступно создание'
 
         description_label = tk.Label(fr_data, text=d_text, justify='left')

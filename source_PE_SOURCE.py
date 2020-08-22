@@ -262,9 +262,9 @@ class PeSource:
             self.Energy0 = ar[:, 0]
             self.EnergyP = ar[:, 1]
 
-            self.N = int(round(self.R0) / 10 * 20000)
-            print(f'Число ячеек {self.N}')
-
+            self.N = int(round(self.R0) / 4000 * 2000000)
+            print(f'ШАГ {self.R0 / 4000}')
+            # print(f'Число ячеек {self.N}')
 
             self._tables()
             self.create_arrays()

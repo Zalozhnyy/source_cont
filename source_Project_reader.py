@@ -304,7 +304,7 @@ class DataParser:
         return out
 
     def pech_check(self):
-        self.source_path = os.path.join(self.path, r'pechs/initials/source')
+        self.source_path = os.path.normpath((os.path.join(self.path, r'pechs/initials/source')))
 
         if os.path.exists(self.source_path):
             lag = self.pech_check_utility(self.source_path)
@@ -323,10 +323,10 @@ class DataParser:
                 if self.source_path == '':
                     mb.showinfo('Info', fr'lag/parameters равен 0')
                     self.source_path = None
-                    return '0'
+                    return '0', self.source_path
                 lag = self.pech_check_utility(self.source_path)
 
-        return lag
+        return lag, self.source_path
 
     def pech_check_utility(self, path):
         with open(path, 'r', encoding='utf-8') as file:
@@ -602,6 +602,9 @@ if __name__ == '__main__':
     a = DataParser(test_file)
     out_surf, out_volume, out_boundaries, numbers = a.pl_decoder()
     print(numbers)
+
+    p_file = r'C:\work\Test_projects\wpala\pechs\initials\source'
+    print(DataParser('').pech_check_utility(p_file))
     # # print(f' surf  {out_surf}')
     # # print(f' vol  {out_volume}')
     # # print(f' bound  {out_boundaries}')

@@ -267,11 +267,11 @@ class ProgressBar(tk.Toplevel):
 
     def update_progress(self, one_step_value):
         self.progress['value'] += one_step_value
-        self.percent_text['text'] = f'{self.progress["value"]} %'
+        self.percent_text['text'] = '{:d} %'.format(int(self.progress["value"]))
         self.update()
 
     def update_directly(self, val):
-        self.progress['value'] += val
+        self.progress['value'] = val
         self.percent_text['text'] = f'{self.progress["value"]} %'
         self.update()
 

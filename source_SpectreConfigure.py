@@ -36,9 +36,9 @@ class SpectreConfigure(tk.Toplevel):
         self.spectre_type_cb = None
         self.sp_type_dict = {'Фиксированный': 'SP_0',
                              'Разыгрывание': 'SP_1',
-                             'Пятый': 'SP_5',
-                             'DISCRETE': 'DISCRETE',
-                             'CONTINUOUS': 'CONTINUOUS'}
+                             'Упрощённый перенос ИИ': 'SP_5',
+                             'Дискретный': 'DISCRETE',
+                             'Непрерывный': 'CONTINUOUS'}
 
         self._sp_zero_form = ['Пример фиксированного спектра',
                               'Номер спектра',
@@ -116,9 +116,10 @@ class SpectreConfigure(tk.Toplevel):
         self.save_as_button = tk.Button(self, text='Сохранить как', command=lambda: self._save_data(True), width=13)
         self.save_as_button.grid(row=2, column=1, pady=3, padx=3, sticky='WN')
 
-        self.spectre_type_combobox_values = ['Фиксированный', 'Разыгрывание', 'Пятый', 'DISCRETE', 'CONTINUOUS']
+        self.spectre_type_combobox_values = ['Фиксированный', 'Разыгрывание', 'Упрощённый перенос ИИ', 'Дискретный',
+                                             'Непрерывный']
         self.spetre_type_cobbobox = ttk.Combobox(self, value=[val for val in self.spectre_type_combobox_values],
-                                                 width=13,
+                                                 width=20,
                                                  state='readonly')
         self.spetre_type_cobbobox.grid(row=0, column=3)
         self.spetre_type_cobbobox.set('Тип спектра')

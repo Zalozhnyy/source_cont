@@ -180,7 +180,7 @@ class MarpleInterface(tk.Toplevel):
         sigma_but.grid(row=1, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
 
         title = 'Выберите файл степени ионизации marple'
-        ion_but = tk.Button(self, text='Выбрать стпень ионизации', width=28,
+        ion_but = tk.Button(self, text='Выбрать степень ионизации', width=28,
                             command=lambda: self.__choice_file(ion_label, 'ion', title))
         ion_but.grid(row=2, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
 

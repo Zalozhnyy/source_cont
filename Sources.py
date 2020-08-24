@@ -8,7 +8,7 @@ from source_MainWindow import MainWindow
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.geometry('1200x800')
+    root.geometry('1350x800')
 
     try:
         print(f'Проект {projectfilename}')

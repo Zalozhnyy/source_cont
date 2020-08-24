@@ -108,12 +108,6 @@ class PeSource:
 
     def geometry_calculations(self):
 
-        Lx = self.target_ori[0] - self.source_ori[0]
-        Ly = self.target_ori[1] - self.source_ori[1]
-        Lz = self.target_ori[2] - self.source_ori[2]
-        dx = Lx / self.N
-        dy = Ly / self.N
-        dz = Lz / self.N
         PT = np.linspace(0, 1, self.N)
 
         for i in range(len(self.X)):
@@ -262,9 +256,17 @@ class PeSource:
             self.Energy0 = ar[:, 0]
             self.EnergyP = ar[:, 1]
 
+            if self.source_ori[-1] == self.target_ori[-1]:
+                mb.showerror('SUBTASK info', 'Высота источника и объекта совпадают, спектр не будет ослаблен')
+                self.out_spectre = np.column_stack((self.Energy0, self.EnergyP))
+                self.save()
+                return
+
             self.N = int(round(self.R0) / 4000 * 2000000)
+            if self.N < 1000:
+                self.N = 1000
             print(f'ШАГ {self.R0 / 4000}')
-            # print(f'Число ячеек {self.N}')
+            print(f'Число ячеек {self.N}')
 
             self._tables()
             self.create_arrays()

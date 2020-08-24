@@ -239,6 +239,7 @@ class MainWindow(tk.Frame):
         if len(self.global_tree_db) == 0:
             self.parent.quit()
             self.parent.destroy()
+            return
 
         if 'Sources.pkl' in os.listdir(self.path):
             with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
@@ -261,6 +262,7 @@ class MainWindow(tk.Frame):
                 if ask_exit is True:
                     self.parent.quit()
                     self.parent.destroy()
+                    return
 
                 elif ask_exit is False:
                     return
@@ -268,10 +270,12 @@ class MainWindow(tk.Frame):
             elif ex.saved is True:
                 self.parent.quit()
                 self.parent.destroy()
+                return
 
         elif ask is False:
             self.parent.quit()
             self.parent.destroy()
+            return
 
     def browse_from_recent(self, path):
         self.prj_path = path
@@ -322,12 +326,6 @@ class MainWindow(tk.Frame):
             pass
 
         self.file_dict = self.check_folder()
-        # for i in self.file_dict.values():
-        #     path = os.path.join(self.path, i)
-        #     if not os.path.exists(path):
-        #         # mb.showerror('Project error', f'Файл PRJ повреждён. Найдены не все необходимые директории.')
-        #         [print(f'{i[0]} -- {i[1]}') for i in self.file_dict.items()]
-        #         return
 
         set_recent_projects(self.prj_path, get_recent_projects())
 
@@ -349,6 +347,7 @@ class MainWindow(tk.Frame):
                 if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
                     print('Загрузка невозможна. Файл Sources.pkl не найден')
                     mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
+                    self.menubar_activate()
                     return
 
                 with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
@@ -1230,12 +1229,12 @@ class MainWindow(tk.Frame):
             ex.button_open_spectre['state'] = 'disabled'
             ex.button_create_spectre['state'] = 'disabled'
             ex.spetre_type_cobbobox['state'] = 'disabled'
+
             ex.open_spectre(use_chose_spectre=sp_path, use_constructor=True)
 
-            try:
-                self.wait_window(ex)
-            except:
-                pass
+            ex.spectre_power['state'] = 'disabled'
+
+            self.wait_window(ex)
 
             file_name, number, sp_type = self.__read_spectre(sp_path)
             if file_name is None:

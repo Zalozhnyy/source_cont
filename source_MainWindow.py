@@ -44,11 +44,7 @@ class TreeDataStructure:
                                                    'tf_break': None})
 
     def insert_share_data(self, key, value):
-        # if key in self.__obj_structure['share_data'].keys():
-        #     print(f'Ключ {key} был перезаписан')
         self.__obj_structure['share_data'].update({key: value})
-
-        # print(self.__obj_structure['share_data'].values())
 
     def insert_first_level(self, key):
         self.__obj_structure[self.obj_name].update({key: {}})
@@ -89,6 +85,7 @@ class MainWindow(tk.Frame):
     def __init__(self, parent, path=None, projectfilename=None):
         super().__init__(parent)
         self.parent = parent
+        self.path = None
 
         self.parent.protocol("WM_DELETE_WINDOW", self.onExit)
 
@@ -106,6 +103,8 @@ class MainWindow(tk.Frame):
         self.remp_source_exist = False
 
         self.marple = None
+
+        self._pechs_path = None
 
         try:
             if projectfilename is not None:
@@ -222,6 +221,7 @@ class MainWindow(tk.Frame):
 
                 if os.path.exists(load_pech_path):
                     self.lag = DataParser('').pech_check_utility(load_pech_path)
+                    self._pechs_path = load_pech_path
                 else:
                     mb.showerror('Ошибка загрузки lag/parameters',
                                  'Загружаемый путь к <pechs/initials/source> не существует')
@@ -229,6 +229,7 @@ class MainWindow(tk.Frame):
                 break
 
             for i in self.global_tree_db.items():
+                print(f'pech path {self._pechs_path}')
                 i[1].insert_share_data('pechs path', self._pechs_path)
                 i[1].insert_share_data('lag', self.lag)
 
@@ -279,7 +280,7 @@ class MainWindow(tk.Frame):
 
     def browse_from_recent(self, path):
         self.prj_path = path
-        self.path = os.path.split(self.prj_path)[0]
+        self.path = os.path.dirname(self.prj_path)
         self.check_project()
 
     def browse_folder(self):
@@ -288,7 +289,7 @@ class MainWindow(tk.Frame):
         if self.prj_path == '' or self.prj_path is None:
             return None
 
-        self.path = os.path.split(self.prj_path)[0]
+        self.path = os.path.dirname(self.prj_path)
         self.check_project()
 
     def check_folder(self):

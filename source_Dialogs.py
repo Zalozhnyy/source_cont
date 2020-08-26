@@ -279,6 +279,60 @@ class ProgressBar(tk.Toplevel):
         self.destroy()
 
 
+class ShowDuplicateSpectreNumbers(tk.Toplevel):
+    def __init__(self, db):
+        super().__init__()
+
+        self.focus()
+
+        self.title = 'Повторяющиеся номера спектров'
+        self.resizable(width=False, height=False)
+
+        self.db = db
+        self.protocol("WM_DELETE_WINDOW", self.onExit)
+
+        self.initUi()
+
+    def onExit(self):
+        self.destroy()
+
+    def initUi(self):
+        self.sp_numbers_frame = ttk.Labelframe(self, text='Повторяющиеся номера спектров')
+        self.sp_numbers_frame.pack(side='left', fill='both', padx=10)
+
+        self.spectres_listbox = tk.Listbox(self.sp_numbers_frame)
+        self.spectres_listbox.pack(side='left', fill='both')
+
+        self.spectres_listbox.bind("<<ListboxSelect>>", self.set_sources_to_canvas, "+")
+
+        self.sources_frame = ttk.Labelframe(self, text='Источники')
+        self.sources_frame.pack(side='left', fill='both', padx=10)
+
+        self.sources_canvas = tk.Canvas(self.sources_frame)
+        self.sources_canvas.pack(side='left', fill='both')
+
+        self.set_listbox()
+
+    def set_listbox(self):
+        for key in self.db.keys():
+            self.spectres_listbox.insert(tk.END, key)
+
+    def set_sources_to_canvas(self, event):
+        key = self.spectres_listbox.get(self.spectres_listbox.curselection())
+
+        l = self.sources_canvas.winfo_children()
+        try:
+            for label in l:
+                label.pack_forget()
+                label.destroy()
+        except:
+            pass
+
+        for val in self.db[key]:
+            t = '--'.join(val)
+            tk.Label(self.sources_canvas, text=t).pack(fill='both')
+
+
 if __name__ == '__main__':
     root = tk.Tk()
 

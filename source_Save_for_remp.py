@@ -6,6 +6,8 @@ from scipy import integrate
 import os
 import pickle
 
+from source_Dialogs import ShowDuplicateSpectreNumbers
+
 
 class Save_remp:
     def __init__(self, marple, data_object=None, path=None):
@@ -307,7 +309,7 @@ class Save_remp:
         return ampl_save
 
     def numbers_control(self):
-        numbers = {}
+        numbers = []
         for item in self.db.items():
             gsource_db = item[1]
             name = item[0]
@@ -318,25 +320,54 @@ class Save_remp:
                         continue
 
                     spectre = gsource_db.get_last_level_data(f_key, s_key, "spectre")
-                    spectre_numbers = gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")
+                    spectre_number = gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")
 
                     if spectre is None:
                         print(f'Не выбраны данные в {name} {f_key} {s_key}')
                         return
 
-                    if type(spectre) is list:
-                        for i in range(len(spectre)):
-                            if spectre_numbers[i] not in numbers.keys():
-                                numbers.update({spectre_numbers[i]: f'{name}  {f_key}  {s_key}'})
-
-                            else:
-                                print(
-                                    f'Совпадают номера спектра ({spectre_numbers[i]}) у источника: {name}  {f_key}  {s_key} и источника {numbers[spectre_numbers[i]]}')
+                    if type(spectre_number) is list:
+                        for i in range(len(spectre_number)):
+                            numbers.append([int(spectre_number[i]), [name, f_key, s_key]])
 
                     else:
-                        if spectre_numbers not in numbers.keys():
-                            numbers.update({spectre_numbers: f'{name}  {f_key}  {s_key}'})
+                        numbers.append([spectre_number, [name, f_key, s_key]])
 
-                        else:
-                            print(
-                                f'Совпадают номера спектра ({spectre_numbers}) у источника: {name}  {f_key}  {s_key} и источника {numbers[spectre_numbers]}')
+        e_numbers = []
+        for i in range(len(numbers)):
+            e_numbers.append(numbers[i][0])
+
+        if len(e_numbers) == len(set(e_numbers)):  # нет повторяющихся элементов
+            return
+
+        re_numbers = {}  # словарь хранящий источники с одинаковыми номерами спектров
+        setarr = sorted(set(e_numbers))
+        for i, x in enumerate(setarr):
+
+            n = x
+
+            val_for_dict = []
+            for j in range(len(numbers)):
+                if n == numbers[j][0]:
+                    val_for_dict.append(numbers[j][1])
+
+            re_numbers.update({n: val_for_dict})
+
+        if len(re_numbers) != 0:
+            ask = mb.askyesno('Внимание', 'Обнаружены одинаковые номера спектров.\n'
+                                          'Показать подробности?')
+            if ask is True:
+                ex = ShowDuplicateSpectreNumbers(re_numbers)
+
+
+
+
+if __name__ == '__main__':
+    import pickle
+
+    path = r'C:\work\Test_projects\wpala'
+
+    with open(os.path.join(path, 'Sources.pkl'), 'rb') as f:
+        db = pickle.load(f)
+
+    ex = Save_remp(None, db, path)

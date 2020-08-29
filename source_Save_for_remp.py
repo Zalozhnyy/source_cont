@@ -284,6 +284,8 @@ class Save_remp:
         out += 'Marple_sigma\n'
         out += '<distribution>\n'
         out += f'{self.marple["sigma"]}\n'
+        out += '\n'
+
         out += 'Marple_ionization\n'
         out += '<distribution>\n'
         out += f'{self.marple["ion"]}\n'

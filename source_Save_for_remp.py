@@ -281,10 +281,11 @@ class Save_remp:
 
     def save_marple(self):
         out = ''
-        out += 'Marple\n'
-        out += '<sigma>\n'
+        out += 'Marple_sigma\n'
+        out += '<distribution>\n'
         out += f'{self.marple["sigma"]}\n'
-        out += '<ionization>\n'
+        out += 'Marple_ionization\n'
+        out += '<distribution>\n'
         out += f'{self.marple["ion"]}\n'
         out += '\n'
 
@@ -358,8 +359,6 @@ class Save_remp:
                                           'Показать подробности?')
             if ask is True:
                 ex = ShowDuplicateSpectreNumbers(re_numbers)
-
-
 
 
 if __name__ == '__main__':

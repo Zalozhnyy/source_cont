@@ -61,6 +61,8 @@ class PeSource:
         self.target_ori = []
         self.source_ori = []
 
+        self.photon_values = None
+
     def delta_R(self, DOT0, DOT1):
         r = ((DOT0[0] - DOT1[0]) ** 2 + (DOT0[1] - DOT1[1]) ** 2 + (DOT0[2] - DOT1[2]) ** 2) ** 0.5
         return r
@@ -77,7 +79,7 @@ class PeSource:
     def _tables(self):
         """Find directory pechs/materials and get photon data."""
 
-        materials_path = os.path.join(self.path, 'pechs\materials')
+        materials_path = os.path.normpath(os.path.join(self.path, 'materials'))
 
         try:
             if os.path.exists(materials_path):
@@ -269,6 +271,8 @@ class PeSource:
             print(f'Число ячеек {self.N}')
 
             self._tables()
+            if self.photon_values is None:
+                return
             self.create_arrays()
 
             print('Расчёт начат')

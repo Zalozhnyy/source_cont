@@ -67,16 +67,15 @@ class SpectreConfigure(tk.Toplevel):
 
     def pechs_check(self):
 
-        pech_names = ['pechs', 'temp']
+        # pech_names = ['pechs', 'temp']
         find_mat_air = False
 
-        for name in pech_names:
-            if os.path.exists(os.path.join(self.path, rf'{name}\materials\mat-air')):
-                self.mat_air_path = os.path.join(self.path, rf'{name}\materials\mat-air')
-                self.mat_air_path = os.path.normpath(self.mat_air_path)
-                print(f'Mat_air обнаружен в {self.mat_air_path}')
-                find_mat_air = True
-                break
+        # for name in pech_names:
+        if os.path.exists(os.path.join(self.path, r'materials\mat-air')):
+            self.mat_air_path = os.path.join(self.path, r'materials\mat-air')
+            self.mat_air_path = os.path.normpath(self.mat_air_path)
+            print(f'Mat_air обнаружен в {self.mat_air_path}')
+            find_mat_air = True
 
         if find_mat_air is False:
             mb.showinfo('PECHS', 'Папка materials/mat_air не обнаружена.\nВыберите папку mat_air')
@@ -1457,7 +1456,7 @@ if __name__ == '__main__':
 
     root.protocol("WM_DELETE_WINDOW", onExit)
 
-    x = SpectreConfigure(parent=root)
+    x = SpectreConfigure(parent=root,path=r'C:\work\Test_projects\wpala')
     x.grab_release()
 
     root.mainloop()

@@ -189,7 +189,7 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_frame_constructor(labels, 'SP_0')
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_0', labels, 5))
 
-        elif 'Номер спектра' in lines[1] and lines[6].strip() == '5':
+        elif 'Номер спектра' in lines[1] and lines[4].strip() == '5':
             check = self.pechs_check()
             if check == 0:
                 return
@@ -225,7 +225,6 @@ class SpectreConfigure(tk.Toplevel):
 
             self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
 
-
         else:
             f = self.spectre_path
             osCommandString = f"notepad.exe {f}"
@@ -233,6 +232,8 @@ class SpectreConfigure(tk.Toplevel):
             self.destroy()
 
             # mb.showerror('Spectre error', 'Тип спектра не был распознан')
+
+        self.__starts_count_change()
 
     def create_spectre(self):
         self.__cb_react()
@@ -280,6 +281,8 @@ class SpectreConfigure(tk.Toplevel):
             self.data_struct.spectre_type = 'CONTINUOUS'
 
             self.description_discrete_cont()
+
+        self.__starts_count_change()
 
     def description_sp_zero(self):
 
@@ -329,17 +332,18 @@ class SpectreConfigure(tk.Toplevel):
         self.spectre_number.grid(row=row, column=0, columnspan=12, sticky='NW')
         row += 1
 
-        # Power
-        p_t = 'Мощность спектра (шт/см\u00b2/с)- для поверхностных, (шт/см\u00b3/с)- для объемных'
-        power_label = tk.Label(self.frame_description, text=p_t, justify='left')
-        power_label.grid(row=row, column=0, columnspan=12, sticky='NW')
-        row += 1
+        if self.spectre_type_cb != 'SP_5':
+            # Power
+            p_t = 'Мощность спектра (шт/см\u00b2/с)- для поверхностных, (шт/см\u00b3/с)- для объемных'
+            power_label = tk.Label(self.frame_description, text=p_t, justify='left')
+            power_label.grid(row=row, column=0, columnspan=12, sticky='NW')
+            row += 1
 
-        self.spectre_power_val = tk.StringVar()
-        self.spectre_power_val.set('1')
-        self.spectre_power = tk.Entry(self.frame_description, textvariable=self.spectre_power_val, width=10)
-        self.spectre_power.grid(row=row, column=0, columnspan=12, sticky='NW')
-        row += 1
+            self.spectre_power_val = tk.StringVar()
+            self.spectre_power_val.set('1')
+            self.spectre_power = tk.Entry(self.frame_description, textvariable=self.spectre_power_val, width=10)
+            self.spectre_power.grid(row=row, column=0, columnspan=12, sticky='NW')
+            row += 1
 
         self.spectre_type_val = tk.StringVar()
         self.spectre_type_val.set(sp_t[self.spectre_type_cb])
@@ -439,7 +443,10 @@ class SpectreConfigure(tk.Toplevel):
         self.spectre_note_val.set(self.data_struct.description)
         self.spectre_number_val.set(str(self.data_struct.sp_number))
         self.spectre_number_val.set(str(self.data_struct.sp_number))
-        self.spectre_power_val.set(str(self.data_struct.sp_power))
+
+        if self.data_struct.spectre_type != 5:
+            self.spectre_power_val.set(str(self.data_struct.sp_power))
+
         self.starts_count_val.set(str(self.data_struct.starts_count))
 
         self.rows_count_val.set(str(self.data_struct.data.shape[0]))
@@ -771,9 +778,6 @@ class SpectreConfigure(tk.Toplevel):
             type_decode = {'Точечный': 0, 'Непрерывный': 1}
 
             out_header = self._sp_zero_form.copy()
-            if self.spectre_power_val.get() == '':
-                mb.showerror('SAVE', 'Не указана мощность спектра')
-                return
             if self.spectre_number_val.get() == '':
                 mb.showerror('save', 'Не указан номер спектра')
                 return
@@ -788,8 +792,6 @@ class SpectreConfigure(tk.Toplevel):
 
             out_header[0] = self.spectre_note_val.get()
             out_header[2] = self.spectre_number_val.get()
-            out_header[3] = 'Мощность спектра (шт/см**2/с)- для поверхностных, (шт/см**3/с)- для объемных'
-            out_header[4] = self.spectre_power_val.get()
             out_header[6] = f'{decode_number[self.spectre_type_cb]}'
             out_header[8] = self.rows_count_calc['text']
             out_header[10] = self.starts_count_val.get()
@@ -797,6 +799,9 @@ class SpectreConfigure(tk.Toplevel):
             out_header.insert(13, 'Вид спектра (0-точечный ,1-непрерывный)')
             s_type = type_decode[self.sp_5_combobox.get()]
             out_header.insert(14, str(s_type))
+
+            out_header.pop(4)
+            out_header.pop(3)
 
             if s_type == 0:
                 out_header[
@@ -1050,6 +1055,7 @@ class SpectreConfigure(tk.Toplevel):
 
         except:
             print('starts_count_val error')
+            self.rows_count_calc['text'] = f'{0}'
 
     def __destroy_frames(self):
 
@@ -1303,6 +1309,10 @@ class SpectreDataStructure:
         elif 'SP_TYPE=DISCRETE' in lines[0]:
             self.spectre_type = 'DISCRETE'
 
+        elif 'Тип спектра' in lines[3]:
+
+            self.spectre_type = int(lines[4].strip())
+
         else:
             try:
                 self.spectre_type = int(lines[6].strip())
@@ -1333,12 +1343,12 @@ class SpectreDataStructure:
         if self.spectre_type == 5:
             self.description = lines[0].strip()
             self.sp_number = int(lines[2].strip())
-            self.sp_power = float(lines[4].strip())
-            self.starts_count = int(lines[10].strip())
-            self.sp_5_type = int(lines[14].strip())
+            # self.sp_power = float(lines[4].strip())
+            self.starts_count = int(lines[8].strip())
+            self.sp_5_type = int(lines[12].strip())
 
             tmp = []
-            for line in lines[16:]:
+            for line in lines[14:]:
                 line = line.strip().split()
                 tmp.append(line)
 
@@ -1456,7 +1466,7 @@ if __name__ == '__main__':
 
     root.protocol("WM_DELETE_WINDOW", onExit)
 
-    x = SpectreConfigure(parent=root,path=r'C:\work\Test_projects\wpala')
+    x = SpectreConfigure(parent=root, path=r'C:\work\Test_projects\wpala')
     x.grab_release()
 
     root.mainloop()

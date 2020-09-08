@@ -349,6 +349,7 @@ class MainWindow(tk.Frame):
                     print('Загрузка невозможна. Файл Sources.pkl не найден')
                     mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
                     self.menubar_activate()
+                    self.set_lag(False)
                     return
 
                 with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:

@@ -121,7 +121,8 @@ def get_recent_projects():
         with open('sources_properties.ini', 'r', encoding='utf-8') as file:
             lines = file.readlines()
         for i in lines:
-            out.update({i.strip(): ''})
+            if os.path.exists(i.strip()):
+                out.update({i.strip(): ''})
     except:
         pass
     return out

@@ -67,7 +67,6 @@ class SpectreConfigure(tk.Toplevel):
 
     def pechs_check(self):
 
-        # pech_names = ['pechs', 'temp']
         find_mat_air = False
 
         # for name in pech_names:
@@ -78,7 +77,7 @@ class SpectreConfigure(tk.Toplevel):
             find_mat_air = True
 
         if find_mat_air is False:
-            mb.showinfo('PECHS', 'Папка materials/mat_air не обнаружена.\nВыберите папку mat_air')
+            mb.showinfo('Перенос', 'Папка materials/mat_air не обнаружена.\nВыберите папку mat_air')
             self.mat_air_path = fd.askdirectory(title='Выберите папку materials', initialdir=self.path)
             print(f'mat_air обнаружен в {self.mat_air_path}')
             if self.mat_air_path == '':

@@ -177,7 +177,7 @@ class MainWindow(tk.Frame):
         self.marple_menu.add_command(label="Добавить задачу обтекания", command=self.__add_marple, state='normal')
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
-        self.menubar.add_command(label="Добавить спектр PECHS", state='disabled', command=self.start_pechs)
+        self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.start_pechs)
 
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
@@ -195,7 +195,7 @@ class MainWindow(tk.Frame):
         marple_index = self.menubar.index('Задача обтекания')
         self.menubar.entryconfigure(marple_index, state='normal')
 
-        pechs_index = self.menubar.index('Добавить спектр PECHS')
+        pechs_index = self.menubar.index('Добавить спектр переноса')
         self.menubar.entryconfigure(pechs_index, state='normal')
 
     def start_pechs(self):

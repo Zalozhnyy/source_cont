@@ -311,9 +311,9 @@ class DataParser:
             # mb.showinfo('Info', fr'lag/parameters взят из {os.path.normpath(self.source_path)}')
             print(fr'lag/parameters взят из {os.path.normpath(self.source_path)}')
         else:
-            ask = mb.askyesno('Проект pechs не найден',
-                              f'Путь {os.path.normpath(self.source_path)} не найден. Проект pechs не обнаружен.\n'
-                              f'Продолжить без проекта pechs? (lag/parameters будет равен нулю)')
+            ask = mb.askyesno('Проект переноса не найден',
+                              f'Путь {os.path.normpath(self.source_path)} не найден. Проект переноса не обнаружен.\n'
+                              f'Продолжить без проекта переноса? (lag/parameters будет равен нулю)')
             if ask is True:
                 self.source_path = None
                 lag = '0'

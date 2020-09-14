@@ -200,7 +200,9 @@ class PeSource:
         if sub.subtask_struct is None:
 
             ex = SpectreConfigure(self.path)
-            ex.spectre_type_combobox_values = ['Пятый', 'DISCRETE', 'CONTINUOUS']
+            ex.spectre_type_combobox_values = ['Упрощённый перенос ИИ',
+                                               'Дискретный',
+                                               'Непрерывный']
             ex.spetre_type_cobbobox.configure(value=[val for val in ex.spectre_type_combobox_values])
             print('subtask Не обнаружен')
 

@@ -232,7 +232,10 @@ class SpectreConfigure(tk.Toplevel):
 
             # mb.showerror('Spectre error', 'Тип спектра не был распознан')
 
-        self.__starts_count_change()
+        try:
+            self.__starts_count_change()
+        except:
+            pass
 
     def create_spectre(self):
         self.__cb_react()
@@ -281,7 +284,10 @@ class SpectreConfigure(tk.Toplevel):
 
             self.description_discrete_cont()
 
-        self.__starts_count_change()
+        try:
+            self.__starts_count_change()
+        except:
+            pass
 
     def description_sp_zero(self):
 
@@ -1047,13 +1053,12 @@ class SpectreConfigure(tk.Toplevel):
             val_starts = int(self.starts_count_val.get())
             val_row_count = eval(self.rows_count_val.get())
 
-            if val_starts < 1:
-                raise Exception
+            # if val_starts < 1:
+            #     raise Exception
 
             self.rows_count_calc['text'] = f'{val_starts * val_row_count}'
 
         except:
-            print('starts_count_val error')
             self.rows_count_calc['text'] = f'{0}'
 
     def __destroy_frames(self):

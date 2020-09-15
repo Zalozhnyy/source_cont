@@ -1179,8 +1179,8 @@ class MainWindow(tk.Frame):
     def __flux_auto_search(self, name, first_key, second_key, label):
         obj = self.global_tree_db[name]
 
-        from_l = second_key.split('_')[-2][0]
-        to_l = second_key.split('_')[-1][1]
+        from_l = second_key.split('_')[-2]
+        to_l = second_key.split('_')[-1]
         number = self.PAR[first_key]['number']
         spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
 
@@ -1250,6 +1250,9 @@ class MainWindow(tk.Frame):
             name_label['text'] = f'Путь к файлу:  {file_name}'
             num_label['text'] = f'Номер спектра:  {number}'
 
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
+
         if create:
 
             top_level_root = tk.Toplevel(self.parent)
@@ -1266,6 +1269,9 @@ class MainWindow(tk.Frame):
 
             name_label['text'] = f'Путь к файлу:  {file_name}'
             num_label['text'] = f'Номер спектра:  {number}'
+
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
+            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
 
     def __choice_distribution(self, label, name, first_key, second_key, buttons):
         distribution_file = fd.askopenfilename(title=f'Выберите файл distribution для {second_key}',

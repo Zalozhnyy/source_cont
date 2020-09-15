@@ -1033,7 +1033,7 @@ class SpectreConfigure(tk.Frame):
         if type == 'SP_0' or type == 'SP_5':
 
             val_starts = int(self.starts_count_val.get())
-            val_row_count = eval(self.rows_count_val.get())
+            val_row_count = int(self.rows_count_val.get())
 
             if val_starts < 1:
                 return

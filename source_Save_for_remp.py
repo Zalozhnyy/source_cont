@@ -19,6 +19,8 @@ class Save_remp:
         self.calc_amplitude = 0.
         self.saved = False
 
+        self.exist_spectres = []
+
         self.save()
 
     def save(self):
@@ -307,7 +309,11 @@ class Save_remp:
         func = np.array(gsource_db.get_share_data("func"), dtype=float)
         amplitude = float(gsource_db.get_share_data("amplitude"))
 
-        ampl_save = amplitude / integrate.trapz(x=time, y=func)
+        try:
+            ampl_save = amplitude / integrate.trapz(x=time, y=func)
+        except RuntimeWarning:
+            ampl_save = amplitude
+            print('Амплитуда не была поделена, найдено деление на ноль')
 
         return ampl_save
 
@@ -362,6 +368,42 @@ class Save_remp:
             if ask is True:
                 ex = ShowDuplicateSpectreNumbers(re_numbers)
 
+    def create_spectre_list(self):
+
+        for item in self.db.items():
+            gsource_db = item[1]
+            name = item[0]
+
+            for f_key in gsource_db.get_first_level_keys():
+                for s_key in gsource_db.get_second_level_keys(f_key):
+                    if 'Flu' in s_key:
+                        data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
+                        if type(data) is list:
+                            [self.exist_spectres.append(i) for i in data if i not in self.exist_spectres]
+                        else:
+                            self.exist_spectres.append(data)
+
+                    if 'Volume' in s_key:
+                        data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
+                        if type(data) is list:
+                            [self.exist_spectres.append(i) for i in data if i not in self.exist_spectres]
+                        else:
+                            self.exist_spectres.append(data)
+
+                    if 'Boundaries' in s_key:
+                        data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
+                        if type(data) is list:
+                            [self.exist_spectres.append(i) for i in data if i not in self.exist_spectres]
+                        else:
+                            self.exist_spectres.append(data)
+
+        with open(os.path.join(self.path, 'spectres'), 'w', encoding='utf-8') as file:
+            file.write('<Particles spectrum>\n')
+            file.write(str(len(self.exist_spectres)) + '\n')
+
+            for sp in self.exist_spectres:
+                file.write(sp + '\n')
+
 
 if __name__ == '__main__':
     import pickle
@@ -372,3 +414,6 @@ if __name__ == '__main__':
         db = pickle.load(f)
 
     ex = Save_remp(None, db, path)
+
+    ex.create_spectre_list()
+    print(ex.exist_spectres)

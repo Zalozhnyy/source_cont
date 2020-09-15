@@ -23,6 +23,8 @@ class Save_remp:
 
         self.save()
 
+        self.create_spectre_list()
+
     def save(self):
         self.numbers_control()
         out = ''

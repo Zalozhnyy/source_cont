@@ -902,7 +902,7 @@ class ScrolledWidget(tk.Frame):
     def __init__(self, parent, size=(300, 100)):
         tk.Frame.__init__(self, parent)
         self.canvas = tk.Canvas(self, borderwidth=0, width=size[0], height=size[1])
-        self.frame = tk.Frame(self.canvas)
+        self.frame = tk.Frame(self.canvas, borderwidth=1)
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
@@ -916,7 +916,8 @@ class ScrolledWidget(tk.Frame):
         self.frame.bind("<Configure>", self.onFrameConfigure)
 
     def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        if self.vsb.get() != (0., 1.):
+            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def populate(self):
         '''Put in some fake data'''
@@ -934,28 +935,11 @@ class ScrolledWidget(tk.Frame):
 if __name__ == '__main__':
     root = tk.Tk()
 
-    # x = SpectreConfigure(parent=root)
-    x = SpectreOneInterface(root, None)
-    x.pack()
+    root.geometry('1000x1000')
 
-    x.sp_one_constructor()
+    sw = ScrolledWidget(root, (200, 200))
+    sw.pack(fill='both')
 
-    # x.data_load()
+    sw.populate()
 
     root.mainloop()
-
-    # data_struct = SpOneReader(r'C:\Users\Nick\Desktop\sp_1_tst')
-    # data_struct.start_read()
-    #
-    # print(data_struct.sp_power)
-
-    # root = tk.Tk()
-    # example = ScrolledWidget(root, (6, 6))
-    # example.pack(side="top", fill="both", expand=True)
-    # for row in range(100):
-    #     tk.Label(example.frame, text="%s" % row, width=3, borderwidth="1",
-    #              relief="solid").grid(row=row, column=0)
-    #     t = "this is the second column for row %s" % row
-    #     tk.Label(example.frame, text=t).grid(row=row, column=1)
-    #
-    # root.mainloop()

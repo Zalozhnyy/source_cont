@@ -1226,7 +1226,12 @@ class MainWindow(tk.Frame):
         if configure:
             sp_path = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
             sp_path = os.path.join(self.path, sp_path)
-            ex = SpectreConfigure(self.path, self.parent)
+
+            top_level_root = tk.Toplevel(self.parent)
+            top_level_root.grab_set()
+
+            ex = SpectreConfigure(self.path, top_level_root)
+            ex.grid(sticky='NWSE')
 
             ex.button_open_spectre['state'] = 'disabled'
             ex.button_create_spectre['state'] = 'disabled'
@@ -1236,7 +1241,7 @@ class MainWindow(tk.Frame):
 
             ex.spectre_power['state'] = 'disabled'
 
-            self.wait_window(ex)
+            self.wait_window(top_level_root)
 
             file_name, number, sp_type = self.__read_spectre(sp_path)
             if file_name is None:
@@ -1246,9 +1251,14 @@ class MainWindow(tk.Frame):
             num_label['text'] = f'Номер спектра:  {number}'
 
         if create:
-            ex = SpectreConfigure(self.path, self.parent)
 
-            self.wait_window(ex)
+            top_level_root = tk.Toplevel(self.parent)
+            top_level_root.grab_set()
+
+            ex = SpectreConfigure(self.path, top_level_root)
+            ex.grid(sticky='NWSE')
+
+            self.wait_window(top_level_root)
 
             file_name, number, sp_type = self.__read_spectre(ex.spectre_path)
             if file_name is None:

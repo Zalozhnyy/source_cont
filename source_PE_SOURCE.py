@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 import os
@@ -199,7 +200,12 @@ class PeSource:
         sub = SubtaskDecoder(self.path)
         if sub.subtask_struct is None:
 
-            ex = SpectreConfigure(self.path)
+            top_level_root = tk.Toplevel(self.parent)
+            top_level_root.grab_set()
+
+            ex = SpectreConfigure(self.path, top_level_root)
+            ex.grid(sticky='NWSE')
+
             ex.spectre_type_combobox_values = ['Упрощённый перенос ИИ',
                                                'Дискретный',
                                                'Непрерывный']

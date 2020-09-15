@@ -15,14 +15,14 @@ from source_Project_reader import DataParser
 from source_Spectre_one_interface import SpectreOneInterface, ScrolledWidget
 
 
-class SpectreConfigure(tk.Toplevel):
+class SpectreConfigure(tk.Frame):
     def __init__(self, path='', parent=None):
         super().__init__(parent)
 
         self.path = path
+        self.parent = parent
 
-        self.title('Редактор спектра')
-        self.grab_set()
+        self.parent.title('Редактор спектра')
 
         self.spectre_frame = None
         self.spectre_path = ''
@@ -117,9 +117,9 @@ class SpectreConfigure(tk.Toplevel):
         self.spectre_type_combobox_values = ['Фиксированный', 'Разыгрывание', 'Упрощённый перенос ИИ', 'Дискретный',
                                              'Непрерывный']
         self.spetre_type_cobbobox = ttk.Combobox(self, value=[val for val in self.spectre_type_combobox_values],
-                                                 width=20,
+                                                 width=25,
                                                  state='readonly')
-        self.spetre_type_cobbobox.grid(row=0, column=3)
+        self.spetre_type_cobbobox.grid(row=0, column=3, padx=5)
         self.spetre_type_cobbobox.set('Тип спектра')
 
         # self.bind_class(self.spetre_type_cobbobox, "<<ComboboxSelected>>", self.__cb_react)
@@ -219,7 +219,7 @@ class SpectreConfigure(tk.Toplevel):
             self.spectre_type_cb = 'SP_1'
             self.spetre_type_cobbobox.set('Разыгрывание')
 
-            self.sp_one_interface = SpectreOneInterface(self, self.spectre_path)
+            self.sp_one_interface = SpectreOneInterface(self.parent, self.spectre_path)
             self.sp_one_interface.data_load()
 
             self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
@@ -267,7 +267,7 @@ class SpectreConfigure(tk.Toplevel):
             self.description_sp_zero()
 
         if self.spectre_type_cb == 'SP_1':
-            self.sp_one_interface = SpectreOneInterface(self, self.spectre_path)
+            self.sp_one_interface = SpectreOneInterface(self.parent, self.spectre_path)
             self.sp_one_interface.sp_one_constructor()
 
             self.sp_one_interface.grid(row=3, column=0, columnspan=12, rowspan=60, sticky="W", padx=10)
@@ -297,7 +297,7 @@ class SpectreConfigure(tk.Toplevel):
         row = 0
 
         self.cf = ScrolledWidget(self, (850, 600))
-        self.cf.grid(row=3, columnspan=12, pady=5, sticky="NWSE", rowspan=100)
+        self.cf.grid(row=3, columnspan=50, pady=5, sticky="NWSE", rowspan=100)
 
         self.frame_description = ttk.Frame(self.cf.frame)
         self.frame_description.grid(row=3, column=0, sticky="W", padx=10)
@@ -1287,6 +1287,10 @@ class SpectreConfigure(tk.Toplevel):
 
         # print(np.sum(self.data_struct.data[:, 1]))
 
+    def onExit(self):
+        self.parent.quit()
+        self.parent.destroy()
+
 
 class SpectreDataStructure:
     def __init__(self, path=None):
@@ -1459,18 +1463,12 @@ class SpectreDataStructure:
                         self.data[i][j] = None
 
 
-def onExit():
-    root.quit()
-    root.destroy()
-
-
 if __name__ == '__main__':
     root = tk.Tk()
-    root.geometry('1x1')
-
-    root.protocol("WM_DELETE_WINDOW", onExit)
 
     x = SpectreConfigure(parent=root, path=r'C:\work\Test_projects\wpala')
-    x.grab_release()
+    x.grid(sticky='NWSE')
+
+    root.protocol("WM_DELETE_WINDOW", x.onExit)
 
     root.mainloop()

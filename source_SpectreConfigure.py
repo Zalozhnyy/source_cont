@@ -188,7 +188,7 @@ class SpectreConfigure(tk.Frame):
             self.spectre_frame_constructor(labels, 'SP_0')
             # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_0', labels, 5))
 
-        elif 'Номер спектра' in lines[1] and lines[4].strip() == '5':
+        elif 'Номер спектра' in lines[1] and lines[6].strip() == '5':
             check = self.pechs_check()
             if check == 0:
                 return
@@ -213,7 +213,7 @@ class SpectreConfigure(tk.Frame):
                           'Энергия электрона (MeВ)']
 
             self.spectre_frame_constructor(labels, 'SP_5')
-            # self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
+            self.rows_count_val.trace('w', lambda name, index, mode: self.__creator('SP_5', labels, 5))
 
         elif 'Номер спектра' in lines[1] and lines[6].strip() == '1':
             self.spectre_type_cb = 'SP_1'
@@ -797,6 +797,8 @@ class SpectreConfigure(tk.Frame):
 
             out_header[0] = self.spectre_note_val.get()
             out_header[2] = self.spectre_number_val.get()
+            out_header[3] = 'Мощность спектра (шт/см**2/с)- для поверхностных, (шт/см**3/с)- для объемных'
+            out_header[4] = '1.0'
             out_header[6] = f'{decode_number[self.spectre_type_cb]}'
             out_header[8] = self.rows_count_calc['text']
             out_header[10] = self.starts_count_val.get()
@@ -804,9 +806,6 @@ class SpectreConfigure(tk.Frame):
             out_header.insert(13, 'Вид спектра (0-точечный ,1-непрерывный)')
             s_type = type_decode[self.sp_5_combobox.get()]
             out_header.insert(14, str(s_type))
-
-            out_header.pop(4)
-            out_header.pop(3)
 
             if s_type == 0:
                 out_header[
@@ -1317,10 +1316,6 @@ class SpectreDataStructure:
         elif 'SP_TYPE=DISCRETE' in lines[0]:
             self.spectre_type = 'DISCRETE'
 
-        elif 'Тип спектра' in lines[3]:
-
-            self.spectre_type = int(lines[4].strip())
-
         else:
             try:
                 self.spectre_type = int(lines[6].strip())
@@ -1351,12 +1346,12 @@ class SpectreDataStructure:
         if self.spectre_type == 5:
             self.description = lines[0].strip()
             self.sp_number = int(lines[2].strip())
-            # self.sp_power = float(lines[4].strip())
-            self.starts_count = int(lines[8].strip())
-            self.sp_5_type = int(lines[12].strip())
+            self.sp_power = float(lines[6].strip())
+            self.starts_count = int(lines[10].strip())
+            self.sp_5_type = int(lines[14].strip())
 
             tmp = []
-            for line in lines[14:]:
+            for line in lines[16:]:
                 line = line.strip().split()
                 tmp.append(line)
 

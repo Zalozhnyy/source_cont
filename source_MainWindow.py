@@ -211,7 +211,7 @@ class MainWindow(tk.Frame):
         return same
 
     def set_lag(self, load):
-        if load is True:
+        if load is True and len(self.global_tree_db) != 0:
             for i in self.global_tree_db.items():
                 load_pech_path = i[1].get_share_data('pechs path')
 
@@ -233,7 +233,7 @@ class MainWindow(tk.Frame):
                 i[1].insert_share_data('pechs path', self._pechs_path)
                 i[1].insert_share_data('lag', self.lag)
 
-        elif load is False:
+        else:
             self.lag, self._pechs_path = DataParser(self.path).pech_check()
 
     def onExit(self):
@@ -1003,7 +1003,7 @@ class MainWindow(tk.Frame):
             if (file is None) or (number is None):
                 raise Exception
 
-            t += file + '  №' + str(number) + '\n'
+            t += '№ ' + str(number) + '   ' + str(file) + '\n'
 
         except:
             t += 'Файлы не найдены, выберите вручную'
@@ -1316,7 +1316,6 @@ class MainWindow(tk.Frame):
                 self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', None)
                 return
 
-            number = str(number)
             t = '№ ' + str(number) + '   ' + file_name + '\n'
 
         else:
@@ -1338,7 +1337,7 @@ class MainWindow(tk.Frame):
                     return
 
                 file_name.append(a)
-                number.append(str(b))
+                number.append(b)
                 sp_type.append(c)
 
                 t = ''

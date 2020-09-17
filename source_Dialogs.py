@@ -284,6 +284,7 @@ class ShowDuplicateSpectreNumbers(tk.Toplevel):
         super().__init__()
 
         self.focus()
+        self.grab_set()
 
         self.title = 'Повторяющиеся номера спектров'
         self.resizable(width=False, height=False)
@@ -315,7 +316,8 @@ class ShowDuplicateSpectreNumbers(tk.Toplevel):
 
     def set_listbox(self):
         for key in self.db.keys():
-            self.spectres_listbox.insert(tk.END, key)
+            if len(self.db[key]) > 1:
+                self.spectres_listbox.insert(tk.END, key)
 
     def set_sources_to_canvas(self, event):
         key = self.spectres_listbox.get(self.spectres_listbox.curselection())

@@ -229,10 +229,6 @@ class Save_remp:
         out += f'{func}\n'
         out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
-        # out += f'<spectre>\n'
-        # out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre")}' + f'\n'
-        # out += f'<spectre number>\n'
-        # out += f'{gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")}' + '\n'
         out += '<distribution>\n'
         out += f'{gsource_db.get_last_level_data(f_key, s_key, "distribution")}' + '\n'
 
@@ -275,7 +271,7 @@ class Save_remp:
         out += f'<spectre number>\n'
 
         try:
-            out += (gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")) + '\n'
+            out += str((gsource_db.get_last_level_data(f_key, s_key, "spectre numbers"))) + '\n'
         except:
             out += 'None' + f'\n'
 
@@ -402,9 +398,14 @@ class Save_remp:
         with open(os.path.join(self.path, 'spectres'), 'w', encoding='utf-8') as file:
             file.write('<Particles spectrum>\n')
             file.write(str(len(self.exist_spectres)) + '\n')
+            try:
 
-            for sp in self.exist_spectres:
-                file.write(sp + '\n')
+                for sp in self.exist_spectres:
+                    file.write(sp + '\n')
+
+            except TypeError:
+                print('Список спектров не был создан')
+                return
 
 
 if __name__ == '__main__':

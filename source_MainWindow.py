@@ -989,7 +989,7 @@ class MainWindow(tk.Frame):
                                  command=lambda: self.__open_notepad(name, first_key, second_key, spectres_label, True))
         open_notepad.grid(row=2, column=4, sticky='E', padx=10, pady=3)
 
-        d_text = 'Подсказка:\nВыберите файл (спектр) типа 4'
+        d_text = 'Подсказка:\nВыберите файл (спектр) типа 4 или 2'
 
         description_label = tk.Label(fr_data, text=d_text)
         description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)

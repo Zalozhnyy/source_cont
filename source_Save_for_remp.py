@@ -131,25 +131,11 @@ class Save_remp:
         out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
 
-        try:
-            out += f'<spectre>\n'
-            spectre = gsource_db.get_last_level_data(f_key, s_key, "spectre")
-            if len(spectre) == 1:
-                out += str(spectre[0]) + f'\n'
-            else:
-                out += ' '.join(spectre) + f'\n'
-        except:
-            out += 'None' + f'\n'
+        out += f'<spectre>\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre') + '\n'
 
-        try:
-            out += f'<spectre number>\n'
-            spectre_number = gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")
-            if len(spectre_number) == 1:
-                out += str(spectre_number[0]) + f'\n'
-            else:
-                out += ' '.join(spectre_number) + f'\n'
-        except:
-            out += 'None' + f'\n'
+        out += f'<spectre number>\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre numbers') + '\n'
 
         out += '\n'
 
@@ -186,10 +172,10 @@ class Save_remp:
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
 
         out += f'<spectre>\n'
-        out += str(gsource_db.get_last_level_data(f_key, s_key, "spectre")) + f'\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre') + '\n'
 
         out += f'<spectre number>\n'
-        out += str(gsource_db.get_last_level_data(f_key, s_key, "spectre numbers")) + '\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre numbers') + '\n'
 
         out += '\n'
 
@@ -229,9 +215,9 @@ class Save_remp:
         out += f'{func}\n'
         out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
-        out += '<distribution>\n'
-        out += f'{gsource_db.get_last_level_data(f_key, s_key, "distribution")}' + '\n'
 
+        out += f'<distribution>\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'distribution') + '\n'
         out += '\n'
 
         return out
@@ -243,8 +229,8 @@ class Save_remp:
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'
         out += name + '\n'
-        # out += '<particle number>\n'
-        # out += str(gsource_db.get_share_data('particle number')) + '\n'
+        out += '<particle index>\n'
+        out += str(gsource_db.get_share_data('particle number')) + '\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<amplitude>\n'
@@ -263,17 +249,10 @@ class Save_remp:
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
 
         out += f'<spectre>\n'
-        try:
-            out += gsource_db.get_last_level_data(f_key, s_key, "spectre") + f'\n'
-        except:
-            out += 'None' + f'\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre') + '\n'
 
         out += f'<spectre number>\n'
-
-        try:
-            out += str((gsource_db.get_last_level_data(f_key, s_key, "spectre numbers"))) + '\n'
-        except:
-            out += 'None' + f'\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre numbers') + '\n'
 
         out += '\n'
 
@@ -406,6 +385,23 @@ class Save_remp:
             except TypeError:
                 print('Список спектров не был создан')
                 return
+
+    def _get_last_level_data_with_exception(self, data_object, first_key, second_key, last_key):
+        out = ''
+
+        db_vel = data_object.get_last_level_data(first_key, second_key, last_key)
+
+        if db_vel is None:
+            out = 'None'
+            return out
+
+        if type(db_vel) is list:
+            out = ' '.join(list(map(str, db_vel)))
+
+        else:
+            out += str(db_vel)
+
+        return out
 
 
 if __name__ == '__main__':

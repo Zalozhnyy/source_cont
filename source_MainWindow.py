@@ -7,6 +7,7 @@ from tkinter import simpledialog as sd
 import shutil
 import pickle
 
+from source_MW_interface_classes import StandardizedSourceMainInterface
 from source_utility import *
 from source_Project_reader import DataParser
 from source_Save_for_remp import Save_remp
@@ -210,30 +211,32 @@ class MainWindow(tk.Frame):
                 return same
         return same
 
-    def set_lag(self, load):
-        if load is True and len(self.global_tree_db) != 0:
-            for i in self.global_tree_db.items():
-                load_pech_path = i[1].get_share_data('pechs path')
+    def set_lag(self):
+        try:
+            if len(self.global_tree_db) != 0:
+                for i in self.global_tree_db.items():
+                    load_pech_path = i[1].get_share_data('pechs path')
 
-                if load_pech_path is None:
-                    self.lag, self._pechs_path = DataParser(self.path).pech_check()
-                    return
+                    if load_pech_path is None:
+                        raise Exception
 
-                if os.path.exists(load_pech_path):
-                    self.lag = DataParser('').pech_check_utility(load_pech_path)
-                    self._pechs_path = load_pech_path
-                else:
-                    mb.showerror('Ошибка загрузки lag/parameters',
-                                 'Загружаемый путь к <pechs/initials/source> не существует')
-                    self.lag, self._pechs_path = DataParser(self.path).pech_check()
-                break
+                    if os.path.exists(load_pech_path):
+                        self.lag = DataParser('').pech_check_utility(load_pech_path)
+                        self._pechs_path = load_pech_path
+                    else:
+                        mb.showerror(f'Ошибка загрузки парметра задержки',
+                                     f'Загружаемый путь ({load_pech_path}) не существует')
+                        self.lag, self._pechs_path = DataParser(self.path).pech_check()
+                    break
 
-            for i in self.global_tree_db.items():
-                print(f'pech path {self._pechs_path}')
-                i[1].insert_share_data('pechs path', self._pechs_path)
-                i[1].insert_share_data('lag', self.lag)
+                for i in self.global_tree_db.items():
+                    print(f'pech path {self._pechs_path}')
+                    i[1].insert_share_data('pechs path', self._pechs_path)
+                    i[1].insert_share_data('lag', self.lag)
 
-        else:
+            else:
+                raise Exception
+        except:
             self.lag, self._pechs_path = DataParser(self.path).pech_check()
 
     def onExit(self):
@@ -342,15 +345,14 @@ class MainWindow(tk.Frame):
 
             if ask is True:
 
-                # self.rs_data = DataParser(os.path.join(self.path, 'remp_sources')).remp_source_decoder()
-                self.remp_source_exist = True
-
                 if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
                     print('Загрузка невозможна. Файл Sources.pkl не найден')
                     mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
                     self.menubar_activate()
-                    self.set_lag(False)
+                    self.set_lag()
                     return
+
+                self.remp_source_exist = True
 
                 with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
                     self.global_tree_db = pickle.load(f)
@@ -365,14 +367,8 @@ class MainWindow(tk.Frame):
                         part_number = None
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
 
-                self.set_lag(True)
-
-            elif ask is False:
-                self.set_lag(False)
-        else:
-            self.set_lag(False)
-
         self.menubar_activate()
+        self.set_lag()
 
     def reset(self):
         if self.path is None:
@@ -851,205 +847,18 @@ class MainWindow(tk.Frame):
                             first_key, second_key = f_key, s_key
                             break
 
-                if 'Volume' in self.tree[index].item(x)['text']:
-                    self.regular_source_interface(fr_data, name, first_key, second_key)
-
-                elif 'Volume78' in self.tree[index].item(x)['text']:
-                    self.regular_source_interface(fr_data, name, first_key, second_key)
-
-                elif 'Flu' in self.tree[index].item(x)['text']:
-                    self.flu_source_interface(fr_data, name, first_key, second_key)
-
-                elif 'Current' in self.tree[index].item(x)['text']:
-                    self.current_source_interface(fr_data, name, first_key, second_key)
-
-                elif 'Energy' in self.tree[index].item(x)['text']:
-                    self.current_source_interface(fr_data, name, first_key, second_key)
-
-                elif 'Boundaries' in self.tree[index].item(x)['text']:
-                    self.boundaries_interface(fr_data, name, first_key, second_key)
+                ex = StandardizedSourceMainInterface(fr_data,
+                                                     self.path,
+                                                     self.global_tree_db,
+                                                     name,
+                                                     first_key,
+                                                     second_key)
 
                 fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='NWSE')
 
             else:
                 self.__destroy_data_frame(name)
                 self.tabs_dict[name][2] = False
-
-    def regular_source_interface(self, parent_widget, name, first_key, second_key):
-        fr_data = parent_widget
-
-        e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
-        energy_type_label = tk.Label(fr_data, text=e)
-        energy_type_label.grid(row=0, column=0, columnspan=4, sticky='W')
-
-        SP_number = tk.Label(fr_data, text=f'Номер спектра: Файл не выбран')
-        SP_number.grid(row=1, column=0, sticky='W', columnspan=4)
-
-        SP_path = tk.Label(fr_data, text=f'Путь к спектру: Файл не выбран            ')
-        SP_path.grid(row=2, column=0, sticky='W', columnspan=4)
-
-        choice_sp = tk.Button(fr_data, text='Выбрать файл', width=13,
-                              command=lambda: self.__choice_file(SP_path, SP_number, name, first_key, second_key,
-                                                                 'спектр', conf_sp))
-        choice_sp.grid(row=1, column=5, sticky='E', padx=20, pady=3)
-
-        conf_sp = tk.Button(fr_data, text='Редактировать', width=13, state='disabled',
-                            command=lambda: self.__spectre_configure(SP_path, SP_number, name, first_key, second_key,
-                                                                     configure=True))
-        conf_sp.grid(row=2, column=5, sticky='E', padx=20, pady=3)
-
-        create_sp = tk.Button(fr_data, text='Создать спектр', width=13,
-                              command=lambda: self.__spectre_configure(SP_path, SP_number, name, first_key, second_key,
-                                                                       create=True))
-        create_sp.grid(row=3, column=5, sticky='E', padx=20, pady=3)
-
-        d_text = 'Подсказка:\nВыберите один из файлов:\n' \
-                 'типа 0 - спектр фиксированной генерации частиц;\n' \
-                 'типа 1 - спектр разыгрываемой генерации частиц;\n' \
-                 'типа 5 - упрощённый спектр учёта переноса ИИ;\n' \
-                 'Для типов 0, 1 и 5 доступно создание'
-
-        description_label = tk.Label(fr_data, text=d_text, justify='left')
-        description_label.grid(row=1, column=6, columnspan=3, rowspan=5, padx=10)
-
-        try:
-            if self.global_tree_db[name].get_last_level_data(first_key, second_key,
-                                                             "spectre numbers") is None:
-                raise Exception
-
-            number = self.global_tree_db[name].get_last_level_data(first_key, second_key, "spectre numbers")
-            sp_name = self.global_tree_db[name].get_last_level_data(first_key, second_key, "spectre")
-            SP_number['text'] = f'Номер спектра: {number}'
-            SP_path['text'] = f'Путь к спектру: {sp_name}'
-            conf_sp['state'] = 'normal'
-
-        except:
-            pass
-
-    def flu_source_interface(self, parent_widget, name, first_key, second_key):
-
-        fr_data = parent_widget
-
-        e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
-        en_type = tk.Label(fr_data, text=f'{e}')
-        en_type.grid(row=0, column=0, columnspan=3, sticky='NW')
-        spectres_label = tk.Label(fr_data)
-        spectres_label.grid(row=1, column=0, columnspan=3, rowspan=15, sticky='NW')
-
-        manual_conf_button = tk.Button(fr_data, text='Выбрать вручную', width=15,
-                                       command=lambda: self.__choice_files(spectres_label, name, first_key, second_key,
-                                                                           '.spc  тип(0 или 1 или 3)', one_file=False))
-        manual_conf_button.grid(row=1, column=4, sticky='E', padx=10)
-
-        auto_conf_button = tk.Button(fr_data, text='Автом. поиск', width=15,
-                                     command=lambda: self.__flux_auto_search(name, first_key, second_key,
-                                                                             spectres_label))
-        auto_conf_button.grid(row=2, column=4, sticky='E', padx=10, pady=3)
-
-        open_notepad = tk.Button(fr_data, text='Редактировать', width=15,
-                                 command=lambda: self.__open_notepad(name, first_key, second_key, spectres_label,
-                                                                     False))
-        open_notepad.grid(row=3, column=4, sticky='E', padx=10, pady=3)
-
-        d_text = 'Подсказка:\nВыберите от 1го до 6ти файлов типа 3'
-
-        description_label = tk.Label(fr_data, text=d_text)
-        description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
-
-        spectre = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
-        spectre_number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
-
-        if (spectre is None) or (spectre_number is None):
-            t = 'Опознано неправильное количество спектров.\nВыберите спектры вручную.'
-
-        else:
-            t = 'Список спектров:\n'
-
-            for i in range(len(spectre)):
-                t += '№ ' + str(spectre_number[i]) + '   ' + str(spectre[i]) + '\n'
-
-        spectres_label['text'] = t
-
-    def boundaries_interface(self, parent_widget, name, first_key, second_key):
-
-        fr_data = parent_widget
-
-        e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
-        en_type = tk.Label(fr_data, text=f'{e}')
-        en_type.grid(row=0, column=0, columnspan=3, sticky='NW')
-        spectres_label = tk.Label(fr_data)
-        spectres_label.grid(row=1, column=0, columnspan=3, rowspan=8, sticky='N')
-
-        manual_conf_button = tk.Button(fr_data, text='Выбрать вручную', width=15,
-                                       command=lambda: self.__choice_files(spectres_label, name, first_key, second_key,
-                                                                           'xmax_part', buttons=open_notepad))
-        manual_conf_button.grid(row=1, column=4, sticky='E', padx=10)
-
-        open_notepad = tk.Button(fr_data, text='Просмотр', width=15, state='disabled',
-                                 command=lambda: self.__open_notepad(name, first_key, second_key, spectres_label, True))
-        open_notepad.grid(row=2, column=4, sticky='E', padx=10, pady=3)
-
-        d_text = 'Подсказка:\nВыберите файл (спектр) типа 4 или 2'
-
-        description_label = tk.Label(fr_data, text=d_text)
-        description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
-
-        t = 'Список файлов:\n'
-
-        try:
-            file = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
-            number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
-
-            if (file is None) or (number is None):
-                raise Exception
-
-            t += '№ ' + str(number) + '   ' + str(file) + '\n'
-
-        except:
-            t += 'Файлы не найдены, выберите вручную'
-
-        if self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre') is not None:
-            open_notepad['state'] = 'normal'
-
-        spectres_label['text'] = t
-
-    def current_source_interface(self, parent_widget, name, first_key, second_key):
-        fr_data = parent_widget
-        e = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'energy_type')
-        en_type = tk.Label(fr_data, text=f'{e}')
-        en_type.grid(row=0, column=0, columnspan=3)
-
-        open_notepad = tk.Button(fr_data, text='Просмотр', width=15, state='disabled',
-                                 command=lambda: self.__open_notepad_distribution(name, first_key, second_key))
-        open_notepad.grid(row=2, column=4, sticky='E', padx=10, pady=3)
-
-        disable = tk.Button(fr_data, text='Отключить', width=15, state='disabled',
-                            command=lambda: self.__delete_distribution(distr_label, name, first_key,
-                                                                       second_key, (open_notepad, disable)))
-        disable.grid(row=3, column=4, sticky='E', padx=10, pady=3)
-
-        d_text = 'Подсказка:\nВыберите файл типа:\n - "energy distribution" для энерговыделения (Energy)\n' \
-                 ' - "JX/JY/JZ" для токов (Current)\n\n' \
-                 'Отключить - отключает сохранение данного источника'
-
-        description_label = tk.Label(fr_data, text=d_text, justify='left')
-        description_label.grid(row=1, column=5, columnspan=3, rowspan=5, padx=10)
-
-        try:
-            d = self.global_tree_db[name].get_last_level_data(first_key, second_key, "distribution")
-        except:
-            d = ''
-
-        distr_label = tk.Label(fr_data, text=f'Список файлов:\n  {d}')
-        distr_label.grid(row=1, column=0, sticky='W', columnspan=4)
-        choice_distr_button = tk.Button(fr_data, text='Выбрать файл', width=15,
-                                        command=lambda: self.__choice_distribution(distr_label, name, first_key,
-                                                                                   second_key, (open_notepad, disable)))
-        choice_distr_button.grid(row=1, column=4, sticky='E', columnspan=1, padx=10)
-
-        if d != '' and d is not None:
-            disable['state'] = 'normal'
-            open_notepad['state'] = 'normal'
 
     def add_part(self, index, name, id):
 
@@ -1166,40 +975,8 @@ class MainWindow(tk.Frame):
         self.tabs_dict.pop(delete_gsource)
         self.global_tree_db.pop(delete_gsource)
 
-    def test(self):
-        add_index = self.menubar.index('Добавить воздействие')
-        del_index = self.menubar.index('Удалить воздействие')
-
-        self.menubar.entryconfigure(add_index, state='disabled')
-        self.menubar.entryconfigure(del_index, state='disabled')
-
     def save(self):
         ex = Save_remp(self.marple, self.global_tree_db, self.path)
-
-    def __flux_auto_search(self, name, first_key, second_key, label):
-        obj = self.global_tree_db[name]
-
-        from_l = second_key.split('_')[-2]
-        to_l = second_key.split('_')[-1]
-        number = self.PAR[first_key]['number']
-        spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
-
-        if len(spectres) == 6:
-            obj.insert_third_level(first_key, second_key, 'spectre', [i for i in spectres.keys()])
-            obj.insert_third_level(first_key, second_key, 'spectre numbers', [i for i in spectres.values()])
-
-            spectre = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
-            spectre_number = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre numbers')
-
-            t = 'Список спектров:\n'
-
-            for i in range(len(spectre)):
-                t += '№ ' + str(spectre_number[i]) + '   ' + str(spectre[i]) + '\n'
-
-        else:
-            t = 'Опознано неправильное количество спектров.\nВоспользуйтесь ручным выбором'
-
-        label['text'] = t
 
     def __add_source_button(self):
         # if len(self.global_tree_db) >= len(self.PAR):
@@ -1220,272 +997,6 @@ class MainWindow(tk.Frame):
         fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
         return fr_data
-
-    def __spectre_configure(self, name_label, num_label, name, first_key, second_key, create=False, configure=False):
-
-        if configure:
-            sp_path = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
-            sp_path = os.path.join(self.path, sp_path)
-
-            top_level_root = tk.Toplevel(self.parent)
-            top_level_root.grab_set()
-
-            ex = SpectreConfigure(self.path, top_level_root)
-            ex.grid(sticky='NWSE')
-
-            ex.button_open_spectre['state'] = 'disabled'
-            ex.button_create_spectre['state'] = 'disabled'
-            ex.spetre_type_cobbobox['state'] = 'disabled'
-
-            ex.open_spectre(use_chose_spectre=sp_path, use_constructor=True)
-
-            ex.spectre_power['state'] = 'disabled'
-
-            self.wait_window(top_level_root)
-
-            file_name, number, sp_type = self.__read_spectre(sp_path)
-            if file_name is None:
-                return
-
-            name_label['text'] = f'Путь к файлу:  {file_name}'
-            num_label['text'] = f'Номер спектра:  {number}'
-
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
-
-        if create:
-
-            top_level_root = tk.Toplevel(self.parent)
-            top_level_root.grab_set()
-
-            ex = SpectreConfigure(self.path, top_level_root)
-            ex.grid(sticky='NWSE')
-
-            self.wait_window(top_level_root)
-
-            file_name, number, sp_type = self.__read_spectre(ex.spectre_path)
-            if file_name is None:
-                return
-
-            name_label['text'] = f'Путь к файлу:  {file_name}'
-            num_label['text'] = f'Номер спектра:  {number}'
-
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
-            self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
-
-    def __choice_distribution(self, label, name, first_key, second_key, buttons):
-        distribution_file = fd.askopenfilename(title=f'Выберите файл distribution для {second_key}',
-                                               initialdir=self.path,
-                                               filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-
-        if distribution_file == '':
-            return
-
-        distribution_file = self.__copy_to_project(distribution_file)
-
-        t = os.path.basename(distribution_file)
-        label['text'] = f'Список файлов:\n  {t}'
-
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'distribution', t)
-
-        buttons[0]['state'] = 'normal'
-        buttons[1]['state'] = 'normal'
-
-    def __delete_distribution(self, label, name, first_key, second_key, buttons):
-
-        label['text'] = f'Список файлов:\n  {None}'
-
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'distribution', None)
-
-        buttons[0]['state'] = 'disabled'
-        buttons[1]['state'] = 'disabled'
-
-    def __choice_files(self, label, name, first_key, second_key, format, one_file=True, buttons=None):
-
-        if one_file:
-            file = fd.askopenfilename(title=f'Выберите файлы формата {format}', initialdir=self.path)
-
-            if file == '':
-                return
-
-            file_name, number, sp_type = self.__read_spectre(file)
-            if file_name is None:
-                t = 'Тип файла не распознан, добавление невозможно'
-                label['text'] = t
-                self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', None)
-                self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', None)
-                return
-
-            t = '№ ' + str(number) + '   ' + file_name + '\n'
-
-        else:
-
-            files = fd.askopenfilenames(title=f'Выберите файлы формата {format}', initialdir=self.path)
-
-            if files == '':
-                return
-
-            file_name, number, sp_type = [], [], []
-            for i in files:
-                a, b, c = self.__read_spectre(i)
-                if a is None:
-                    t = 'Тип файла не распознан, добавление невозможно'
-                    label['text'] = t
-                    self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', None)
-                    self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', None)
-
-                    return
-
-                file_name.append(a)
-                number.append(b)
-                sp_type.append(c)
-
-                t = ''
-                for i in range(len(number)):
-                    t += '№ ' + str(number[i]) + '   ' + file_name[i] + '\n'
-
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
-
-        label['text'] = 'Список файлов:\n' + t
-
-        if buttons is not None:
-            buttons['state'] = 'normal'
-
-    def __choice_file(self, name_label, num_label, name, first_key, second_key, format, buttons):
-
-        file = fd.askopenfilename(title=f'Выберите файлы формата {format}', initialdir=self.path)
-
-        if file == '':
-            name_label['text'] = 'Файл не опознан. Выберите файл правильного формата.'
-            return
-
-        file_name, number, sp_type = self.__read_spectre(file)
-        if file_name is None:
-            return
-
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
-
-        name_label['text'] = f'Путь к файлу:  {file_name}'
-        num_label['text'] = f'Номер спектра:  {number}'
-
-        buttons['state'] = 'normal'
-
-    def __copy_to_project(self, target):
-        t = target
-        in_project = os.path.normpath(os.path.split(t)[0])
-        if os.path.normpath(self.path) == in_project:
-            return target
-        file_name = os.path.split(t)[-1]
-        save_path = os.path.join(self.path, file_name)
-        if file_name in os.listdir(self.path + '/'):
-            ask = mb.askyesno(f'Копирование {file_name} в проект',
-                              'Файл с таким названием уже есть в проекте. Перезаписать файл?\n'
-                              'да - перезаписать\n'
-                              'нет - переименовать')
-            if ask is True:
-                shutil.copyfile(t, save_path)
-            elif ask is False:
-                while file_name in os.listdir(self.path + '/'):
-                    file_name = sd.askstring('Введите имя файла', 'Введите имя файла')
-                    if file_name in os.listdir(self.path + '/'):
-                        print('Файл уже находится в проекте. Выберите новое имя.')
-                save_path = os.path.join(self.path, file_name)
-                shutil.copyfile(t, save_path)
-        else:
-            shutil.copyfile(t, save_path)
-
-        return save_path
-
-    def __open_notepad(self, name, first_key, second_key, label, one_file):
-        d = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
-        if d is None:
-            return
-
-        if one_file is False:
-
-            a = SelectSpectreToView(d)
-
-            self.wait_window(a)
-
-            choice = a.lb_current
-            if choice is None:
-                return
-
-        elif one_file is True:
-            choice = d
-
-        f = os.path.join(self.path, choice)
-        osCommandString = f"notepad.exe {f}"
-        os.system(osCommandString)
-
-        files = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'spectre')
-
-        if type(files) is list:
-            files = [os.path.join(self.path, i) for i in files]
-
-            file_name, number, sp_type = [], [], []
-            for i in files:
-                a, b, c = self.__read_spectre(i)
-                if a is None:
-                    return
-
-                file_name.append(a)
-                number.append(str(b))
-                sp_type.append(c)
-
-            t = ''
-            for i in range(len(number)):
-                t += '№ ' + str(number[i]) + '   ' + file_name[i] + '\n'
-
-        else:
-            file = os.path.join(self.path, files)
-            file_name, number, sp_type = self.__read_spectre(file)
-            if file_name is None:
-                return
-
-            t = '№ ' + str(number) + '   ' + file_name + '\n'
-
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre', file_name)
-        self.global_tree_db[name].insert_third_level(first_key, second_key, 'spectre numbers', number)
-
-        label['text'] = 'Список файлов:\n' + t
-
-    def __open_notepad_distribution(self, name, first_key, second_key):
-
-        choice = self.global_tree_db[name].get_last_level_data(first_key, second_key, 'distribution')
-
-        f = os.path.join(self.path, choice)
-        osCommandString = f"notepad.exe {f}"
-        os.system(osCommandString)
-
-    def __read_spectre(self, target):
-
-        if not os.path.exists(target):
-            print('Выбранный файл не существует')
-            return None, None, None
-
-        target = self.__copy_to_project(target)
-        file_name = os.path.split(target)[-1]
-
-        try:
-            with open(os.path.join(self.path, file_name), 'r') as file:
-                for j, line in enumerate(file):
-                    if j == 2:
-                        number = int(line.strip())
-                    if j == 6:
-                        type = int(line.strip())
-                        break
-
-                if len(file.readlines()) < 2:
-                    raise Exception
-
-        except:
-            print('Ошибка чтения выбранных файлов')
-            return None, None, None
-
-        return file_name, number, type
 
     def __add_marple(self):
         ex = MarpleInterface(self.path)

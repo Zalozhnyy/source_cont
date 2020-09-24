@@ -213,7 +213,7 @@ class FrameGen(ttk.LabelFrame):
         self.entry_f_val.set(f'')
         self.entry_f_val.trace('w', lambda name, index, mode: self.__get_amplitude_callback())
 
-        label_f = tk.Label(self.constants_fr, text='Суммарный выход квантов\nиз источника')
+        label_f = tk.Label(self.constants_fr, text='Суммарный выход частиц\nиз источника')
         label_f.grid(row=0, column=0, padx=3, sticky='E', pady=3)
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)

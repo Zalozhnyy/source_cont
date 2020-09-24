@@ -309,11 +309,11 @@ class DataParser:
         if os.path.exists(self.source_path):
             lag = self.pech_check_utility(self.source_path)
             # mb.showinfo('Info', fr'lag/parameters взят из {os.path.normpath(self.source_path)}')
-            print(fr'lag/parameters взят из {os.path.normpath(self.source_path)}')
+            print(fr'Параметр задержки был взят из {os.path.normpath(self.source_path)}')
         else:
             ask = mb.askyesno('Проект переноса не найден',
-                              f'Путь {os.path.normpath(self.source_path)} не найден. Проект переноса не обнаружен.\n'
-                              f'Продолжить без проекта переноса? (lag/parameters будет равен нулю)')
+                              f'Путь {os.path.normpath(self.source_path)} не найден.\nПроект переноса не обнаружен.\n'
+                              f'Продолжить без проекта переноса? Параметр задержки будет равен нулю.')
             if ask is True:
                 self.source_path = None
                 lag = '0'
@@ -321,7 +321,7 @@ class DataParser:
                 mb.showinfo('Info', fr'Выберите файл source, находящийся в <pechs/initials/source>')
                 self.source_path = fd.askopenfilename(title='Выберите файл source', initialdir=f'{self.path}')
                 if self.source_path == '':
-                    mb.showinfo('Info', fr'lag/parameters равен 0')
+                    mb.showinfo('Info', fr'параметр задержки равен 0')
                     self.source_path = None
                     return '0', self.source_path
                 lag = self.pech_check_utility(self.source_path)
@@ -331,12 +331,15 @@ class DataParser:
     def pech_check_utility(self, path):
         with open(path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
-
+        koord = '0'
         for i in lines:
             if 'SOURCE_DIRECTION' in i:
                 koord = i.split('=')[-1]
+                return f'1 {koord}'
 
-        return f'1 {koord}'
+        if koord == '0':
+            return koord
+
 
     def distribution_reader(self):
         out = []

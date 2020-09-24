@@ -232,12 +232,12 @@ class SpectreConfigure(tk.Frame):
 
             else:
                 raise Exception
+
         except IndexError:
             print('Файл не похож на спектр')
             self.open_notepad_with_chosen_file()
         except:
             print('Тип спектра не распознан или структура нарушена.')
-            print(f'Распознаный тип спектра: {self.data_struct.spectre_type}')
             self.open_notepad_with_chosen_file()
 
         try:
@@ -249,7 +249,7 @@ class SpectreConfigure(tk.Frame):
         f = self.spectre_path
         osCommandString = f"notepad.exe {f}"
         os.system(osCommandString)
-        self.destroy()
+        self.parent.destroy()
 
     def create_spectre(self):
         self.__cb_react()

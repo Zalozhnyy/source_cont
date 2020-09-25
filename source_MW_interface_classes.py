@@ -71,9 +71,9 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_number_label = tk.Label(self, text='')
         self.spectre_type_label = tk.Label(self, text='')
 
-        self.spectre_name_label.grid(row=self.row, column=0, padx=3, pady=3, rowspan=10)
-        self.spectre_number_label.grid(row=self.row, column=1, padx=3, pady=3, rowspan=10)
-        self.spectre_type_label.grid(row=self.row, column=2, padx=3, pady=3, rowspan=10)
+        self.spectre_name_label.grid(row=self.row, column=0, padx=3, pady=3, rowspan=10, sticky='N')
+        self.spectre_number_label.grid(row=self.row, column=1, padx=3, pady=3, rowspan=10, sticky='N')
+        self.spectre_type_label.grid(row=self.row, column=2, padx=3, pady=3, rowspan=10, sticky='N')
 
         self._init_buttons()
 
@@ -87,6 +87,8 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_name_label['text'] = name
         self.spectre_number_label['text'] = number
         self.spectre_type_label['text'] = sp_type
+
+        self._configure_labels_rowpan()
 
     def _init_buttons(self):
         row = 1
@@ -438,6 +440,14 @@ class StandardizedSourceMainInterface(tk.Frame):
 
         else:
             print('чиво наделили? не знаем такого источника')
+
+    def _configure_labels_rowpan(self):
+
+        n = len(self.spectre_name_values) + 1
+
+        self.spectre_name_label.grid_configure(rowspan=n)
+        self.spectre_number_label.grid_configure(rowspan=n)
+        self.spectre_type_label.grid_configure(rowspan=n)
 
 
 if __name__ == '__main__':

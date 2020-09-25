@@ -54,10 +54,21 @@ class SpectreOneInterface(tk.Frame):
         num_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
+        self.spectre_number_exception = tk.Label(self.frame_description, text='Введите целочисленое значение')
+        self.spectre_number_exception.grid(row=self.row, column=2, columnspan=6, sticky='NW')
+        self.spectre_number_exception.grid_remove()
+
         self.spectre_number_val = tk.StringVar()
-        self.spectre_number_val.set('')
+
         self.spectre_number = tk.Entry(self.frame_description, textvariable=self.spectre_number_val, width=10)
-        self.spectre_number.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.spectre_number.grid(row=self.row, column=0, columnspan=2, sticky='NW')
+
+        self.spectre_number_val.trace('w', lambda name, index, mode: self._data_validation([int],
+                                                                                           self.spectre_number_val,
+                                                                                           self.spectre_number,
+                                                                                           self.spectre_number_exception))
+        self.spectre_number_val.set('')
+
         self.row += 1
 
         # Power
@@ -66,10 +77,20 @@ class SpectreOneInterface(tk.Frame):
         power_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
+        self.spectre_power_exception = tk.Label(self.frame_description, text='Введите значение')
+        self.spectre_power_exception.grid(row=self.row, column=2, columnspan=6, sticky='NW')
+        self.spectre_power_exception.grid_remove()
+
         self.spectre_power_val = tk.StringVar()
-        self.spectre_power_val.set('1')
         self.spectre_power = tk.Entry(self.frame_description, textvariable=self.spectre_power_val, width=10)
-        self.spectre_power.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+        self.spectre_power.grid(row=self.row, column=0, columnspan=2, sticky='NW')
+
+        self.spectre_power_val.trace('w', lambda name, index, mode: self._data_validation([int, float],
+                                                                                          self.spectre_power_val,
+                                                                                          self.spectre_power,
+                                                                                          self.spectre_power_exception))
+        self.spectre_power_val.set('1')
+
         self.row += 1
 
         # # SP_type
@@ -118,14 +139,25 @@ class SpectreOneInterface(tk.Frame):
         pcount_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
 
+        self.starts_count_exception = tk.Label(self.frame_description, text='Введите целочисленое значение')
+        self.starts_count_exception.grid(row=self.row, column=2, columnspan=6, sticky='NW')
+        self.starts_count_exception.grid_remove()
+
         self.starts_count_val = tk.StringVar()
-        self.starts_count_val.set('1')
         self.starts_count_val.trace('w',
                                     lambda name, index, mode: self.__change_count_callback())
 
         self.starts_count = tk.Entry(self.frame_description, textvariable=self.starts_count_val, width=10,
                                      state='normal')
         self.starts_count.grid(row=self.row, column=0, columnspan=12, sticky='NW')
+
+        self.starts_count_val.trace('w', lambda name, index, mode: self._data_validation([int],
+                                                                                         self.starts_count_val,
+                                                                                         self.starts_count,
+
+                                                                                         self.starts_count_exception))
+        self.starts_count_val.set('1')
+
         self.row += 1
 
         # phi type
@@ -896,6 +928,21 @@ class SpectreOneInterface(tk.Frame):
             return -1
 
         return 1
+
+    def _data_validation(self, dtype, value_obj, entry_object, exception_label):
+
+        try:
+            val = eval(value_obj.get())
+        except:
+            val = None
+
+        if type(val) not in dtype or val is None:
+            entry_object.configure(bg='#F08080')
+            exception_label.grid()
+
+        else:
+            entry_object.configure(bg='#FFFFFF')
+            exception_label.grid_remove()
 
 
 class ScrolledWidget(tk.Frame):

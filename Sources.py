@@ -4,9 +4,14 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 
 import tkinter as tk
+
+from loguru import logger
+
 from source_MainWindow import MainWindow
 
-if __name__ == '__main__':
+
+@logger.catch()
+def main():
     root = tk.Tk()
     root.geometry('1350x800')
 
@@ -19,3 +24,10 @@ if __name__ == '__main__':
     main_win = MainWindow(root, projectfilename=ini)
 
     root.mainloop()
+
+
+if __name__ == '__main__':
+    logger.add('sources_debug.log', format="{time} {level} {message}",
+               level='DEBUG', rotation='10MB', compression='zip')
+
+    main()

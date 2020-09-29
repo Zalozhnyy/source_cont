@@ -6,7 +6,7 @@ from tkinter import simpledialog
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg)
-from matplotlib.backend_bases import key_press_handler
+import matplotlib.ticker
 from matplotlib.figure import Figure
 import numpy as np
 from numpy import exp, sin, cos, tan, log10
@@ -221,13 +221,13 @@ class FrameGen(ttk.LabelFrame):
 
     def graph_frame(self):
         self.graph_fr = tk.LabelFrame(self, text='График', width=30)
-        self.graph_fr.grid(row=0, column=5, padx=10, pady=10, rowspan=10, columnspan=20, sticky='N')
+        self.graph_fr.grid(row=0, column=5, padx=10, pady=10, rowspan=15, columnspan=30, sticky='NWSE')
 
-        self.figure = Figure(figsize=(5, 4), dpi=100)
+        self.figure = Figure(figsize=(5, 5), dpi=100)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.graph_fr)  # A tk.DrawingArea.
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas.get_tk_widget().pack(side='top', fill='both', expand=True)
 
     def rows_metod(self):
 
@@ -1022,12 +1022,38 @@ class FrameGen(ttk.LabelFrame):
         try:
             self.figure.clf()
             self.chart_type.draw()
+
         except:
             pass
 
         g = self.figure.add_subplot(111)
-        g.plot(self.time_list, self.func_list)
-        g.set_xlabel('Time , s', fontsize=14)
+
+        major_axis = self.time_list[-1] / 12
+
+        try:
+            g.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(major_axis))
+            g.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.1))
+        except ValueError:
+            pass
+
+        formatter = matplotlib.ticker.FormatStrFormatter("%.2g")
+        g.xaxis.set_major_formatter(formatter)
+
+        g.grid(which='major',
+               color='grey',
+               alpha=0.8)
+
+        g.minorticks_on()
+        g.grid(which='minor',
+               color='gray',
+               linestyle=':',
+               alpha=0.3)
+
+        g.plot(self.time_list, self.func_list, linewidth=1.8)
+        g.tick_params(axis='x', which='major', labelsize=9, labelrotation=45)
+        g.set_xlabel('Time , s', fontsize=10, labelpad=1.)
+
+        self.figure.tight_layout()
         # g.set_ylabel('Function', fontsize=14)
         self.canvas.draw()
 
@@ -1146,6 +1172,7 @@ class FrameGen(ttk.LabelFrame):
     def onExit(self):
         self.quit()
 
+
 if __name__ == '__main__':
 
     class TreeDataStructure:
@@ -1218,7 +1245,7 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     data = TreeDataStructure('test')
-    time = [0, 1e-7, 5e-7, 1e-6, 1.5e-6, 2e-6]
+    time = [0, 1e-9, 5e-8, 1e-7, 1.5e-6, 2e-6]
     func = [0, 1, 0.9, 0.5, 0.6, 0]
 
     data.insert_share_data('amplitude', 123)

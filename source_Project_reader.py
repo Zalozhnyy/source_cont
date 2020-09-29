@@ -312,8 +312,11 @@ class DataParser:
             print(fr'Параметр задержки был взят из {os.path.normpath(self.source_path)}')
         else:
             ask = mb.askyesno('Проект переноса не найден',
-                              f'Путь {os.path.normpath(self.source_path)} не найден.\nПроект переноса не обнаружен.\n'
-                              f'Продолжить без проекта переноса? Параметр задержки будет равен нулю.')
+                              f'Путь {os.path.normpath(self.source_path)} не найден.\n'
+                              f'Проект переноса не обнаружен.\n'
+                              f'Продолжить без проекта переноса?\n\n\n'
+                              f'Да - параметр задержки будет равен нулю.\n'
+                              f'Нет - выбрать проект переноса.\n')
             if ask is True:
                 self.source_path = None
                 lag = '0'

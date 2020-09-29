@@ -8,6 +8,7 @@ from tkinter import ttk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 from tkinter import simpledialog
+
 import numpy as np
 from scipy import integrate
 
@@ -1213,6 +1214,8 @@ class SpectreConfigure(tk.Frame):
             return
 
         if type == 'DISCRETE' or type == 'CONTINUOUS':
+            if type == 'CONTINUOUS':
+                rows += 1
             labels = ['Энергия (кэВ)', 'Доля(не нормируется)']
             if self.data_struct.data is None or self.data_struct.spectre_type != type:
                 self.data_struct.create_empty_data((rows, 2))

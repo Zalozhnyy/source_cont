@@ -711,7 +711,8 @@ class MainWindow(tk.Frame):
                             lambda _,
                                    name=name,
                                    sv=len(self.tabs_dict):
-                            self.__tree_select_react(sv, name, _), "+")
+                            self.__tree_select_react(sv, name, _))
+
 
         source = self.tree[ind].insert('', 0, text=f'{name}', open=True)
 
@@ -974,6 +975,23 @@ class MainWindow(tk.Frame):
         self.tree.pop(self.tabs_dict[delete_gsource][0])
         self.tabs_dict.pop(delete_gsource)
         self.global_tree_db.pop(delete_gsource)
+
+        for item in self.tabs_dict.items():
+            if item[1][0] > len(self.tabs_dict) - 1:
+                item[1][0] -= 1
+
+        for item in self.tabs_dict.items():
+            index = item[1][0]
+
+            self.tree[index].bind("<<TreeviewSelect>>",
+                                lambda _,
+                                       name=item[0],
+                                       sv=index:
+                                self.__tree_select_react(sv, name, _))
+
+            self.tree[index].bind("<Button-3>", lambda _,
+                                                     index=index,
+                                                     name=item[0]: self.popup(name, index, _))
 
     def save(self):
         ex = Save_remp(self.marple, self.global_tree_db, self.path)

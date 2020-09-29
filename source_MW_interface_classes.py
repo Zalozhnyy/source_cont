@@ -88,7 +88,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_number_label['text'] = number
         self.spectre_type_label['text'] = sp_type
 
-        self._configure_labels_rowpan()
+        self._configure_labels_rowspan()
 
     def _init_buttons(self):
         row = 1
@@ -121,7 +121,11 @@ class StandardizedSourceMainInterface(tk.Frame):
         self._buttons_state()
 
     def _choice_file_button(self):
-        self.__choice_files()
+        if 'Boundaries' in self.sk:
+            self.__choice_files(one_file=True)
+        else:
+            self.__choice_files(one_file=False)
+
         self._set_spectre_data_to_interface()
 
         if all([i != 'Тип одного из файлов не распознан,\nдобавление невозможно' for i in self.spectre_name_values]):
@@ -212,11 +216,21 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_type_values = ['--']
         self._set_spectre_data_to_interface()
 
-    def __choice_files(self):
-        files = fd.askopenfilenames(title=f'Выберите файлы спектров', initialdir=self.path)
+    def __choice_files(self, one_file=False):
+        if one_file is True:
+            files = fd.askopenfilename(title=f'Выберите файлы спектров', initialdir=self.path)
 
-        if files == '':
-            return
+            if files == '':
+                return
+
+            else:
+                files = [files]
+
+        elif one_file is False:
+            files = fd.askopenfilenames(title=f'Выберите файлы спектров', initialdir=self.path)
+
+            if files == '':
+                return
 
         file_name, number, sp_type = [], [], []
         for i in files:
@@ -441,7 +455,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         else:
             print('чиво наделили? не знаем такого источника')
 
-    def _configure_labels_rowpan(self):
+    def _configure_labels_rowspan(self):
 
         n = len(self.spectre_name_values) + 1
 

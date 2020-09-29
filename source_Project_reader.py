@@ -343,7 +343,6 @@ class DataParser:
         if koord == '0':
             return koord
 
-
     def distribution_reader(self):
         out = []
         for i in os.listdir(self.path + '/'):

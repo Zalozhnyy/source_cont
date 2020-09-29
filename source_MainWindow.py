@@ -4,7 +4,6 @@ from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
 
-import shutil
 import pickle
 
 from source_MW_interface_classes import StandardizedSourceMainInterface
@@ -12,8 +11,8 @@ from source_utility import *
 from source_Project_reader import DataParser
 from source_Save_for_remp import Save_remp
 from source_Main_frame import FrameGen
-from source_SpectreConfigure import SpectreConfigure
-from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView, MarpleInterface
+from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView, MarpleInterface, \
+    MicroElectronicsInterface
 from source_PE_SOURCE import PeSource
 
 
@@ -103,7 +102,8 @@ class MainWindow(tk.Frame):
 
         self.remp_source_exist = False
 
-        self.marple = None
+        self._marple = None
+        self._micro_electronics = None
 
         self._pechs_path = None
 
@@ -179,6 +179,21 @@ class MainWindow(tk.Frame):
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
         self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.start_pechs)
+
+    def _create_micro_electronics_menubar(self):
+
+        self.electronics_menu = tk.Menu(self.menubar, tearoff=0)
+
+        self.menubar.add_cascade(label="Микроэлектроника", menu=self.electronics_menu, state='disabled')
+
+        self.electronics_menu.add_command(label="Добавить файлы микроэлектроники", command=self.__add_microel,
+                                          state='normal')
+        self.electronics_menu.add_command(label="Удалить  файлы микроэлектроники", command=self.__delete_microel,
+                                          state='disabled')
+
+    def _activate_micro_electronics_menubar(self):
+        microele_index = self.menubar.index('Микроэлектроника')
+        self.menubar.entryconfigure(microele_index, state='normal')
 
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
@@ -258,7 +273,7 @@ class MainWindow(tk.Frame):
         ask = mb.askyesno('Сохранение', 'Сохранить файл?')
 
         if ask is True:
-            ex = Save_remp(self.marple, self.global_tree_db, self.path)
+            ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
 
             if ex.saved is False:
                 ask_exit = mb.askyesno('Сохранение', 'Сохранение невозможно, т.к. не заданы все параметры.\n'
@@ -338,6 +353,14 @@ class MainWindow(tk.Frame):
 
         self.from_project_reader()
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
+
+        try:
+            for i in self.PAR.keys():
+                if self.PAR[i]['type'] == 7 or self.PAR[i]['type'] == 8:
+                    self._create_micro_electronics_menubar()
+                    break
+        except:
+            pass
 
         if 'remp_sources' in os.listdir(self.path):
 
@@ -713,7 +736,6 @@ class MainWindow(tk.Frame):
                                    sv=len(self.tabs_dict):
                             self.__tree_select_react(sv, name, _))
 
-
         source = self.tree[ind].insert('', 0, text=f'{name}', open=True)
 
         if load is False:
@@ -729,6 +751,8 @@ class MainWindow(tk.Frame):
             for i in self.PAR.keys():
                 if self.PAR[i]['number'] == load_data[1]:
                     part_name = i
+                    if self.PAR[i]['type'] == 7 or self.PAR[i]['type'] == 8:
+                        self._activate_micro_electronics_menubar()
                     break
 
             if part_name is not None:  # костыль для загрузки в структуры воздействий без частиц
@@ -888,6 +912,9 @@ class MainWindow(tk.Frame):
         if new_particle is None:
             return
 
+        if self.PAR[new_particle]['type'] == 7 or self.PAR[new_particle]['type'] == 8:
+            self._activate_micro_electronics_menubar()
+
         source = self.tree[index].get_children()[0]
 
         if new_particle not in self.global_tree_db[name].get_first_level_keys():
@@ -899,7 +926,6 @@ class MainWindow(tk.Frame):
             source_keys = self.global_tree_db[name].get_second_level_keys(new_particle)
 
             self.particle_tree_constr(new_particle, source_keys, source, index)
-
 
 
         else:
@@ -984,17 +1010,17 @@ class MainWindow(tk.Frame):
             index = item[1][0]
 
             self.tree[index].bind("<<TreeviewSelect>>",
-                                lambda _,
-                                       name=item[0],
-                                       sv=index:
-                                self.__tree_select_react(sv, name, _))
+                                  lambda _,
+                                         name=item[0],
+                                         sv=index:
+                                  self.__tree_select_react(sv, name, _))
 
             self.tree[index].bind("<Button-3>", lambda _,
-                                                     index=index,
-                                                     name=item[0]: self.popup(name, index, _))
+                                                       index=index,
+                                                       name=item[0]: self.popup(name, index, _))
 
     def save(self):
-        ex = Save_remp(self.marple, self.global_tree_db, self.path)
+        ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
 
     def __add_source_button(self):
         # if len(self.global_tree_db) >= len(self.PAR):
@@ -1029,7 +1055,7 @@ class MainWindow(tk.Frame):
         self.marple_menu.entryconfigure(0, state='disabled')
         self.marple_menu.entryconfigure(1, state='normal')
 
-        self.marple = {'ion': ion, 'sigma': sigma}
+        self._marple = {'ion': ion, 'sigma': sigma}
         mb.showinfo('Marple', 'Marple будет сохранён в remp source')
 
     def __delete_marple(self):
@@ -1038,4 +1064,28 @@ class MainWindow(tk.Frame):
 
         mb.showinfo('Marple', 'Marple не будет сохранён в remp source')
 
-        self.marple = None
+        self._marple = None
+
+    def __add_microel(self):
+        ex = MicroElectronicsInterface(self.path)
+        self.wait_window(ex)
+
+        field = ex.field78_path
+        density = ex.density78_path
+
+        if field is None or density is None:
+            return
+
+        self.electronics_menu.entryconfigure(0, state='disabled')
+        self.electronics_menu.entryconfigure(1, state='normal')
+
+        self._micro_electronics = {'field78': field, 'density78': density}
+        mb.showinfo('Marple', 'Микроэлектроника будет сохранёна в remp source')
+
+    def __delete_microel(self):
+        self.electronics_menu.entryconfigure(0, state='normal')
+        self.electronics_menu.entryconfigure(1, state='disabled')
+
+        mb.showinfo('Marple', 'Marple не будет сохранён в remp source')
+
+        self._micro_electronics = None

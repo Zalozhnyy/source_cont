@@ -10,11 +10,12 @@ from source_Dialogs import ShowDuplicateSpectreNumbers
 
 
 class Save_remp:
-    def __init__(self, marple, data_object=None, path=None):
+    def __init__(self, marple, micro_electronics, data_object, path):
         self.db = data_object
         self.path = path
 
         self.marple = marple
+        self.micro_electronics = micro_electronics
 
         self.calc_amplitude = 0.
         self.saved = False
@@ -31,6 +32,9 @@ class Save_remp:
 
         if self.marple is not None:
             out += self.save_marple()
+
+        if self.micro_electronics is not None:
+            out += self.save_micro_electronics()
 
         for item in self.db.items():
             gsource_db = item[1]
@@ -400,6 +404,20 @@ class Save_remp:
 
         else:
             out += str(db_vel)
+
+        return out
+
+    def save_micro_electronics(self):
+        out = ''
+        out += 'Field78\n'
+        out += '<distribution>\n'
+        out += f'{self.micro_electronics["field78"]}\n'
+        out += '\n'
+
+        out += 'Density78\n'
+        out += '<distribution>\n'
+        out += f'{self.micro_electronics["density78"]}\n'
+        out += '\n'
 
         return out
 

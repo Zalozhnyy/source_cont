@@ -12,27 +12,6 @@ class DataParser:
         self.decoding_def = locale.getpreferredencoding()
         self.decoding = 'utf-8'
 
-    # def lay_decoder_old(self):
-    #     #### .LAY DECODER
-    #     try:
-    #         with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-    #             lines = file.readlines()
-    #     except UnicodeDecodeError:
-    #
-    #         with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
-    #             lines = file.readlines()
-    #     lay_numeric = int(lines[2])
-    #     out_lay = np.zeros((lay_numeric, 3), dtype=int)
-    #     j = 0
-    #     for i in range(len(lines)):
-    #         if '<Номер, название слоя>' in lines[i]:  # 0 - номер слоя  1 - стороннй ток  2 - стро. ист.
-    #             out_lay[j, 0] = int(lines[i + 1].split()[0])
-    #             out_lay[j, 1] = int(lines[i + 3].split()[2])
-    #             out_lay[j, 2] = int(lines[i + 3].split()[3])
-    #             j += 1
-    #     # print('.LAY  ', out_lay)
-    #     return out_lay
-
     def lay_decoder(self):
         #### .LAY DECODER
         try:
@@ -77,7 +56,7 @@ class DataParser:
             return out_lay
         except Exception:
             print('Ошибка в чтении файла .LAY')
-            return
+            return None
 
     def tok_decoder(self):
         #### .TOK DECODER
@@ -179,22 +158,7 @@ class DataParser:
 
         except Exception:
             print('Ошибка в чтении файла .PL')
-            return
-            # with open(rf'{self.path}', 'r', encoding='utf-8') as file:
-            #     lines_pl = file.readlines()
-            # for line in range(len(lines_pl)):
-            #     if '<Количество слоев>' in lines_pl[line]:
-            #         pl_numeric = int(lines_pl[line + 1])
-            #         out_pl = np.zeros((pl_numeric, pl_numeric), dtype=int)
-            #
-            #     if '<Частица номер>' in lines_pl[line]:
-            #         for i in range(pl_numeric):
-            #             for j in range(len(lines_pl[line + 2 + i].split())):
-            #                 out_pl[i, j] = int(lines_pl[line + 2 + i].split()[j])
-            #
-            # # print('.PL\n', out_pl)
-            # return out_pl
-            # print('.PL\n', out_pl)
+            return None, None, None, None
 
     def grid_parcer(self):
 
@@ -241,7 +205,7 @@ class DataParser:
 
         except Exception:
             print('Ошибка в чтении файла .PAR')
-            return
+            return None
 
     def remp_source_decoder(self):
         try:
@@ -385,21 +349,29 @@ class DataParser:
     def get_spectre_for_bound(self):
         out = {}
         create_list = ['xmax_part', 'xmin_part', 'ymax_part', 'ymin_part', 'zmax_part', 'zmin_part']
-        for file in os.listdir(os.path.split(self.path)[0]):
-            if any(file in i for i in create_list):
-                try:
-                    with open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding) as f:
-                        for i, line in enumerate(f):
-                            if i == 2:
-                                number = line.strip()
-                                break
-                except:
-                    with open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding_def) as f:
-                        for i, line in enumerate(f):
-                            if i == 2:
-                                number = line.strip()
-                                break
-                out.update({file: number})
+        for file in os.listdir(os.path.dirname(self.path)):
+            for i in range(len(create_list)):
+                if create_list[i] in file:
+                    try:
+                        f = open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding)
+                    except:
+                        f = open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding_def)
+
+                    part_number = int(file[-1])
+                    number = -1
+
+                    for i, line in enumerate(f):
+                        if i == 2:
+                            number = int(line.strip())
+                            break
+
+                    f.close()
+
+                    out.update({file: {
+                        'particle number': part_number,
+                        'number': number
+                    }
+                    })
 
         return out
 
@@ -603,20 +575,7 @@ if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
     # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
     # test_file = r'C:\work\Test_projects\wpala\remp_sources'
-    test_file = r'C:\work\Test_projects\KAMERA\Ez_Kamera.pl'
+    test_file = r'C:\Work\functional_tests\week_0\far\projects\template_faraday\remp_sources'
     a = DataParser(test_file)
-    out_surf, out_volume, out_boundaries, numbers = a.pl_decoder()
-    print(numbers)
-
-    p_file = r'C:\work\Test_projects\wpala\pechs\initials\source'
-    print(DataParser('').pech_check_utility(p_file))
-    # # print(f' surf  {out_surf}')
-    # # print(f' vol  {out_volume}')
-    # # print(f' bound  {out_boundaries}')
-    # x = a.elph_reader()
-    # print(x)
-
-    # a = SpOneReader(test_file)
-    # a.start_read()
-    # print(a.energy_angles)
-    # print(a.energy_parts)
+    x = a.get_spectre_for_bound()
+    print(x)

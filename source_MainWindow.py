@@ -128,18 +128,34 @@ class MainWindow(tk.Frame):
         # self.TOK = DataParcer(self.tok_dir).tok_decoder()
         if os.path.exists(self.pl_dir):
             self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = DataParser(self.pl_dir).pl_decoder()
+            if self.PL_surf is None:
+                mb.showerror('ERROR', 'Нарушена структура файла PL')
+                return
         else:
             self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = None, None, None, None
 
         if os.path.exists(self.lay_dir):
             self.LAY = DataParser(self.lay_dir).lay_decoder()
+            if self.LAY is None:
+                mb.showerror('ERROR', 'Нарушена структура файла LAY')
+                return
         else:
             self.LAY = DataParser('').return_empty_array((1, 3))
 
         if os.path.exists(self.par_dir):
             self.PAR = DataParser(self.par_dir).par_decoder()
+            if self.PAR is None:
+                mb.showerror('ERROR', 'Нарушена структура файла PAR')
+                return
         else:
             self.PAR = None
+
+        if (self.LAY is not None) and (self.layer_numbers is not None):
+            if self.LAY.shape[0] != self.layer_numbers.shape[0]:
+                mb.showerror('ERROR', 'Не совпадает количество слоёв в файле PL и LAY.\n'
+                                      'Запустите интерфейс редактирования файлов LAY/PL для исправления данной ошибки.')
+                return -1
+        return 0
 
     def toolbar(self):
         self.parent.title("Sources")
@@ -344,7 +360,6 @@ class MainWindow(tk.Frame):
         except:
             pass
 
-
         self.file_dict = self.check_folder()
 
         set_recent_projects(self.prj_path, get_recent_projects())
@@ -352,7 +367,8 @@ class MainWindow(tk.Frame):
         self.notebook = ttk.Notebook(self.parent)
         self.notebook.grid(sticky='NWSE')
 
-        self.from_project_reader()
+        if self.from_project_reader() != 0:
+            return
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
 
         try:
@@ -662,31 +678,15 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level(particle, name, 'spectre', None)
                 obj.insert_third_level(particle, name, 'spectre numbers', None)
 
-                try:
-                    for j in boundaries_decode_f.items():
-                        if j[0] == boundaries_decode[i]:
-                            file = j[1]
-                            sp_number = b_list[file]
-                            break
+                for item in b_list.items():
+                    predict_file_name = boundaries_decode_f[name.split('_')[-1]]
+                    if predict_file_name in item[0]:
+                        if item[1]['particle number'] == number:
+                            file = item[0]
+                            sp_number = item[1]['number']
 
-                    obj.insert_third_level(particle, name, 'spectre', file)
-                    obj.insert_third_level(particle, name, 'spectre numbers', sp_number)
-
-                except:
-                    obj.insert_third_level(particle, name, 'spectre', None)
-                    obj.insert_third_level(particle, name, 'spectre numbers', None)
-
-                # if load:
-                #     try:
-                #         sp = self.rs_data[number][name]['spectre']
-                #         obj.insert_third_level(particle, name, 'spectre', sp)
-                #
-                #         sp_n = self.rs_data[number][name]['spectre number']
-                #         obj.insert_third_level(particle, name, 'spectre numbers', sp_n)
-                #     except:
-                #         print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                #         obj.insert_third_level(particle, name, 'spectre', None)
-                #         obj.insert_third_level(particle, name, 'spectre numbers', None)
+                            obj.insert_third_level(particle, name, 'spectre', file)
+                            obj.insert_third_level(particle, name, 'spectre numbers', sp_number)
 
     def tree_view_constructor(self, ask_name=True, load=False, load_data=None):
         if self.path is None:

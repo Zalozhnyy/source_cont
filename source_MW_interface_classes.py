@@ -194,6 +194,9 @@ class StandardizedSourceMainInterface(tk.Frame):
         ex = SpectreConfigure(self.path, top_level_root)
         ex.grid(sticky='NWSE')
 
+        if 'Boundaries' in self.sk:
+            ex.change_boundaries_allowed_creation_list()
+
         self.wait_window(top_level_root)
 
         file_name, number, sp_type = self.__read_spectre(ex.spectre_path)
@@ -445,7 +448,6 @@ class StandardizedSourceMainInterface(tk.Frame):
 
         elif 'Boundaries' in self.sk:
             self.delete_current_source_from_db_button.grid_remove()
-            self.create_spectre_button.grid_remove()
             self.flux_auto_search_button.grid_remove()
 
             self.configure_spectre_button['state'] = 'disabled'

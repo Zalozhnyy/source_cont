@@ -1636,6 +1636,10 @@ class SpectreConfigure(tk.Frame):
 
         return True
 
+    def change_boundaries_allowed_creation_list(self):
+        self.spectre_type_combobox_values = ['Граничный']
+        self.spetre_type_cobbobox.configure(value=[val for val in self.spectre_type_combobox_values])
+
 
 class SpectreDataStructure:
     def __init__(self, path=None):

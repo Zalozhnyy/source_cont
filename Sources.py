@@ -27,7 +27,8 @@ def main():
 
 
 if __name__ == '__main__':
-    logger.add('sources_debug.log', format="{time} {level} {message}",
+    log_path = os.path.join(os.path.dirname(__file__), 'sources_debug.log')
+    logger.add(log_path, format="{time} {level} {message}",
                level='DEBUG', rotation='10MB', compression='zip')
 
     main()

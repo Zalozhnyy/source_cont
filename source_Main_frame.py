@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import (
 import matplotlib.ticker
 from matplotlib.figure import Figure
 import numpy as np
-from numpy import exp, sin, cos, tan, log10
+from numpy import exp, sin, cos, tan, log10, arcsin, arccos, arctan, arcsinh, arccosh, arctanh, sinh, cosh, tanh
 from numpy import log as ln
 
 from source_utility import *
@@ -199,7 +199,7 @@ class FrameGen(ttk.LabelFrame):
             'Для создания диапазона значений в строке "Время"\n' \
             'введите range[начало; конец; количество шагов]\n' \
             'Для применения формул в строке "Функция" введите\n' \
-            'exp(t), ln(t) и т.д Так же доступны все мат. операции\n' \
+            'exp(T), ln(T) и т.д Так же доступны все мат. операции\n' \
             'возведение в степерь: a**n\n\n' \
             'Для сортировки времени переведите курсор в окно ввода\n' \
             'временной функции и нажмите Enter'
@@ -265,10 +265,13 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
 
         self.entry_time.bind('<Return>', self.__row_sort_method)
+        # self.entry_time.bind('<FocusOut>', self.__get_row_callback)
 
         tk.Label(self.entry_func_fr, text='Зн. функции').grid(row=2, column=0, pady=3, padx=2)
         self.entry_func = tk.Entry(self.entry_func_fr, width=50, textvariable=self.func_entry_vel, justify='left')
         self.entry_func.grid(row=2, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
+
+        # self.entry_func.bind('<FocusOut>', self.__get_row_callback)
 
         self.entryScroll_func = tk.Scrollbar(self.entry_func_fr, orient=tk.HORIZONTAL,
                                              command=self.__scrollHandler_func)
@@ -295,6 +298,7 @@ class FrameGen(ttk.LabelFrame):
                                                                 'функцию с момента времени:')
         self.obriv_tf_lavel.grid(row=6, column=0, columnspan=2, sticky='W')
         self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_row_callback())
+
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
                                        justify='center')
         self.entry_time_fix.grid(row=6, column=2, sticky='W')
@@ -641,10 +645,21 @@ class FrameGen(ttk.LabelFrame):
             print('Начало меньше нуля')
             return
         if fr > float(self.end_time[-1]):
-            print('Начало больше возможного конечного значения')
-            return
+            ask = mb.askyesno('info', f'Обнаружено что введённое значение {fr} '
+                                      f'превышает конечное значение на временной сетке {self.end_time[0]}\n'
+                                      f'Заменить {to} на {self.end_time[0]}?')
+            if ask is True:
+                fr = float(self.end_time[-1])
+
         if to > float(self.end_time[-1]):
-            to = float(self.end_time[-1])
+            ask = mb.askyesno('info', f'Обнаружено что введённое значение {to} '
+                                      f'превышает конечное значение на временной сетке {self.end_time[-1]}\n'
+                                      f'Заменить {to} на {self.end_time[-1]}?')
+            if ask is True:
+                to = float(self.end_time[-1])
+
+        if fr > to:
+            mb.showerror('info', f'Начальное значение {fr} jkmit ')
 
         gen = np.linspace(fr, to, num)
         ins = ''
@@ -679,12 +694,16 @@ class FrameGen(ttk.LabelFrame):
                 pass
 
         func_string = self.func_entry_vel.get()
-        if '(' in func_string:
+        if '(' in func_string or 'T' in func_string:
             tmp = ''
             for i in range(len(self.time_list)):
-                calc = func_string.replace('t', f'{self.time_list[i]}')
-                self.func_list.append(eval(calc))
-                tmp += '{:.5g} '.format(eval(calc))
+                calc = func_string.replace('T', f'{self.time_list[i]}')
+
+                try:
+                    self.func_list.append(eval(calc))
+                    tmp += '{:.5g} '.format(eval(calc))
+                except:
+                    pass
 
             # self.func_entry_vel.set(tmp)
 
@@ -1028,11 +1047,15 @@ class FrameGen(ttk.LabelFrame):
 
         g = self.figure.add_subplot(111)
 
-        major_axis = self.time_list[-1] / 12
+        try:
+            major_axis = self.time_list[-1] / 12
+        except:
+            return
 
         try:
             g.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(major_axis))
-            g.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.1))
+
+            # g.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.1))
         except ValueError:
             pass
 

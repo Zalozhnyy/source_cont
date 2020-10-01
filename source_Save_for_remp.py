@@ -325,7 +325,7 @@ class Save_remp:
 
         e_numbers = []
         for i in range(len(numbers)):
-            e_numbers.append(numbers[i][0])
+            e_numbers.append(int(numbers[i][0]))
 
         if len(e_numbers) == len(set(e_numbers)):  # нет повторяющихся элементов
             return

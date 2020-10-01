@@ -344,6 +344,7 @@ class MainWindow(tk.Frame):
         except:
             pass
 
+
         self.file_dict = self.check_folder()
 
         set_recent_projects(self.prj_path, get_recent_projects())
@@ -367,7 +368,6 @@ class MainWindow(tk.Frame):
             ask = mb.askyesno('Обнаружен rems source', 'Обнаружен файл remp source\nЗагрузить данные?')
 
             if ask is True:
-
                 if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
                     print('Загрузка невозможна. Файл Sources.pkl не найден')
                     mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
@@ -938,7 +938,7 @@ class MainWindow(tk.Frame):
             first_list = []
             second_list = []
             for key in self.global_tree_db[name].get_first_level_keys():
-                first_list.append(key.split()[-1])
+                first_list.append(key)
                 for item in self.global_tree_db[name].get_second_level_keys(key):
                     second_list.append(item)
 

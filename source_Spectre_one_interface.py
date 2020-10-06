@@ -963,8 +963,11 @@ class ScrolledWidget(tk.Frame):
         self.frame.bind("<Configure>", self.onFrameConfigure)
 
     def _on_mousewheel(self, event):
-        if self.vsb.get() != (0., 1.):
-            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        try:
+            if self.vsb.get() != (0., 1.):
+                self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        except:
+            pass
 
     def populate(self):
         '''Put in some fake data'''

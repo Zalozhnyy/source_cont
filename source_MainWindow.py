@@ -505,19 +505,6 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
                 obj.insert_third_level('Energy', f'{name}', 'distribution', None)
 
-        # if self.TOK[2] == 1:
-        #     number = self.PAR[part_list[0]]['number']
-        #
-        #     energy_type = f'Gursa'
-        #     name = f'Gursa_{number}'
-        #
-        #     obj.insert_second_level(f'{part_list[0]}', f'{name}', {})
-        #
-        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'energy_type', energy_type)
-        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'name', name)
-        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre', None)
-        #     obj.insert_third_level(f'{part_list[0]}', f'{name}', 'spectre numbers', None)
-
         return obj
 
     def tree_db_insert_particle(self, obj_name, particle, load=False):
@@ -776,21 +763,21 @@ class MainWindow(tk.Frame):
                 continue
             if any(['Energy' in s_key for s_key in source_keys]):
                 lb = 'Энерговыделение'
-                part = self.tree[ind].insert(source, index, text=lb, open=True)
+                self.__energy_tree_view_section = self.tree[ind].insert(source, index, text=lb, open=True)
 
                 for i, s_key in enumerate(source_keys):
-                    self.tree[ind].insert(part, i, text=f'{s_key}', open=True)
+                    self.tree[ind].insert(self.__energy_tree_view_section, i, text=f'{s_key}', open=True)
 
             elif any(['Current' in s_key for s_key in source_keys]):
                 lb = 'Сторонний ток'
-                part = self.tree[ind].insert(source, index, text=lb, open=True)
+                self.__current_tree_view_section = self.tree[ind].insert(source, index, text=lb, open=True)
 
                 for i, s_key in enumerate(source_keys):
-                    self.tree[ind].insert(part, i, text=f'{s_key}', open=True)
+                    self.tree[ind].insert(self.__current_tree_view_section, i, text=f'{s_key}', open=True)
 
         self.tree[ind].bind("<Button-3>", lambda _,
                                                  index=ind,
-                                                 name=name: self.popup(name, index, _))
+                                                 name=name: self._left_button_menu(name, index, _))
 
         self.notebook.add(fr, text=f'{name}')
         self.tabs_dict.update({name: [len(self.tabs_dict), fr, True]})
@@ -931,38 +918,59 @@ class MainWindow(tk.Frame):
         else:
             print('Объект уже существует')
 
-    def popup(self, name, index, event):
+    def _left_button_menu(self, name, index, event):
 
         iid = self.tree[index].identify_row(event.y)
         if iid:
-            first_list = []
-            second_list = []
+            particle_list = []
+            sources_list = []
             for key in self.global_tree_db[name].get_first_level_keys():
-                first_list.append(key)
+                if 'Current' not in key and 'Energy' not in key:
+                    particle_list.append(key)
                 for item in self.global_tree_db[name].get_second_level_keys(key):
-                    second_list.append(item)
+                    sources_list.append(item)
 
-            # mouse pointer over item
-            self.contextMenu = tk.Menu(tearoff=0)
-            if self.tree[index].item(iid)['text'] in first_list:
-                self.contextMenu.add_command(label="Удалить", command=lambda: self.delete_particle(index, name, iid))
+            influence = name
+
+            if self.tree[index].item(iid)['text'] == influence:
+                self.contextMenu = tk.Menu(tearoff=0)
+
+                self.contextMenu.add_command(label="Добавить частицу",
+                                             command=lambda: self.add_part(index, name, iid),
+                                             state='normal')
+
+                self.contextMenu.add_command(label="Восстановить источники токов",
+                                             command=lambda: self.__restore_currents(influence, index))
+
+                self.contextMenu.add_command(label="Восстановить источники энорговыделения",
+                                             command=lambda: self.__restore_energy_distribution(influence, index))
+
+                self.contextMenu.add_command(label="Удалить воздействие",
+                                             command=lambda: self.__tree_view_deconstructor(influence))
+
                 self.tree[index].selection_set(iid)
-            else:
-                if self.tree[index].item(iid)['text'] == name:
-                    self.contextMenu.add_command(label="Добавить частицу",
-                                                 command=lambda: self.add_part(index, name, iid),
-                                                 state='normal')
+                self.contextMenu.post(event.x_root, event.y_root)
+
+            elif 'Current' in self.tree[index].item(iid)['text'] or 'Energy' in self.tree[index].item(iid)['text']:
+                self.contextMenu = tk.Menu(tearoff=0)
 
                 self.contextMenu.add_command(label="Удалить", command=lambda: self.delete_particle(index, name, iid),
-                                             state='disabled')
-                self.tree[index].selection_set(iid)
+                                             state='normal')
 
-            self.contextMenu.post(event.x_root, event.y_root)
-        else:
-            # mouse pointer not over item
-            # occurs when items do not fill frame
-            # no action required
-            pass
+                self.tree[index].selection_set(iid)
+                self.contextMenu.post(event.x_root, event.y_root)
+
+            elif any([i in self.tree[index].item(iid)['text'] for i in particle_list]):
+                self.contextMenu = tk.Menu(tearoff=0)
+
+                self.contextMenu.add_command(label="Удалить", command=lambda: self.delete_particle(index, name, iid),
+                                             state='normal')
+
+                self.tree[index].selection_set(iid)
+                self.contextMenu.post(event.x_root, event.y_root)
+
+            else:
+                pass
 
     def delete_particle(self, index, name, id):
         first_list = []
@@ -977,7 +985,11 @@ class MainWindow(tk.Frame):
                 if self.tree[index].item(id)['text'] in i:
                     f_key = i
                     break
-            self.global_tree_db[name].delete_first_level(f_key)
+            try:
+                self.global_tree_db[name].delete_first_level(f_key)
+            except:
+                print('The object can not be deleted')
+                return
             self.tree[index].delete(id)
 
         elif self.tree[index].item(id)['text'] in second_list:
@@ -988,13 +1000,20 @@ class MainWindow(tk.Frame):
         else:
             print('The object can not be deleted')
 
-    def __tree_view_deconstructor(self):
-        data = [i for i in self.global_tree_db.keys()]
+    def __tree_view_deconstructor(self, selection=None):
+        if selection is None:
+            data = [i for i in self.global_tree_db.keys()]
 
-        a = DeleteGSourceDialog(data)
-        self.wait_window(a)
-        delete_gsource = a.lb_current
-        if delete_gsource is None:
+            a = DeleteGSourceDialog(data)
+            self.wait_window(a)
+            delete_gsource = a.lb_current
+            if delete_gsource is None:
+                return
+
+        elif selection is not None:
+            delete_gsource = selection
+
+        else:
             return
 
         self.notebook.forget(self.tabs_dict[delete_gsource][0])
@@ -1017,10 +1036,48 @@ class MainWindow(tk.Frame):
 
             self.tree[index].bind("<Button-3>", lambda _,
                                                        index=index,
-                                                       name=item[0]: self.popup(name, index, _))
+                                                       name=item[0]: self._left_button_menu(name, index, _))
 
     def save(self):
         ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
+
+    def __restore_currents(self, object_name, index):
+
+        obj = self.global_tree_db[object_name]
+        create_list = ['x', 'y', 'z']
+
+        for i in range(self.LAY.shape[0]):
+            if self.LAY[i, 1] == 1:
+                for axis in create_list:
+                    energy_type = f'Ток по оси {axis} слой {self.layer_numbers[i]}'
+                    name = f'Current_{axis}_layer_{self.layer_numbers[i]}'
+                    d = f'J{axis.upper()}_{self.layer_numbers[i]}'
+
+                    if name not in obj.get_second_level_keys('Current'):
+                        obj.insert_second_level('Current', f'{name}', {})
+
+                        obj.insert_third_level('Current', f'{name}', 'name', name)
+                        obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
+                        obj.insert_third_level('Current', f'{name}', 'distribution', None)
+
+                        self.tree[index].insert(self.__current_tree_view_section, i, text=f'{name}', open=True)
+
+    def __restore_energy_distribution(self, object_name, index):
+
+        obj = self.global_tree_db[object_name]
+
+        for i in range(self.LAY.shape[0]):
+            if self.LAY[i, 2] == 1:
+                energy_type = 'Energy'
+                name = f'Energy_layer_{self.layer_numbers[i]}'
+                if name not in obj.get_second_level_keys('Energy'):
+                    obj.insert_second_level('Energy', f'{name}', {})
+
+                    obj.insert_third_level('Energy', f'{name}', 'name', name)
+                    obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level('Energy', f'{name}', 'distribution', None)
+
+                    self.tree[index].insert(self.__energy_tree_view_section, i, text=f'{name}', open=True)
 
     def __add_source_button(self):
         # if len(self.global_tree_db) >= len(self.PAR):

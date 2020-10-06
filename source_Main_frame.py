@@ -74,32 +74,15 @@ class FrameGen(ttk.LabelFrame):
         # self.spectr_type = ''
 
     def _notebooks(self):
-        # rows = 0
-        # while rows < 100:
-        #     self.rowconfigure(rows, weight=1, minsize=10)
-        #     self.columnconfigure(rows, weight=1, minsize=10)
-        #     rows += 1
 
         self.button_change_method = tk.Button(self)
         self.button_change_method.grid(row=3, column=0, padx=5, pady=5, sticky='WN', columnspan=2)
-        # test_button = tk.Button(self,text='test',command=self.integral)
-        # test_button.grid(row=2,column=3)
 
-        # self.load_save_frame()
         self.graph_frame()
         self.constants_frame()
         self.entry_func_frame()
 
-        # self.button_calculate = tk.Button(self, width=15, text='Расчёт', state='disabled')
-        # self.button_calculate.grid(row=1, column=3, padx=3)
-
         self.a, self.A = self.time_grid()
-
-        # self.remp_source = self.remp_source_finder()
-        # self.specter_config = DataParcer(self.path).temp_spectres_reader()
-        # self.loat_from_remp()
-
-        # self.grid(sticky='NWSE')
 
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
@@ -125,8 +108,10 @@ class FrameGen(ttk.LabelFrame):
     def entry_func_frame(self):
 
         if type(self.func_entry_vel) is not list:
-
-            tmp_f = self.func_entry_vel.get().split()
+            if 'T' in self.func_entry_vel.get():
+                tmp_f = self.func_list
+            else:
+                tmp_f = self.func_entry_vel.get().split()
             tmp_t = self.time_entry_vel.get().split()
             if len(tmp_f) != len(tmp_t):
                 print('Размерности не совпадают')
@@ -163,31 +148,12 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_fr = tk.LabelFrame(self.cf.frame, text='Временная функция')
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, rowspan=20)
 
-        # self.button_read_gen = tk.Button(self.entry_func_fr, width=12, text='Прочитать', state='disabled',
-        #                                  command=self.get)
-        # self.button_read_gen.grid(row=0, column=2, padx=3, pady=3)
-        # self.button_generate = tk.Button(self.entry_func_fr, width=12, text='Сгенерировать', command=self.ent,
-        #                                  state='active')
-        # self.button_generate.grid(row=1, column=2, padx=3, pady=3)
-
-        # label_name_energy = tk.Label(self.entry_func_fr, text=f'{self.energy_type}')
-        # label_name_energy.grid(row=2, column=0, columnspan=2)
         label_func = tk.Label(self.entry_func_fr, text='Значение функции', width=15)
         label_func.grid(row=3, column=1, padx=2, pady=2)
         label_time = tk.Label(self.entry_func_fr, text='Время', width=15)
         label_time.grid(row=3, column=0, padx=2, pady=2)
 
-        # self.add_button = tk.Button(self.entry_func_fr, width=3, text='+', state='normal',
-        #                             command=lambda: self.add_entry(len(self.entry_time) - 1, None))
-        # self.del_button = tk.Button(self.entry_func_fr, width=3, text='-', state='normal',
-        #                             command=lambda: self.delete_entry(len(self.entry_time) - 1, None))
-        # self.add_button.grid(row=0, column=0, sticky='e', padx=3)
-        # self.del_button.grid(row=0, column=1, sticky='w', padx=3)
-
         self.ent(from_row)
-
-        # if len(self.time_entry_vel) != 0 or len(self.func_entry_vel) != 0:
-        #     self.ent_load_back()
 
         self.button_change_method.configure(text='Строчный ввод', command=self.rows_metod, width=15)
 
@@ -232,9 +198,9 @@ class FrameGen(ttk.LabelFrame):
     def rows_metod(self):
 
         if type(self.func_entry_vel) is list:
-            # for i in range(len(self.time_trace_id)):
-            #     self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
-            #     self.time_entry_vel[i].trace_vdelete('w', self.time_trace_id[i])
+            for i in range(len(self.time_trace_id)):
+                self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
+                self.time_entry_vel[i].trace_vdelete('w', self.time_trace_id[i])
 
             self.entry_time_fix_val.trace_vdelete('w', self.fix_trace_id)
 
@@ -243,16 +209,16 @@ class FrameGen(ttk.LabelFrame):
                 tmp_f += val.get() + ' '
             self.func_entry_vel = tk.StringVar()
             self.func_entry_vel.set(tmp_f)
-            self.func_entry_vel.trace_id = self.func_entry_vel.trace('w', lambda name, index,
-                                                                                 mode: self.__get_row_callback())
+            # self.func_entry_vel.trace_id = self.func_entry_vel.trace('w', lambda name, index,
+            #                                                                      mode: self.__get_row_callback())
 
             tmp_t = ''
             for val in self.time_entry_vel:
                 tmp_t += val.get() + ' '
             self.time_entry_vel = tk.StringVar()
             self.time_entry_vel.set(tmp_t)
-            self.time_entry_vel.trace_id = self.time_entry_vel.trace('w', lambda name, index,
-                                                                                 mode: self.__get_row_callback())
+            # self.time_entry_vel.trace_id = self.time_entry_vel.trace('w', lambda name, index,
+            #                                                                      mode: self.__get_row_callback())
 
         self.cf.destroy()
         self.entry_func_fr.destroy()
@@ -265,13 +231,13 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time.grid(row=0, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
 
         self.entry_time.bind('<Return>', self.__row_sort_method)
-        # self.entry_time.bind('<FocusOut>', self.__get_row_callback)
+        self.entry_time.bind('<FocusOut>', self.__get_row_callback)
 
         tk.Label(self.entry_func_fr, text='Зн. функции').grid(row=2, column=0, pady=3, padx=2)
         self.entry_func = tk.Entry(self.entry_func_fr, width=50, textvariable=self.func_entry_vel, justify='left')
         self.entry_func.grid(row=2, column=1, pady=3, padx=2, columnspan=7, sticky='WEN')
 
-        # self.entry_func.bind('<FocusOut>', self.__get_row_callback)
+        self.entry_func.bind('<FocusOut>', self.__get_row_callback)
 
         self.entryScroll_func = tk.Scrollbar(self.entry_func_fr, orient=tk.HORIZONTAL,
                                              command=self.__scrollHandler_func)
@@ -297,7 +263,8 @@ class FrameGen(ttk.LabelFrame):
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить временную\n'
                                                                 'функцию с момента времени:')
         self.obriv_tf_lavel.grid(row=6, column=0, columnspan=2, sticky='W')
-        self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_row_callback())
+        self.fix_trace_id = self.entry_time_fix_val.trace('w',
+                                                          lambda name, index, mode: self.__get_row_callback(None))
 
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
                                        justify='center')
@@ -370,43 +337,9 @@ class FrameGen(ttk.LabelFrame):
         self.discrete_description_label = tk.Label(self.entry_func_fr, text=d_t, justify='left')
         self.discrete_description_label.grid(row=8 + len(self.func_entry_vel), column=0, columnspan=3)
 
-        # self.button_browse.configure(state='disabled')
-        # self.button_browse_def.configure(state='disabled')
-        # self.button_read_gen.configure(state='normal')
-        # self.add_button.configure(state='normal')
-        # self.del_button.configure(state='normal')
-
         self.__grid_configure()
 
-    # def loat_from_remp(self):
-    #
-    #     if self.remp_source is not None:
-    #         if self.name in self.remp_source.keys():
-    #             l_dict = self.remp_source.get(self.name)
-    #             time = l_dict.get('time')
-    #             for i, val in enumerate(time):
-    #                 self.time_entry_vel.append(tk.StringVar())
-    #                 self.time_entry_vel[i].set(val)
-    #
-    #             func = l_dict.get('value')
-    #             for i, val in enumerate(func):
-    #                 self.func_entry_vel.append(tk.StringVar())
-    #                 self.func_entry_vel[i].set(val)
-    #
-    #             self.ent_load_back()
-    #             self.loat_from_remp_calc()
-    #     else:
-    #         return
-    #
-    # def loat_from_remp_calc(self):
-    #     if self.name in self.specter_config.keys():
-    #         self.get()
-    #         self.stectr_choice(specter=self.specter_config.get(self.name)[0],
-    #                            lag=self.specter_config.get(self.name)[1])
-
     def load_data(self):
-        # time = self.db.get_share_data('time')
-        # func = self.db.get_share_data('func')
         time = self.db.get_share_data('time_full')
         func = self.db.get_share_data('func_full')
         self.entry_time_fix_val.set(self.db.get_share_data('tf_break'))
@@ -664,7 +597,7 @@ class FrameGen(ttk.LabelFrame):
         gen = np.linspace(fr, to, num)
         ins = ''
         for i in gen:
-            ins += str(i) + ' '
+            ins += '{:.3g}'.format(i) + ' '
         return ins
 
     def row_get(self):
@@ -743,13 +676,8 @@ class FrameGen(ttk.LabelFrame):
         self.db.insert_share_data('func_full', list(self.backup_fu))
         self.db.insert_share_data('time_full', list(self.backup_tf))
         self.db.insert_share_data('tf_break', self.user_timeset)
-        # print(f'Backup time {self.backup_tf}')
-        # print(f'Backup func {self.backup_fu}')
 
         self.__painter()
-
-        # self.button_save.configure(state='disabled')
-        # self.button_save_def.configure(state='disabled')
 
     def get(self):
 
@@ -809,8 +737,7 @@ class FrameGen(ttk.LabelFrame):
         self.db.insert_share_data('func_full', list(self.backup_fu))
         self.db.insert_share_data('time_full', list(self.backup_tf))
         self.db.insert_share_data('tf_break', self.user_timeset)
-        # print(f'Backup time {self.backup_tf}')
-        # print(f'Backup func {self.backup_fu}')
+
         self.__painter()
 
         # self.value_check(func=self.func_list, time=self.time_list)
@@ -1095,7 +1022,7 @@ class FrameGen(ttk.LabelFrame):
     def __get_callback(self):
         self.get()
 
-    def __get_row_callback(self):
+    def __get_row_callback(self, event):
         self.row_get()
 
     def __get_amplitude_callback(self):

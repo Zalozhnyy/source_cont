@@ -1219,7 +1219,7 @@ class SpectreConfigure(tk.Frame):
             labels = ['Энергия (кэВ)', 'Доля(не нормируется)']
             if self.data_struct.data is None or self.data_struct.spectre_type != type:
                 self.data_struct.create_empty_data((rows, 2))
-                self.data_struct.data[:, :] = None
+                self.data_struct.data[:, 0] = None
             else:
                 self.data_struct.change_shape(rows, 2)
 

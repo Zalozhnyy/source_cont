@@ -1,7 +1,11 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+
 import tkinter as tk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
-import os
 
 import numpy as np
 
@@ -63,6 +67,8 @@ class PeSource:
         self.source_ori = []
 
         self.photon_values = None
+
+        self.sub = SubtaskDecoder(self.path)
 
     def delta_R(self, DOT0, DOT1):
         r = ((DOT0[0] - DOT1[0]) ** 2 + (DOT0[1] - DOT1[1]) ** 2 + (DOT0[2] - DOT1[2]) ** 2) ** 0.5
@@ -197,8 +203,7 @@ class PeSource:
 
     def main_calculation(self):
 
-        sub = SubtaskDecoder(self.path)
-        if sub.subtask_struct is None:
+        if self.sub.subtask_struct is None:
 
             top_level_root = tk.Toplevel(self.parent)
             top_level_root.grab_set()
@@ -215,27 +220,23 @@ class PeSource:
             return
 
         else:
-            # source = (sub.subtask_struct['source_position']['x'],
-            #           sub.subtask_struct['source_position']['y'],
-            #           sub.subtask_struct['source_position']['z'])
 
             source = ('0',
                       '0',
-                      sub.subtask_struct['altitude'])
+                      self.sub.subtask_struct['altitude'])
 
             source = list(map(float, source))
             source = [i * 10 ** -5 for i in source]
 
-            target = (sub.subtask_struct['source_position']['x'],
-                      sub.subtask_struct['source_position']['y'],
+            target = (self.sub.subtask_struct['source_position']['x'],
+                      self.sub.subtask_struct['source_position']['y'],
                       0)
 
             target = list(map(float, target))
-            target[-1] = float(sub.subtask_struct['altitude']) + float(sub.subtask_struct['source_position']['z'])
+            target[-1] = float(self.sub.subtask_struct['altitude']) + float(
+                self.sub.subtask_struct['source_position']['z'])
             target = [i * 10 ** -5 for i in target]
 
-            # self.source_ori = np.array(source)
-            # self.target_ori = np.array([0, 0, 0])
             self.source_ori = np.array(source)
             self.target_ori = np.array(target)
 
@@ -376,17 +377,26 @@ class SpectreDataWithConvertation:
 
 
 if __name__ == '__main__':
-    # root = tk.Tk()
-    #
-    # ex = PeSource(r'C:\work\Test_projects\wpala')
-    #
-    # root.mainloop()
 
-    path = r'C:\Users\Nick\Desktop\spectr_3_49_norm_na_1.txt'
 
-    # ex = SpectreDataWithConvertation(path)
-    # print(ex.data)
+    def destr():
+        root.quit()
+        root.destroy()
 
-    ex = PeSource(r'C:\work\Test_projects\wpala', None)
+
+    root = tk.Tk()
+
+    try:
+        print(f'Проект {projectfilename}')
+        ini = os.path.normpath(os.path.dirname(projectfilename))
+    except:
+        mb.showerror('error', 'Проект не выбран')
+        destr()
+        exit()
+
+    ex = PeSource(ini, root)
 
     ex.main_calculation()
+
+    destr()
+    root.mainloop()

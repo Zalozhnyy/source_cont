@@ -302,7 +302,7 @@ class DataParser:
         for i in lines:
             if 'SOURCE_DIRECTION' in i:
                 koord = i.split('=')[-1]
-                return f'1 {koord}'
+                return f'{koord}'
 
         if koord == '0':
             return koord
@@ -357,22 +357,25 @@ class DataParser:
                     except:
                         f = open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding_def)
 
-                    part_number = int(file[-1])
-                    number = -1
+                    try:
+                        part_number = int(file[-1])
+                        number = -1
 
-                    for i, line in enumerate(f):
-                        if i == 2:
-                            number = int(line.strip())
-                            break
+                        for i, line in enumerate(f):
+                            if i == 2:
+                                number = int(line.strip())
+                                break
 
-                    f.close()
+                        f.close()
 
-                    out.update({file: {
+                        out.update({file: {
                         'particle number': part_number,
                         'number': number
                     }
                     })
-
+                    except:
+                        out = {}
+                        return out
         return out
 
     def elph_reader(self):
@@ -575,7 +578,11 @@ if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
     # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
     # test_file = r'C:\work\Test_projects\wpala\remp_sources'
-    test_file = r'C:\Work\functional_tests\week_0\far\projects\template_faraday\remp_sources'
+    test_file = r'C:\Work\Test_projects\Sphere\SPHERE.PL'
     a = DataParser(test_file)
-    x = a.get_spectre_for_bound()
+    x,y,z,k = a.pl_decoder()
     print(x)
+    print(y)
+    print(z)
+    print(k)
+

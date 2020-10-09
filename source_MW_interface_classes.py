@@ -12,7 +12,10 @@ from source_Dialogs import SelectSpectreToView
 from source_Project_reader import DataParser
 from source_SpectreConfigure import SpectreConfigure
 
+from loguru import logger
 
+
+@logger.catch()
 class StandardizedSourceMainInterface(tk.Frame):
     """
     Класс, взаимодействующий с главным интерфейсом источников.
@@ -178,7 +181,7 @@ class StandardizedSourceMainInterface(tk.Frame):
             pass
 
         file_name, number, sp_type = self.__read_spectre(sp_path)
-        if file_name is None:
+        if file_name is None or sp_type == -1:
             return
 
         self.spectre_name_values[chosen_index] = file_name

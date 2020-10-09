@@ -6,9 +6,13 @@ from scipy import integrate
 import os
 import pickle
 
+from loguru import logger
+
+
 from source_Dialogs import ShowDuplicateSpectreNumbers
 
 
+@logger.catch()
 class Save_remp:
     def __init__(self, marple, micro_electronics, data_object, path):
         self.db = data_object
@@ -288,7 +292,7 @@ class Save_remp:
     def amplitude_calculation(self, gsource_db):
         time = np.array(gsource_db.get_share_data("time"), dtype=float)
         func = np.array(gsource_db.get_share_data("func"), dtype=float)
-        amplitude = float(gsource_db.get_share_data("amplitude"))
+        amplitude = abs(float(gsource_db.get_share_data("amplitude")))
 
         try:
             ampl_save = amplitude / integrate.trapz(x=time, y=func)

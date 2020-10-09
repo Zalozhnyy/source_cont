@@ -11,13 +11,15 @@ from matplotlib.figure import Figure
 import numpy as np
 from numpy import exp, sin, cos, tan, log10, arcsin, arccos, arctan, arcsinh, arccosh, arctanh, sinh, cosh, tanh
 from numpy import log as ln
+from loguru import logger
+
 
 from source_utility import *
 from source_Project_reader import DataParser
-from source_Exceptions import *
 from source_Spectre_one_interface import ScrolledWidget
 
 
+@logger.catch()
 class FrameGen(ttk.LabelFrame):
     def __init__(self, parent, path, data_obj):
         super().__init__(parent)
@@ -179,7 +181,8 @@ class FrameGen(ttk.LabelFrame):
         self.entry_f_val.set(f'')
         self.entry_f_val.trace('w', lambda name, index, mode: self.__get_amplitude_callback())
 
-        label_f = tk.Label(self.constants_fr, text='Суммарный выход частиц\nиз источника')
+        label_f = tk.Label(self.constants_fr, text='Суммарный выход\nиз источника')
+        # label_f = tk.Label(self.constants_fr, text='Суммарный выход частиц\nиз источника')
         label_f.grid(row=0, column=0, padx=3, sticky='E', pady=3)
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
@@ -784,54 +787,6 @@ class FrameGen(ttk.LabelFrame):
     def time_grid(self):
         a = DataParser(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
         return f'[{a[0]} : {a[-1]}]', a
-
-    def spectr_choice_classifier(self, path):
-        spectr_dir = os.path.normpath(path)
-
-        with open(spectr_dir, 'r') as file:
-            strings = []
-            for string in range(5):
-                strings.append(file.readline().strip())
-
-        if any(['CONTINUOUS' in line for line in strings]):
-            spectr_type = 'CONTINUOUS'
-        elif any(['DISCRETE' in line for line in strings]):
-            spectr_type = 'DISCRETE'
-        else:
-            print('Тип спектра не распознан')
-            return
-        return spectr_dir, spectr_type
-
-    def spectr_choice_opener(self):
-
-        try:
-            if self.spectr_type == 'CONTINUOUS':
-                with open(self.spectr_dir, 'r', encoding='utf-8') as file_handler:
-                    i = 0
-                    s = []
-                    for line in file_handler:
-                        i += 1
-                        if i < 3: continue
-                        if len(line.split()) < 2:
-                            line = line + '0'
-                            s.append(line.split())
-                        else:
-                            s.append(line.split())
-
-                    out = np.array(s, dtype=float)
-                    for i in range(len(out) - 1):
-                        out[i, 0] = (out[i, 0] + out[i + 1, 0]) / 2
-                        out[i, 1] = out[i + 1, 1]
-                    out = np.delete(out, np.s_[-1:], 0)
-
-                spectr = out
-
-            elif self.spectr_type == 'DISCRETE':
-                spectr = np.loadtxt(self.spectr_dir, skiprows=2)
-            return spectr
-        except Exception:
-            main_spectr_ex_example()
-            return 1
 
     def interpolate_user_time(self):
 

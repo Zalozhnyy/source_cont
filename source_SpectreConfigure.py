@@ -11,11 +11,13 @@ from tkinter import simpledialog
 
 import numpy as np
 from scipy import integrate
+from loguru import logger
 
 from source_Project_reader import DataParser
 from source_Spectre_one_interface import SpectreOneInterface, ScrolledWidget
 
 
+@logger.catch()
 class SpectreConfigure(tk.Frame):
     def __init__(self, path='', parent=None):
         super().__init__(parent)
@@ -157,7 +159,7 @@ class SpectreConfigure(tk.Frame):
             if 'SP_TYPE=CONTINUOUS' in lines[0]:
 
                 self.spectre_type_cb = 'CONTINUOUS'
-                self.spetre_type_cobbobox.set('CONTINUOUS')
+                self.spetre_type_cobbobox.set('Непрерывный')
 
                 labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
 
@@ -173,7 +175,7 @@ class SpectreConfigure(tk.Frame):
             elif 'SP_TYPE=DISCRETE' in lines[0]:
 
                 self.spectre_type_cb = 'DISCRETE'
-                self.spetre_type_cobbobox.set('DISCRETE')
+                self.spetre_type_cobbobox.set('Дискретный')
 
                 labels = ['Энергия (кеВ)', 'Доля(не нормируется)']
 
@@ -489,18 +491,18 @@ class SpectreConfigure(tk.Frame):
         row += 1
 
         if self.spectre_type_cb == 'SP_5' or self.spectre_type_cb == 'SP_2':
-            # Вид спектра (0-точечный ,1-непрерывный)
+            # Вид спектра (0-Дискретный ,1-непрерывный)
             p = 'Вид спектра'
             ag_label = tk.Label(self.frame_description, text=p, justify='left')
             ag_label.grid(row=row, column=0, columnspan=12, sticky='NW')
             row += 1
 
-            combobox_values = ['Точечный', 'Непрерывный']
+            combobox_values = ['Дискретный', 'Непрерывный']
             self.sp_5_combobox = ttk.Combobox(self.frame_description, value=[val for val in combobox_values],
                                               width=13,
                                               state='readonly')
             self.sp_5_combobox.grid(row=row + 1, column=0, columnspan=12, sticky='NW')
-            self.sp_5_combobox.set('Точечный')
+            self.sp_5_combobox.set('Дискретный')
 
             self.bind_class(self.sp_5_combobox, "<<ComboboxSelected>>", self.__creator)
 
@@ -558,7 +560,7 @@ class SpectreConfigure(tk.Frame):
 
         if self.data_struct.spectre_type == 5:
             if self.data_struct.sp_5_type == 0:
-                self.sp_5_combobox.set('Точечный')
+                self.sp_5_combobox.set('Дискретный')
             elif self.data_struct.sp_5_type == 1:
                 self.sp_5_combobox.set('Непрерывный')
 
@@ -606,7 +608,7 @@ class SpectreConfigure(tk.Frame):
 
     def data_insert_sp_two(self):
 
-        if self.sp_5_combobox.get() == 'Точечный':
+        if self.sp_5_combobox.get() == 'Дискретный':
             row_count = self.data_struct.data.shape[0]
             column_count = 3
 
@@ -696,6 +698,11 @@ class SpectreConfigure(tk.Frame):
 
                     self.__insert_to_interface_from_data_struct(i, j)
 
+            for i in range(row_count):  # Нааполнение данными
+                for j in range(column_count):
+                    if j == 1 or j == 2:
+                        self.__insert_to_interface_from_data_struct(i, j)
+
             [self.spectre_entry[i][0].configure(state='readonly', width=5) for i in range(len(self.spectre_entry))]
             # [self.spectre_entry[i][2].configure(state='normal', width=8) for i in range(len(self.spectre_entry))]
             [self.spectre_entry[i][3].configure(state='disabled', width=13) for i in range(len(self.spectre_entry))]
@@ -703,7 +710,7 @@ class SpectreConfigure(tk.Frame):
     def data_insert_sp_five(self):
         row_count = self.data_struct.data.shape[0]
 
-        if self.sp_5_combobox.get() == 'Точечный':
+        if self.sp_5_combobox.get() == 'Дискретный':
             column_count = 5
 
             for i in range(row_count):
@@ -741,12 +748,11 @@ class SpectreConfigure(tk.Frame):
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__energy_callback_sp_five(
                                                                sv))
-                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 2:
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode: self.__energy_part_callback(2))
-                        self.__insert_to_interface_from_data_struct(i, j)
+                    self.__insert_to_interface_from_data_struct(i, j)
 
             [self.spectre_entry[i][0].configure(state='readonly', width=5) for i in range(len(self.spectre_entry))]
             [self.spectre_entry[i][1].configure(state='normal', width=13) for i in range(len(self.spectre_entry))]
@@ -793,7 +799,6 @@ class SpectreConfigure(tk.Frame):
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__avg_energy_callback(
                                                                sv))
-                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 2:
                         self.spectre_entry_val[i][j].trace('w',
@@ -801,7 +806,6 @@ class SpectreConfigure(tk.Frame):
                                                                i, j, self.spectre_entry_val[i][
                                                                    j]): self.__avg_energy_callback(
                                                                sv))
-                        self.__insert_to_interface_from_data_struct(i, j)
 
                     if j == 3:
                         self.spectre_entry_val[i][j].trace('w',
@@ -814,6 +818,11 @@ class SpectreConfigure(tk.Frame):
                     if j == 4:
                         self.spectre_entry_val[i][j].trace('w',
                                                            lambda name, index, mode: self.__energy_part_callback(4))
+                        self.__insert_to_interface_from_data_struct(i, j)
+
+            for i in range(row_count):  # Нааполнение данными
+                for j in range(column_count):
+                    if j == 1 or j == 2:
                         self.__insert_to_interface_from_data_struct(i, j)
 
             [self.spectre_entry[i][0].configure(state='readonly', width=5) for i in range(len(self.spectre_entry))]
@@ -860,7 +869,7 @@ class SpectreConfigure(tk.Frame):
                     self.spectre_entry_val[i][j].trace('w',
                                                        lambda name, index, mode: self.__energy_part_callback(-1))
 
-                self.__insert_to_interface_from_data_struct(i, j, 'float')
+                self.__insert_to_interface_from_data_struct(i, j)
 
     def data_insert_cont(self):
         row_count = self.data_struct.data.shape[0]
@@ -907,7 +916,7 @@ class SpectreConfigure(tk.Frame):
                 if i == 0 and j == 1:
                     continue
 
-                self.__insert_to_interface_from_data_struct(i, j, 'float')
+                self.__insert_to_interface_from_data_struct(i, j)
 
     def _save_data(self, save_as):
 
@@ -967,7 +976,7 @@ class SpectreConfigure(tk.Frame):
         if self.spectre_type_cb == 'SP_2':
             decode_number = {'SP_5': 5,
                              'SP_2': 2}
-            type_decode = {'Точечный': 0, 'Непрерывный': 1}
+            type_decode = {'Дискретный': 0, 'Непрерывный': 1}
 
             out_header = self._sp_zero_form.copy()
 
@@ -979,7 +988,7 @@ class SpectreConfigure(tk.Frame):
             out_header[8] = self.rows_count_calc['text']
             out_header[10] = self.starts_count_val.get()
             out_header[12] = str(len(self.spectre_entry_val))
-            out_header.insert(13, 'Вид спектра (0-точечный ,1-непрерывный)')
+            out_header.insert(13, 'Вид спектра (0-Дискретный ,1-непрерывный)')
             s_type = type_decode[self.sp_5_combobox.get()]
             out_header.insert(14, str(s_type))
 
@@ -1030,7 +1039,7 @@ class SpectreConfigure(tk.Frame):
 
             decode_number = {'SP_5': 5,
                              'SP_2': 2}
-            type_decode = {'Точечный': 0, 'Непрерывный': 1}
+            type_decode = {'Дискретный': 0, 'Непрерывный': 1}
 
             out_header = self._sp_zero_form.copy()
 
@@ -1042,7 +1051,7 @@ class SpectreConfigure(tk.Frame):
             out_header[8] = self.rows_count_calc['text']
             out_header[10] = self.starts_count_val.get()
             out_header[12] = str(len(self.spectre_entry_val))
-            out_header.insert(13, 'Вид спектра (0-точечный ,1-непрерывный)')
+            out_header.insert(13, 'Вид спектра (0-Дискретный ,1-непрерывный)')
             s_type = type_decode[self.sp_5_combobox.get()]
             out_header.insert(14, str(s_type))
 
@@ -1139,6 +1148,7 @@ class SpectreConfigure(tk.Frame):
 
             KSI = np.interp(energy * 10 ** 6, self.photon_table[:, 0], self.photon_table[:, 1])
             self.spectre_entry_val[i][j + 2].set('{:.5g}'.format(KSI))
+            self.__insert_data_to_data_struct_not_event(i, j + 2, KSI, float)
 
             if energy <= self.elph[-1, 0]:
                 energy_el = np.interp(energy, self.elph[:, 0], self.elph[:, 1])
@@ -1147,6 +1157,8 @@ class SpectreConfigure(tk.Frame):
                 energy_el = self.elph_ext(energy)
 
             self.spectre_entry_val[i][j + 3].set('{:.5g}'.format(energy_el))
+            self.__insert_data_to_data_struct_not_event(i, j + 3, energy_el, float)
+
 
         except:
             self.spectre_entry_val[i][j + 2].set('')
@@ -1163,6 +1175,7 @@ class SpectreConfigure(tk.Frame):
 
             KSI = np.interp(energy * 10 ** 6, self.photon_table[:, 0], self.photon_table[:, 1])
             self.spectre_entry_val[i][5].set('{:.5g}'.format(KSI))
+            self.__insert_data_to_data_struct_not_event(i, 5, KSI, float)
 
             if energy <= self.elph[-1, 0]:
                 energy_el = np.interp(energy, self.elph[:, 0], self.elph[:, 1])
@@ -1171,6 +1184,8 @@ class SpectreConfigure(tk.Frame):
                 energy_el = self.elph_ext(energy)
 
             self.spectre_entry_val[i][6].set('{:.5g}'.format(energy_el))
+            self.__insert_data_to_data_struct_not_event(i, 6, energy_el, float)
+
 
         except:
 
@@ -1188,6 +1203,7 @@ class SpectreConfigure(tk.Frame):
             val = (arg1 + arg2) / 2
 
             self.spectre_entry_val[i][3].set('{:.5g}'.format(val))
+            self.__insert_data_to_data_struct_not_event(i, 3, val, float)
         except:
             self.spectre_entry_val[i][3].set('')
 
@@ -1230,7 +1246,7 @@ class SpectreConfigure(tk.Frame):
             else:
                 self.data_struct.change_shape(rows, 5)
 
-        elif type == 'SP_5' and self.sp_5_combobox.get() == 'Точечный':
+        elif type == 'SP_5' and self.sp_5_combobox.get() == 'Дискретный':
             labels = ['№', 'Энергия фотона (MeВ)', 'Доля(не нормируется)', 'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
 
@@ -1261,7 +1277,7 @@ class SpectreConfigure(tk.Frame):
                       'Сечение см\u00b2/г',
                       'Энергия электрона (MeВ)']
 
-        elif type == 'SP_2' and self.sp_5_combobox.get() == 'Точечный':
+        elif type == 'SP_2' and self.sp_5_combobox.get() == 'Дискретный':
             labels = ['№', 'Энергия (MеВ)', 'Доля(не нормируется)']
 
             if self.data_struct.sp_5_type == 1 and self.data_struct.spectre_type == 2:
@@ -1441,15 +1457,22 @@ class SpectreConfigure(tk.Frame):
                 self.spectre_entry_val[i][0].set(str(i + 1))
                 self.data_struct.data[i, 0] = i + 1
 
-    def __insert_to_interface_from_data_struct(self, i, j, type='float'):
-        if type == 'float':
-            if self.data_struct.data[i, j] is None:
-                self.spectre_entry_val[i][j].set('')
-            else:
-                self.spectre_entry_val[i][j].set('{:.6g}'.format(self.data_struct.data[i, j]))
+    def __insert_to_interface_from_data_struct(self, i, j):
+
+        if self.data_struct.data[i, j] is None:
+            self.spectre_entry_val[i][j].set('')
+        else:
+            self.spectre_entry_val[i][j].set('{:.6g}'.format(self.data_struct.data[i, j]))
 
         if 'nan' in self.spectre_entry_val[i][j].get():
             self.spectre_entry_val[i][j].set('')
+
+    def __insert_data_to_data_struct_not_event(self, i, j, value, val_type=float):
+
+        if val_type == float:
+            self.data_struct.data[i, j] = float(value)
+        elif val_type == int:
+            self.data_struct.data[i, j] = int(value)
 
     def __insert_data_to_data_struct(self, i, j, event):
 
@@ -1514,7 +1537,7 @@ class SpectreConfigure(tk.Frame):
             self.spectre_frame_constructor(labels, 'SP_5')
 
         if perenos_type == 'DISCRETE':
-            self.sp_5_combobox.set('Точечный')
+            self.sp_5_combobox.set('Дискретный')
 
             self.data_struct.create_empty_data((perenos_data.shape[0], 5))
             self.data_struct.sp_5_type = 0
@@ -1641,6 +1664,7 @@ class SpectreConfigure(tk.Frame):
         self.spetre_type_cobbobox.configure(value=[val for val in self.spectre_type_combobox_values])
 
 
+@logger.catch()
 class SpectreDataStructure:
     def __init__(self, path=None):
         self.spectre_path = path
@@ -1751,7 +1775,8 @@ class SpectreDataStructure:
                 if self.sp_5_type == 0:
                     self.data[:, 1] = None
                 elif self.sp_5_type == 1:
-                    self.data[:, 1:3] = None
+                    self.data[:, 1:4] = None
+                    self.data[:, 5:] = None
 
             for i in range(self.data.shape[0]):
                 self.data[i, 0] = i + 1
@@ -1813,7 +1838,7 @@ class SpectreDataStructure:
             for j in range(self.data.shape[1]):
                 if j == 1:
                     try:
-                        self.data[i][j] = old_data[i, j]
+                        self.data[i][j] = old_data[i, 3]
                     except IndexError:
                         self.data[i][j] = None
                 if j == 2:

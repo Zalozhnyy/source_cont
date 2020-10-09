@@ -4,7 +4,10 @@ import os
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 
+from loguru import logger
 
+
+@logger.catch()
 class DataParser:
     def __init__(self, path):
         self.path = path
@@ -369,10 +372,10 @@ class DataParser:
                         f.close()
 
                         out.update({file: {
-                        'particle number': part_number,
-                        'number': number
-                    }
-                    })
+                            'particle number': part_number,
+                            'number': number
+                        }
+                        })
                     except:
                         out = {}
                         return out
@@ -389,6 +392,7 @@ class DataParser:
         return np.zeros(shape)
 
 
+@logger.catch()
 class SpOneReader:
     def __init__(self, path):
         self.path = path
@@ -574,15 +578,62 @@ class SpOneReader:
                     break
 
 
+@logger.catch()
+class SubtaskDecoder:
+    def __init__(self, path):
+        self.path = path
+
+        self.subtask_struct = None
+        if 'SUBTASK' in os.listdir(self.path):
+            self.subtask_struct = {}
+
+            self.subtask_path = os.path.join(self.path, 'SUBTASK')
+
+            self.read_subtask()
+        else:
+            self.subtask_path = None
+
+    def read_subtask(self):
+        with open(self.subtask_path, 'r') as file:
+            lines = file.readlines()
+
+        self.subtask_struct.update({
+            'angles': {
+                'alpha': lines[1].strip(),
+                'beta': lines[2].strip(),
+                'gamma': lines[3].strip()
+            },
+            'source_position': {
+                'x': lines[5].strip(),
+                'y': lines[6].strip(),
+                'z': lines[7].strip()
+            },
+            'local source position': {
+                'x': lines[11].strip(),
+                'y': lines[12].strip(),
+                'z': lines[13].strip()
+            },
+            'altitude': lines[15].strip()
+        })
+
+    def get_subtask_koord(self):
+        x = float(self.subtask_struct['local source position']['x'])
+        y = float(self.subtask_struct['local source position']['y'])
+        z = float(self.subtask_struct['local source position']['z'])
+
+        vector = (x ** 2 + y ** 2 + z ** 2) ** 0.5
+
+        return x / vector, y / vector, z / vector
+
+
 if __name__ == '__main__':
     # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
     # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
     # test_file = r'C:\work\Test_projects\wpala\remp_sources'
     test_file = r'C:\Work\Test_projects\Sphere\SPHERE.PL'
     a = DataParser(test_file)
-    x,y,z,k = a.pl_decoder()
+    x, y, z, k = a.pl_decoder()
     print(x)
     print(y)
     print(z)
     print(k)
-

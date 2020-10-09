@@ -6,6 +6,10 @@ from tkinter import simpledialog as sd
 import os
 import shutil
 
+from loguru import logger
+
+from source_Project_reader import DataParser
+
 
 def copy_to_project(target, project_path):
     t = os.path.normpath(target)
@@ -36,6 +40,7 @@ def copy_to_project(target, project_path):
     return save_path
 
 
+@logger.catch()
 class SelectParticleDialog(tk.Toplevel):
     def __init__(self, data):
         super().__init__()
@@ -77,6 +82,7 @@ class SelectParticleDialog(tk.Toplevel):
         self.destroy()
 
 
+@logger.catch()
 class DeleteGSourceDialog(tk.Toplevel):
     def __init__(self, data):
         super().__init__()
@@ -122,6 +128,7 @@ class DeleteGSourceDialog(tk.Toplevel):
         self.destroy()
 
 
+@logger.catch()
 class SelectSpectreToView(tk.Toplevel):
     def __init__(self, data):
         super().__init__()
@@ -163,6 +170,7 @@ class SelectSpectreToView(tk.Toplevel):
         self.destroy()
 
 
+@logger.catch()
 class FAQ(tk.Toplevel):
     def __init__(self):
         super().__init__()
@@ -180,6 +188,7 @@ class FAQ(tk.Toplevel):
         text = 'Программа служит для создания абстракций типа "Воздействие"'
 
 
+@logger.catch()
 class MarpleInterface(tk.Toplevel):
     def __init__(self, path):
         super().__init__()
@@ -246,6 +255,7 @@ class MarpleInterface(tk.Toplevel):
             label['text'] = self.sigma_label_text + f'{os.path.basename(distribution_file)}'
 
 
+@logger.catch()
 class MicroElectronicsInterface(tk.Toplevel):
     def __init__(self, path):
         super().__init__()
@@ -314,6 +324,7 @@ class MicroElectronicsInterface(tk.Toplevel):
             label['text'] = self.density78_label_text + f'{os.path.basename(distribution_file)}'
 
 
+@logger.catch()
 class ProgressBar(tk.Toplevel):
     def __init__(self, parent):
         super().__init__()
@@ -351,6 +362,7 @@ class ProgressBar(tk.Toplevel):
         self.destroy()
 
 
+@logger.catch()
 class ShowDuplicateSpectreNumbers(tk.Toplevel):
     def __init__(self, db):
         super().__init__()
@@ -407,9 +419,114 @@ class ShowDuplicateSpectreNumbers(tk.Toplevel):
             tk.Label(self.sources_canvas, text=t).pack(fill='both')
 
 
+@logger.catch()
+class SelectLagInterface(tk.Toplevel):
+    def __init__(self, init_values=[]):
+        super().__init__()
+
+        self.focus()
+        self.grab_set()
+
+        self.title = 'Задание параметра задержки'
+        self.resizable(width=False, height=False)
+
+        self.protocol("WM_DELETE_WINDOW", self.onExit)
+
+        self._entry_vector_values = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
+        [self._entry_vector_values[i].set('') for i in range(3)]
+
+        self._entry_vector = []
+
+        if len(init_values) != 0:
+            for i in range(len(self._entry_vector_values)):
+                self._entry_vector_values[i].set(init_values[i])
+
+        self.vector_data = [None, None, None]
+        self.enable = False
+
+        self.initUi()
+
+    def onExit(self):
+        self.destroy()
+
+    def initUi(self):
+        labl = tk.Label(self, text='Задание параметров задержки')
+        labl.grid(row=1, column=0, sticky='N', padx=5, pady=5, columnspan=2)
+
+        self._enable_var = tk.IntVar()
+        enable = tk.Checkbutton(self, text='Редактировать', command=self.en_change, variable=self._enable_var,
+                                onvalue=1, offvalue=0)
+        enable.grid(row=1, column=2, sticky='N', padx=5, pady=5)
+
+        find_in_pech = tk.Button(self, text='Найти в проекте переноса', command=self.__find_lag_in_pechs)
+        find_in_pech.grid(row=1, column=3, sticky='N', padx=5, pady=5)
+
+        find_in_pech = tk.Button(self, text='Получить из подзадачи', command=self.__find_lag_in_pechs)
+        find_in_pech.grid(row=2, column=3, sticky='N', padx=5, pady=5)
+
+        description_text = ['X', 'Y', 'Z']
+
+        for i in range(3):
+            self._entry_vector_values[i].trace('w',
+                                               lambda name, index, mode, ind=i: self.__data_validation(ind))
+
+            self._entry_vector.append(tk.Entry(self, textvariable=self._entry_vector_values[i], state='disabled',
+                                               width=10, justify='center'))
+
+        for i in range(3):
+            tk.Label(self, text=description_text[i], justify='center').grid(row=2, column=i, padx=5, pady=10,
+                                                                            sticky='N')
+            self._entry_vector[i].grid(row=3, column=i, padx=5, pady=5, sticky='N')
+
+            self.__data_validation(i)
+
+    def __data_validation(self, i):
+        try:
+            val = float(self._entry_vector_values[i].get())
+
+            if val == '':
+                raise Exception
+
+            self._entry_vector[i].configure(bg='#FFFFFF')
+            self.vector_data[i] = val
+
+        except:
+            self._entry_vector[i].configure(bg='#F08080')
+            self.vector_data[i] = None
+
+    def __find_lag_in_pechs(self):
+        pech_path = fd.askdirectory(title='Выберите директорию проекта переноса')
+
+        if pech_path == '':
+            return
+
+        source_path = os.path.join(pech_path, 'initials/source')
+        if os.path.exists(source_path):
+            lag = DataParser(pech_path).pech_check_utility(source_path)
+            lag = list(map(float, lag.split()))
+
+            self.vector_data = lag
+            [self._entry_vector_values[i].set(str(self.vector_data[i])) for i in range(len(self.vector_data))]
+            # self._enable_var.set(1)
+            # self.en_change()
+
+        else:
+            mb.showerror('Ошибка', 'Не найден файл с координатами')
+
+    def en_change(self):
+        state = self._enable_var.get()
+
+        if state == 1:
+            [self._entry_vector[i].configure(state='normal') for i in range(3)]
+
+        if state == 0:
+            [self._entry_vector[i].configure(state='disabled') for i in range(3)]
+            [self._entry_vector_values[i].set('0') for i in range(3)]
+
+
 if __name__ == '__main__':
     root = tk.Tk()
 
-    a = MarpleInterface(r'C:\work\Test_projects\wpala')
+    a = SelectLagInterface([0, 0, 1])
 
     root.mainloop()

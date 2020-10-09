@@ -7,49 +7,16 @@ import tkinter as tk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 
+from loguru import logger
+
 import numpy as np
 
 from source_SpectreConfigure import SpectreConfigure
 from source_Dialogs import ProgressBar
+from source_Project_reader import SubtaskDecoder
 
 
-class SubtaskDecoder:
-    def __init__(self, path):
-        self.path = path
-
-        self.subtask_struct = None
-        if 'SUBTASK' in os.listdir(self.path):
-            self.subtask_struct = {}
-
-            self.subtask_path = os.path.join(self.path, 'SUBTASK')
-            mb.showinfo('SUBTASK', 'Обнаружен файл локальной задачи.\nВыберите спектр для ослабления.')
-
-            self.read_subtask()
-
-    def read_subtask(self):
-        with open(self.subtask_path, 'r') as file:
-            lines = file.readlines()
-
-        self.subtask_struct.update({
-            'angles': {
-                'alpha': lines[1].strip(),
-                'beta': lines[2].strip(),
-                'gamma': lines[3].strip()
-            },
-            'source_position': {
-                'x': lines[5].strip(),
-                'y': lines[6].strip(),
-                'z': lines[7].strip()
-            },
-            'local source position': {
-                'x': lines[11].strip(),
-                'y': lines[12].strip(),
-                'z': lines[13].strip()
-            },
-            'altitude': lines[15].strip()
-        })
-
-
+@logger.catch()
 class PeSource:
     def __init__(self, path, parent):
         super().__init__()
@@ -244,6 +211,11 @@ class PeSource:
                        (self.target_ori[1] - self.source_ori[1]) ** 2 +
                        (self.target_ori[2] - self.source_ori[2]) ** 2) ** 0.5
 
+            if self.R0 == 0:
+                mb.showerror('Ошибка', 'Местоположение объекта совпадает с местоположением источника.')
+                return
+            mb.showinfo('SUBTASK', 'Обнаружен файл локальной задачи.\nВыберите спектр для ослабления.')
+
             print(f'source {self.source_ori}')
             print(f'object {self.target_ori}')
 
@@ -268,10 +240,7 @@ class PeSource:
             self.EnergyP = ar[:, 1]
 
             if self.source_ori[-1] == self.target_ori[-1]:
-                mb.showerror('SUBTASK info', 'Высота источника и объекта совпадают, спектр не будет ослаблен')
-                self.out_spectre = np.column_stack((self.Energy0, self.EnergyP))
-                self.save()
-                return
+                mb.showerror('SUBTASK info', 'Высота источника и объекта совпадают')
 
             self.N = int(round(self.R0) / 4000 * 2000000)
             if self.N < 1000:
@@ -377,7 +346,6 @@ class SpectreDataWithConvertation:
 
 
 if __name__ == '__main__':
-
 
     def destr():
         root.quit()

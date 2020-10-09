@@ -6,13 +6,15 @@ from tkinter import simpledialog as sd
 
 import pickle
 
+from loguru import logger
+
 from source_MW_interface_classes import StandardizedSourceMainInterface
 from source_utility import *
-from source_Project_reader import DataParser
+from source_Project_reader import DataParser, SubtaskDecoder
 from source_Save_for_remp import Save_remp
 from source_Main_frame import FrameGen
 from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView, MarpleInterface, \
-    MicroElectronicsInterface
+    MicroElectronicsInterface, SelectLagInterface
 from source_PE_SOURCE import PeSource
 
 
@@ -81,6 +83,7 @@ class TreeDataStructure:
         return self.__obj_structure
 
 
+@logger.catch()
 class MainWindow(tk.Frame):
     def __init__(self, parent, path=None, projectfilename=None):
         super().__init__(parent)
@@ -105,7 +108,7 @@ class MainWindow(tk.Frame):
         self._marple = None
         self._micro_electronics = None
 
-        self._pechs_path = None
+        self.lag = None
 
         try:
             if projectfilename is not None:
@@ -174,17 +177,18 @@ class MainWindow(tk.Frame):
 
         self.filemenu.add_cascade(label="Недавние проекты", menu=self.recent_pr_menu)
 
-        # self.filemenu.add_command(label="Сохранить (output dicts)", command=lambda: timef_global_save(self.path))
         self.filemenu.add_command(label="Сохранение для РЭМП", command=self.save, state='disabled')
 
         self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder, state='disabled')
-        # self.filemenu.add_command(label="Очистить папку time functions", command=lambda: tf_global_del(self.path))
-        # self.filemenu.add_command(label='Перезагрузка', command=self.reset)
+
+        self.filemenu.add_command(label="Изменить параметр задержки", command=self._configure_lag, state='disabled')
+
         self.filemenu.add_command(label="Exit", command=self.onExit)
 
         self.menubar.add_command(label='Добавить воздействие',
                                  command=self.__add_source_button, state='disabled')
         self.menubar.add_command(label='Удалить воздействие', command=self.__tree_view_deconstructor, state='disabled')
+
         # self.menubar.add_command(label='Справка')
         # self.menubar.add_command(label='test', command=self.test)
 
@@ -217,12 +221,14 @@ class MainWindow(tk.Frame):
 
         open_folder_index = self.filemenu.index('Открыть папку с проектом')
         save_for_remp_index = self.filemenu.index('Сохранение для РЭМП')
+        configure_lag_index = self.filemenu.index('Изменить параметр задержки')
 
-        self.menubar.entryconfigure(open_folder_index, state='normal')
-        self.menubar.entryconfigure(save_for_remp_index, state='normal')
+        self.filemenu.entryconfigure(open_folder_index, state='normal')
+        self.filemenu.entryconfigure(save_for_remp_index, state='normal')
+        self.filemenu.entryconfigure(configure_lag_index, state='normal')
 
-        self.filemenu.entryconfigure(add_index, state='normal')
-        self.filemenu.entryconfigure(del_index, state='normal')
+        self.menubar.entryconfigure(add_index, state='normal')
+        self.menubar.entryconfigure(del_index, state='normal')
 
         marple_index = self.menubar.index('Задача обтекания')
         self.menubar.entryconfigure(marple_index, state='normal')
@@ -243,32 +249,56 @@ class MainWindow(tk.Frame):
         return same
 
     def set_lag(self):
+        sub = SubtaskDecoder(self.path)
+
+        if sub.subtask_path is not None:
+            x, y, z = sub.get_subtask_koord()
+            self.lag = f'1 {x} {y} {z}'
+            print('Параметр задержки взята из файла подзадачи')
+
+        else:
+            ask = mb.askyesno('Файл подзадачи не найден',
+                              'Параметры задержки не найдены в файле подзадачи.\n'
+                              'Активировать меню выбора параметров задержки?\n\n'
+                              'Да  - запустить меню редактора\n'
+                              'Нет - параметр задержки отсутствует')
+
+            if ask is True:
+                ex = SelectLagInterface()
+                self.wait_window(ex)
+
+                x, y, z = ex.vector_data
+                self.lag = f'1 {x} {y} {z}'
+
+                if any([i is None for i in [x, y, z]]):
+                    self.lag = f'0'
+
+            elif ask is False:
+                self.lag = f'0'
+
+    def _configure_lag(self):
+
+        for name in self.global_tree_db.keys():
+            self.lag = self.global_tree_db[name].get_share_data('lag')
+            break
+
         try:
-            if len(self.global_tree_db) != 0:
-                for i in self.global_tree_db.items():
-                    load_pech_path = i[1].get_share_data('pechs path')
-
-                    if load_pech_path is None:
-                        raise Exception
-
-                    if os.path.exists(load_pech_path):
-                        self.lag = DataParser('').pech_check_utility(load_pech_path)
-                        self._pechs_path = load_pech_path
-                    else:
-                        mb.showerror(f'Ошибка загрузки парметра задержки',
-                                     f'Загружаемый путь ({load_pech_path}) не существует')
-                        self.lag, self._pechs_path = DataParser(self.path).pech_check()
-                    break
-
-                for i in self.global_tree_db.items():
-                    print(f'pech path {self._pechs_path}')
-                    i[1].insert_share_data('pechs path', self._pechs_path)
-                    i[1].insert_share_data('lag', self.lag)
-
-            else:
+            if self.lag is None:
                 raise Exception
+
+            a = list(map(float, self.lag.strip().split()[1:]))
+
         except:
-            self.lag, self._pechs_path = DataParser(self.path).pech_check()
+            a = []
+
+        ex = SelectLagInterface(a)
+        self.wait_window(ex)
+
+        x, y, z = ex.vector_data
+        self.lag = f'1 {x} {y} {z}'
+
+        if any([i is None for i in [x, y, z]]):
+            self.lag = f'0'
 
     def onExit(self):
         if len(self.global_tree_db) == 0:
@@ -388,7 +418,6 @@ class MainWindow(tk.Frame):
                     print('Загрузка невозможна. Файл Sources.pkl не найден')
                     mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
                     self.menubar_activate()
-                    self.set_lag()
                     return
 
                 self.remp_source_exist = True
@@ -406,8 +435,12 @@ class MainWindow(tk.Frame):
                         part_number = None
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
 
+            elif ask is False:
+                self.set_lag()
+        else:
+            self.set_lag()
+
         self.menubar_activate()
-        self.set_lag()
 
     def reset(self):
         if self.path is None:
@@ -479,7 +512,6 @@ class MainWindow(tk.Frame):
         create_list = ['x', 'y', 'z']
         obj.insert_share_data('lag', self.lag)
         obj.insert_share_data('influence number', str(self.global_count_gsources))
-        obj.insert_share_data('pechs path', self._pechs_path)
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
@@ -942,7 +974,7 @@ class MainWindow(tk.Frame):
                 self.contextMenu.add_command(label="Восстановить источники токов",
                                              command=lambda: self.__restore_currents(influence, index))
 
-                self.contextMenu.add_command(label="Восстановить источники энорговыделения",
+                self.contextMenu.add_command(label="Восстановить источники энерговыделения",
                                              command=lambda: self.__restore_energy_distribution(influence, index))
 
                 self.contextMenu.add_command(label="Удалить воздействие",

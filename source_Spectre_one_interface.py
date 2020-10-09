@@ -6,9 +6,12 @@ from tkinter import simpledialog
 
 import os
 
+from loguru import logger
+
 from source_Project_reader import SpOneReader
 
 
+@logger.catch()
 class SpectreOneInterface(tk.Frame):
     def __init__(self, parent, spectre_path):
         super().__init__(parent)
@@ -945,6 +948,7 @@ class SpectreOneInterface(tk.Frame):
             exception_label.grid_remove()
 
 
+@logger.catch()
 class ScrolledWidget(tk.Frame):
     def __init__(self, parent, size=(300, 100)):
         tk.Frame.__init__(self, parent)

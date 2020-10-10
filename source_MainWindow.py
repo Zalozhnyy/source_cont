@@ -264,7 +264,7 @@ class MainWindow(tk.Frame):
                               'Нет - параметр задержки отсутствует')
 
             if ask is True:
-                ex = SelectLagInterface()
+                ex = SelectLagInterface(self.path)
                 self.wait_window(ex)
 
                 x, y, z = ex.vector_data
@@ -275,6 +275,9 @@ class MainWindow(tk.Frame):
 
             elif ask is False:
                 self.lag = f'0'
+
+        for name in self.global_tree_db.keys():
+            self.global_tree_db[name].insert_share_data('lag', self.lag)
 
     def _configure_lag(self):
 
@@ -291,7 +294,10 @@ class MainWindow(tk.Frame):
         except:
             a = []
 
-        ex = SelectLagInterface(a)
+        ex = SelectLagInterface(self.path, a)
+        ex._enable_var.set(1)
+        ex.en_change()
+
         self.wait_window(ex)
 
         x, y, z = ex.vector_data
@@ -299,6 +305,9 @@ class MainWindow(tk.Frame):
 
         if any([i is None for i in [x, y, z]]):
             self.lag = f'0'
+
+        for name in self.global_tree_db.keys():
+            self.global_tree_db[name].insert_share_data('lag', self.lag)
 
     def onExit(self):
         if len(self.global_tree_db) == 0:

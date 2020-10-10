@@ -295,7 +295,13 @@ class FrameGen(ttk.LabelFrame):
             self.func_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
         elif row_m is True:
             self.cell_numeric = len(self.time_entry_vel)
-            pass
+            if self.cell_numeric == 0:
+                self.cell_numeric = 2
+                self.func_entry_vel.clear()
+                self.time_entry_vel.clear()
+
+                self.time_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
+                self.func_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
 
         for i in self.func_entry_vel:
             i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())

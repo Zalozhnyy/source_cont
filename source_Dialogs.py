@@ -8,7 +8,7 @@ import shutil
 
 from loguru import logger
 
-from source_Project_reader import DataParser
+from source_Project_reader import DataParser, SubtaskDecoder
 
 
 def copy_to_project(target, project_path):
@@ -421,8 +421,10 @@ class ShowDuplicateSpectreNumbers(tk.Toplevel):
 
 @logger.catch()
 class SelectLagInterface(tk.Toplevel):
-    def __init__(self, init_values=[]):
+    def __init__(self, path, init_values=[]):
         super().__init__()
+
+        self.path = path
 
         self.focus()
         self.grab_set()
@@ -430,7 +432,7 @@ class SelectLagInterface(tk.Toplevel):
         self.title = 'Задание параметра задержки'
         self.resizable(width=False, height=False)
 
-        self.protocol("WM_DELETE_WINDOW", self.onExit)
+        self.protocol("WM_DELETE_WINDOW", lambda: self.onExit(False))
 
         self._entry_vector_values = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
         [self._entry_vector_values[i].set('') for i in range(3)]
@@ -441,28 +443,53 @@ class SelectLagInterface(tk.Toplevel):
             for i in range(len(self._entry_vector_values)):
                 self._entry_vector_values[i].set(init_values[i])
 
+            self._restore_init_values = init_values.copy()
+
         self.vector_data = [None, None, None]
         self.enable = False
 
         self.initUi()
 
-    def onExit(self):
-        self.destroy()
+    def onExit(self, save=True):
+        if all([i is not None for i in self.vector_data]):
+            vector = (self.vector_data[0] ** 2 + self.vector_data[1] ** 2 + self.vector_data[2] ** 2) ** 0.5
+
+            if vector > 1.001 or vector < 0.999:
+                mb.showerror('Ошибка', f'Введённые значения не поохожи на единичный вектор.\n'
+                                       f'Вектор равен {vector}\n\n'
+                                       f'Сохранение невозможно. Введите корректные значения')
+                return
+
+        if save is True:
+            self.destroy()
+
+        elif save is False:
+            ask = mb.askyesno('Сохранение', 'Сохранить данные?')
+
+            if ask is True:
+                self.destroy()
+
+            elif ask is False:
+                self.vector_data = self._restore_init_values
+                self.destroy()
 
     def initUi(self):
         labl = tk.Label(self, text='Задание параметров задержки')
         labl.grid(row=1, column=0, sticky='N', padx=5, pady=5, columnspan=2)
 
         self._enable_var = tk.IntVar()
-        enable = tk.Checkbutton(self, text='Редактировать', command=self.en_change, variable=self._enable_var,
+        enable = tk.Checkbutton(self, text='Включить', command=self.en_change, variable=self._enable_var,
                                 onvalue=1, offvalue=0)
         enable.grid(row=1, column=2, sticky='N', padx=5, pady=5)
 
-        find_in_pech = tk.Button(self, text='Найти в проекте переноса', command=self.__find_lag_in_pechs)
+        find_in_pech = tk.Button(self, text='Найти в проекте переноса', command=self.__find_lag_in_pechs, width=22)
         find_in_pech.grid(row=1, column=3, sticky='N', padx=5, pady=5)
 
-        find_in_pech = tk.Button(self, text='Получить из подзадачи', command=self.__find_lag_in_pechs)
+        find_in_pech = tk.Button(self, text='Получить из подзадачи', command=self.__find_lag_in_subtask, width=22)
         find_in_pech.grid(row=2, column=3, sticky='N', padx=5, pady=5)
+
+        save_exit = tk.Button(self, text='Сохранить', command=self.onExit, width=14)
+        save_exit.grid(row=4, column=3, sticky='N', padx=5, pady=5)
 
         description_text = ['X', 'Y', 'Z']
 
@@ -495,7 +522,8 @@ class SelectLagInterface(tk.Toplevel):
             self.vector_data[i] = None
 
     def __find_lag_in_pechs(self):
-        pech_path = fd.askdirectory(title='Выберите директорию проекта переноса')
+        pech_path = fd.askdirectory(title='Выберите директорию проекта переноса',
+                                    initialdir=self.path)
 
         if pech_path == '':
             return
@@ -511,7 +539,20 @@ class SelectLagInterface(tk.Toplevel):
             # self.en_change()
 
         else:
-            mb.showerror('Ошибка', 'Не найден файл с координатами')
+            mb.showerror('Ошибка', 'Не найден файл с координатами. Выберите другой способ задания координат.')
+
+    def __find_lag_in_subtask(self):
+
+        sub = SubtaskDecoder(self.path)
+        if sub.subtask_path is None:
+            mb.showerror('Подзадача', 'Файл подзадачи не найден в проекте. выберите другой способ задания координат.')
+            return
+
+        self._enable_var.set(1)
+        self.en_change()
+
+        self.vector_data = list(sub.get_subtask_koord())
+        [self._entry_vector_values[i].set(str(self.vector_data[i])) for i in range(len(self.vector_data))]
 
     def en_change(self):
         state = self._enable_var.get()
@@ -522,11 +563,15 @@ class SelectLagInterface(tk.Toplevel):
         if state == 0:
             [self._entry_vector[i].configure(state='disabled') for i in range(3)]
             [self._entry_vector_values[i].set('0') for i in range(3)]
+            self.vector_data = [None, None, None]
 
 
 if __name__ == '__main__':
     root = tk.Tk()
 
-    a = SelectLagInterface([0, 0, 1])
+    path = r'C:\Work\Test_projects\template_faraday'
+    a = SelectLagInterface(path, [0, 0, 1])
 
     root.mainloop()
+
+    print(a.vector_data)

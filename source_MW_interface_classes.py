@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
+import random
 
 import os
 import shutil
@@ -124,7 +125,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         self._buttons_state()
 
     def _choice_file_button(self):
-        if 'Boundaries' in self.sk:
+        if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk or 'Volume78' in self.sk:
             self.__choice_files(one_file=True)
         else:
             self.__choice_files(one_file=False)
@@ -375,6 +376,14 @@ class StandardizedSourceMainInterface(tk.Frame):
         if self.spectre_name_values != ['Файл не выбран'] and self.spectre_number_values == [
             '--'] and self.spectre_type_values == ['--']:  # Доставка в БД для Current Energy
 
+            if 'Volume78' in self.sk:
+                self._set_spectre_data_to_interface()
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', spectre_file_name)
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers',
+                                                         [random.randint(1000, 9999)])
+
+                return
+
             if 'Current' not in self.sk and 'Energy' not in self.sk:
                 mb.showerror('Ошибка', 'Выбранный файл подходит для источников Current или Energy.\n'
                                        'Добавление невозможно.')
@@ -382,6 +391,7 @@ class StandardizedSourceMainInterface(tk.Frame):
                 self.spectre_name_values = ['Файл не выбран']
                 self._set_spectre_data_to_interface()
                 return
+
             self.db[self.db_name].insert_third_level(self.fk, self.sk, 'distribution', spectre_file_name)
 
         else:  # Доставка в БД для всех остальных источников

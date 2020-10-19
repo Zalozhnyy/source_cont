@@ -381,6 +381,15 @@ class DataParser:
                         return out
         return out
 
+    def get_distribution_for_current_and_energy(self, part_number, layer_number, find_type):
+
+        find_item = f'{find_type}_{part_number}_{layer_number}'
+
+        if find_item in os.listdir(self.path):
+            return find_item
+        else:
+            return None
+
     def elph_reader(self):
 
         path = os.path.join(os.path.dirname(__file__), 'elph.txt')

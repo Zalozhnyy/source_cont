@@ -302,6 +302,7 @@ class SpectreConfigure(tk.Frame):
                 return
 
             self.elph = DataParser(self.path).elph_reader()
+
             self.data_struct = SpectreDataStructure()
             self.data_struct.spectre_type = 5
 
@@ -1404,6 +1405,7 @@ class SpectreConfigure(tk.Frame):
         X = self.elph[:, 0]
         Y = self.elph[:, 1]
 
+
         x0, y0 = X[-1], Y[-1]
         x1, y1 = X[1000], Y[1000]
 
@@ -1851,7 +1853,7 @@ class SpectreDataStructure:
 if __name__ == '__main__':
     root = tk.Tk()
 
-    x = SpectreConfigure(parent=root, path=r'C:\work\Test_projects\wpala')
+    x = SpectreConfigure(parent=root, path=r'C:\Users\Zalozhnyy_N\Dropbox\work_cloud\PERENOS_Example')
     x.grid(sticky='NWSE')
 
     root.protocol("WM_DELETE_WINDOW", x.onExit)

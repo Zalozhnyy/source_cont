@@ -13,7 +13,6 @@ from numpy import exp, sin, cos, tan, log10, arcsin, arccos, arctan, arcsinh, ar
 from numpy import log as ln
 from loguru import logger
 
-
 from source_utility import *
 from source_Project_reader import DataParser
 from source_Spectre_one_interface import ScrolledWidget
@@ -42,8 +41,8 @@ class FrameGen(ttk.LabelFrame):
         self.time_entry_vel = []
         self.func_list = []
         self.time_list = []
-        self.func_trace_id = []
-        self.time_trace_id = []
+        self.func_bind_id = []
+        self.time_bind_id = []
 
         self.backup_tf = None
         self.backup_fu = None
@@ -53,6 +52,9 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time_fix_val = tk.StringVar()
 
         self.cell_numeric = 2
+
+        self.grd_def = self.child_parcecer_grid()
+
         # self.spectr = []
 
         # self.path = os.path.normpath(config_read()[0])
@@ -123,13 +125,6 @@ class FrameGen(ttk.LabelFrame):
             self.entry_func_fr.destroy()
             self.d_fr.destroy()
 
-            try:
-                self.entry_time_fix_val.trace_vdelete('w', self.fix_trace_id)
-                self.func_entry_vel.trace_vdelete('w', self.func_trace_id)
-                self.time_entry_vel.trace_vdelete('w', self.time_trace_id)
-            except:
-                pass
-
             self.func_entry_vel = []
             for i, val in enumerate(tmp_f):
                 self.func_entry_vel.append(tk.StringVar())
@@ -165,10 +160,10 @@ class FrameGen(ttk.LabelFrame):
 
         t = 'Значения заполняются через пробел\n' \
             'Для создания диапазона значений в строке "Время"\n' \
-            'введите range[начало; конец; количество шагов]\n' \
+            'введите range[начало;конец;количество шагов]\n' \
             'Для применения формул в строке "Функция" введите\n' \
             'exp(T), ln(T) и т.д Так же доступны все мат. операции\n' \
-            'возведение в степерь: a**n\n\n' \
+            'возведение в степень: a**n\n\n' \
             'Для сортировки времени переведите курсор в окно ввода\n' \
             'временной функции и нажмите Enter'
         discription = tk.Label(self.d_fr, text=t)
@@ -179,7 +174,6 @@ class FrameGen(ttk.LabelFrame):
         self.constants_fr.grid(row=0, column=0, sticky='NWSE', padx=5, columnspan=3)
 
         self.entry_f_val.set(f'')
-        self.entry_f_val.trace('w', lambda name, index, mode: self.__get_amplitude_callback())
 
         label_f = tk.Label(self.constants_fr, text='Суммарный выход\nиз источника')
         # label_f = tk.Label(self.constants_fr, text='Суммарный выход частиц\nиз источника')
@@ -187,6 +181,8 @@ class FrameGen(ttk.LabelFrame):
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
         self.entry_f.grid(row=0, column=2, padx=3)
+
+        self.entry_f.bind("<FocusOut>", self.__get_amplitude_callback)
 
     def graph_frame(self):
         self.graph_fr = tk.LabelFrame(self, text='График', width=30)
@@ -201,27 +197,18 @@ class FrameGen(ttk.LabelFrame):
     def rows_metod(self):
 
         if type(self.func_entry_vel) is list:
-            for i in range(len(self.time_trace_id)):
-                self.func_entry_vel[i].trace_vdelete('w', self.func_trace_id[i])
-                self.time_entry_vel[i].trace_vdelete('w', self.time_trace_id[i])
-
-            self.entry_time_fix_val.trace_vdelete('w', self.fix_trace_id)
 
             tmp_f = ''
             for val in self.func_entry_vel:
                 tmp_f += val.get() + ' '
             self.func_entry_vel = tk.StringVar()
             self.func_entry_vel.set(tmp_f)
-            # self.func_entry_vel.trace_id = self.func_entry_vel.trace('w', lambda name, index,
-            #                                                                      mode: self.__get_row_callback())
 
             tmp_t = ''
             for val in self.time_entry_vel:
                 tmp_t += val.get() + ' '
             self.time_entry_vel = tk.StringVar()
             self.time_entry_vel.set(tmp_t)
-            # self.time_entry_vel.trace_id = self.time_entry_vel.trace('w', lambda name, index,
-            #                                                                      mode: self.__get_row_callback())
 
         self.cf.destroy()
         self.entry_func_fr.destroy()
@@ -266,12 +253,12 @@ class FrameGen(ttk.LabelFrame):
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить временную\n'
                                                                 'функцию с момента времени:')
         self.obriv_tf_lavel.grid(row=6, column=0, columnspan=2, sticky='W')
-        self.fix_trace_id = self.entry_time_fix_val.trace('w',
-                                                          lambda name, index, mode: self.__get_row_callback(None))
 
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
                                        justify='center')
         self.entry_time_fix.grid(row=6, column=2, sticky='W')
+
+        self.fix_bind_id = self.entry_time_fix.bind("<FocusOut>", self.__get_row_callback)
 
         self.__row_grid_configure()
 
@@ -283,8 +270,8 @@ class FrameGen(ttk.LabelFrame):
     def ent(self, row_m):
         self.entry_func = []
         self.entry_time = []
-        self.func_trace_id = []
-        self.time_trace_id = []
+        self.func_bind_id = []
+        self.time_bind_id = []
 
         if row_m is False:
             self.func_entry_vel.clear()
@@ -293,6 +280,7 @@ class FrameGen(ttk.LabelFrame):
             # self.cell_numeric = simpledialog.askinteger('Введите число ячеек.', 'Число ячеек = ')
             self.time_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
             self.func_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
+
         elif row_m is True:
             self.cell_numeric = len(self.time_entry_vel)
             if self.cell_numeric == 0:
@@ -303,18 +291,20 @@ class FrameGen(ttk.LabelFrame):
                 self.time_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
                 self.func_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
 
-        for i in self.func_entry_vel:
-            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
-        for i in self.time_entry_vel:
-            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
-
         for i in range(int(self.cell_numeric)):
             self.entry_time.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
             self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
+
             self.entry_func.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
             self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
+
+            time_bind = self.entry_time[i].bind("<FocusOut>", self.__get_callback)
+            func_bind = self.entry_func[i].bind("<FocusOut>", self.__get_callback)
+
+            self.time_bind_id.append(time_bind)
+            self.func_bind_id.append(func_bind)
 
             self.entry_time[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
             self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
@@ -335,10 +325,12 @@ class FrameGen(ttk.LabelFrame):
         self.obriv_tf_lavel = tk.Label(self.entry_func_fr, text='Принудительно обнулить\n'
                                                                 'временную ф-ю с момента времени:')
         self.obriv_tf_lavel.grid(row=6 + len(self.func_entry_vel), column=0)
-        self.fix_trace_id = self.entry_time_fix_val.trace('w', lambda name, index, mode: self.__get_callback())
+
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
                                        justify='center')
         self.entry_time_fix.grid(row=6 + len(self.func_entry_vel), column=1)
+
+        self.fix_bind_id = self.entry_time_fix.bind("<FocusOut>", self.__get_callback)
 
         d_t = 'Shift + Down - доб. яч. ниже выбранной\n' \
               'Shift + Up      - уд. выбранную яч.\n' \
@@ -354,21 +346,12 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time_fix_val.set(self.db.get_share_data('tf_break'))
 
         for i in range(len(self.func_entry_vel)):
-            self.func_entry_vel[i].trace_vdelete('w', self.func_entry_vel[i].trace_id)
-            self.time_entry_vel[i].trace_vdelete('w', self.time_entry_vel[i].trace_id)
-
-        for i in range(len(self.func_entry_vel)):
             self.func_entry_vel[i].set(str(func[i]))
             self.time_entry_vel[i].set(str(time[i]))
 
         self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
 
         self.get()
-
-        for i in self.func_entry_vel:
-            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
-        for i in self.time_entry_vel:
-            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
 
     def ent_load(self, path):
         if path == '':
@@ -471,30 +454,23 @@ class FrameGen(ttk.LabelFrame):
 
         self.func_entry_vel.insert(index + 1, tk.StringVar())
         self.func_entry_vel[index + 1].set('')
-        self.func_entry_vel[index + 1].trace_id = self.func_entry_vel[index + 1].trace('w', lambda name, index,
-                                                                                                   mode: self.__get_callback())
 
         self.time_entry_vel.insert(index + 1, tk.StringVar())
         self.time_entry_vel[index + 1].set('')
-        self.time_entry_vel[index + 1].trace_id = self.time_entry_vel[index + 1].trace('w', lambda name, index,
-                                                                                                   mode: self.__get_callback())
-
-        # self.entry_time.insert(index + 1,
-        #                        tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[index + 1],
-        #                                 justify='center'))
-        # self.entry_func.insert(index + 1,
-        #                        tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[index + 1],
-        #                                 justify='center'))
 
         for i in range(len(self.time_entry_vel)):
-            # self.entry_time[i].grid_configure(row=4 + i, column=0, pady=3, padx=2)
-            # self.entry_func[i].grid_configure(row=4 + i, column=1, pady=3, padx=2)
             self.entry_time.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.time_entry_vel[i], justify='center'))
             self.entry_time[i].grid(row=4 + i, column=0, pady=3, padx=2)
             self.entry_func.append(
                 tk.Entry(self.entry_func_fr, width=15, textvariable=self.func_entry_vel[i], justify='center'))
             self.entry_func[i].grid(row=4 + i, column=1, pady=3, padx=2)
+
+            time_bind = self.entry_time[i].bind("<FocusOut>", self.__get_callback)
+            func_bind = self.entry_func[i].bind("<FocusOut>", self.__get_callback)
+
+            self.time_bind_id.append(time_bind)
+            self.func_bind_id.append(func_bind)
 
             self.entry_time[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
             self.entry_func[i].bind('<Shift-KeyPress Down>', lambda _, index=i: self.add_entry(index, _))
@@ -738,8 +714,9 @@ class FrameGen(ttk.LabelFrame):
         self.time_list = list(time_list)
         self.func_list = list(func_list)
 
-        print('time = ', self.time_list)
-        print('func = ', self.func_list)
+        # print('time = ', self.time_list)
+        # print('func = ', self.func_list)
+
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
@@ -837,7 +814,6 @@ class FrameGen(ttk.LabelFrame):
         return func_out, time_count
 
     def data_control(self):
-        self.grd_def = self.child_parcecer_grid()
         try:
             self.user_timeset = float(self.entry_time_fix_val.get())
         except:
@@ -868,14 +844,15 @@ class FrameGen(ttk.LabelFrame):
         else:
             try:
                 time_right_side = np.where(self.user_timeset == self.grd_def)[0]
+
                 # print(f'right side {time_right_side}')
-                # print(f'len array  {len(self.grd_def)}')
+
                 if len(time_right_side) == 0:
                     time_right_side = \
-                        np.where(abs(self.user_timeset - self.grd_def) <= (self.grd_def[1] - self.grd_def[0]) / 2)[0]
+                        np.where(abs(self.user_timeset - self.grd_def) <= (
+                                self.grd_def[1] - self.grd_def[0]) / 2)[0]
                     # print(f'right side 2nd try {time_right_side}')
 
-                # print(time_right_side)
                 time_cell = self.grd_def[:time_right_side[0]]
 
                 self.backup_tf = np.copy(entry_t)
@@ -892,18 +869,26 @@ class FrameGen(ttk.LabelFrame):
                         if self.backup_tf[i] >= time_cell[-1]:
                             self.backup_fu[i] = 0
 
-                for i in range(len(entry_f)):
-                    if entry_t[i] >= time_cell[-1]:
+                for i in range(len(entry_t)):
+                    if entry_t[i] == self.user_timeset:
+                        entry_t = np.delete(entry_t, np.s_[i + 1:], 0)
+                        entry_f = np.delete(entry_f, np.s_[i + 1:], 0)
+
+                        entry_t = np.append(entry_t, self.grd_def[time_right_side[0] + 1])
+                        entry_f = np.append(entry_f, 0)
+
+                        break
+
+                    if entry_t[i] > time_cell[-1]:
                         entry_t = np.delete(entry_t, np.s_[i:], 0)
                         entry_f = np.delete(entry_f, np.s_[i:], 0)
-                        # entry_f[i] = 0
 
-                if entry_t[-1] != time_cell[-1]:
-                    entry_t = np.append(entry_t, time_cell[-1])
-                    entry_f = np.append(entry_f, entry_f[-1])
-                # if entry_t[0] != 0 and entry_f[0] != 0:
-                #     entry_t = np.insert(entry_t, 0, 0)
-                #     entry_f = np.insert(entry_f, 0, 0)
+                        if entry_t[-1] != time_cell[-1]:
+                            entry_t = np.append(entry_t, time_cell[-1])
+                            entry_f = np.append(entry_f, 0)
+
+                        break
+
             except:
                 time_cell = None
                 pass
@@ -930,22 +915,13 @@ class FrameGen(ttk.LabelFrame):
             self.figure.clf()
             self.chart_type.draw()
 
-        except:
+        except AttributeError:
             pass
 
         g = self.figure.add_subplot(111)
 
-        try:
-            major_axis = self.time_list[-1] / 12
-        except:
-            return
-
-        try:
-            g.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(major_axis))
-
-            # g.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.1))
-        except ValueError:
-            pass
+        # major_axis = self.time_list[-1] / 10
+        # g.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(major_axis))
 
         formatter = matplotlib.ticker.FormatStrFormatter("%.2g")
         g.xaxis.set_major_formatter(formatter)
@@ -980,13 +956,13 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_fr.grid(row=2, column=0, columnspan=3, padx=5, sticky='NE')
         self.graph_fr.grid(row=0, column=4, padx=5, pady=5, columnspan=20, rowspan=20, sticky='N')
 
-    def __get_callback(self):
+    def __get_callback(self, event):
         self.get()
 
     def __get_row_callback(self, event):
         self.row_get()
 
-    def __get_amplitude_callback(self):
+    def __get_amplitude_callback(self, event):
         try:
             self.db.insert_share_data('amplitude', eval(self.entry_f_val.get()))
             # print(eval(self.entry_f_val.get()))
@@ -1064,18 +1040,9 @@ class FrameGen(ttk.LabelFrame):
 
         time = sorted(time)
 
-        for i in range(len(self.func_entry_vel)):
-            self.func_entry_vel[i].trace_vdelete('w', self.func_entry_vel[i].trace_id)
-            self.time_entry_vel[i].trace_vdelete('w', self.time_entry_vel[i].trace_id)
-
         for i in range(len(time)):
             self.time_entry_vel[i].set(str(time[i]))
             self.func_entry_vel[i].set(str(d[time[i]]))
-
-        for i in self.func_entry_vel:
-            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
-        for i in self.time_entry_vel:
-            i.trace_id = i.trace('w', lambda name, index, mode: self.__get_callback())
 
         print('Сортировка времени завершена')
         self.get()

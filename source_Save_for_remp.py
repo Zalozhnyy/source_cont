@@ -61,6 +61,15 @@ class Save_remp:
                             print(a)
                             return
 
+                    # if 'Volume78' in s_key:
+                    #     a = self.volume78_save(gsource_db, f_key, s_key, name)
+                    #     out += a
+                    #     if 'None' in a:
+                    #         print(f'Введены не все данные в источнике {s_key}')
+                    #         mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
+                    #         print(a)
+                    #         return
+
                     if 'Volume' in s_key:
                         a = self.volume_save(gsource_db, f_key, s_key, name)
                         out += a
@@ -152,6 +161,46 @@ class Save_remp:
     def volume_save(self, gsource_db, f_key, s_key, name):
         out = ''
         out += f'Volume\n'
+        out += '<influence number>\n'
+        out += gsource_db.get_share_data('influence number') + '\n'
+        out += '<influence name>\n'
+        out += name + '\n'
+        # out += '<particle number>\n'
+        # out += str(gsource_db.get_share_data('particle number')) + '\n'
+        out += f'<source name>\n'
+        out += f'{s_key}\n'
+        out += f'<layer index>\n'
+        out += f'{s_key.split("_")[-1]}\n'
+        out += f'<particle index>\n'
+        out += f'{s_key.split("_")[1]}\n'
+        out += f'<amplitude>\n'
+        out += '{:6g}\n'.format(self.calc_amplitude)
+        out += f'<time function>\n'
+        out += f'{gsource_db.get_share_data("count")}\n'
+        time = ''
+        for i in gsource_db.get_share_data("time"):
+            time += str(i) + ' '
+        out += f'{time}\n'
+        func = ''
+        for i in gsource_db.get_share_data("func"):
+            func += str(i) + ' '
+        out += f'{func}\n'
+        out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
+        out += f'{gsource_db.get_share_data("lag").strip()}\n'
+
+        out += f'<spectre>\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre') + '\n'
+
+        out += f'<spectre number>\n'
+        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre numbers') + '\n'
+
+        out += '\n'
+
+        return out
+
+    def volume78_save(self, gsource_db, f_key, s_key, name):
+        out = ''
+        out += f'Volume78\n'
         out += '<influence number>\n'
         out += gsource_db.get_share_data('influence number') + '\n'
         out += '<influence name>\n'

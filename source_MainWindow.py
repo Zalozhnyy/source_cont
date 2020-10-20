@@ -501,6 +501,10 @@ class MainWindow(tk.Frame):
                 to_l = int(key.split('_')[-1])
                 if self.PL_surf[part_number][to_l, from_l] == 0:
                     obj.delete_second_level(key)
+            if 'Volume78' in key:
+                vol_lay = int(key.split('_')[-1])
+                if self.PL_vol[part_number][vol_lay] == 0:
+                    obj.delete_second_level(key)
             if 'Volume' in key:
                 vol_lay = int(key.split('_')[-1])
                 if self.PL_vol[part_number][vol_lay] == 0:

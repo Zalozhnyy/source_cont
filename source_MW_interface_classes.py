@@ -125,7 +125,8 @@ class StandardizedSourceMainInterface(tk.Frame):
         self._buttons_state()
 
     def _choice_file_button(self):
-        if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk or 'Volume78' in self.sk:
+        if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk:
+            # if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk or 'Volume78' in self.sk:
             self.__choice_files(one_file=True)
         else:
             self.__choice_files(one_file=False)
@@ -373,30 +374,49 @@ class StandardizedSourceMainInterface(tk.Frame):
 
     def _set_data_to_data_structure(self, spectre_file_name, spectre_number):
 
-        if self.spectre_name_values != ['Файл не выбран'] and self.spectre_number_values == [
-            '--'] and self.spectre_type_values == ['--']:  # Доставка в БД для Current Energy
+        if 'Volume78' in self.sk:  # обработка доставки в БД данных источника Volume78
+            _spectres = []
+            _spectres_number = []
 
-            if 'Volume78' in self.sk:
-                self._set_spectre_data_to_interface()
+            distributions = []
+
+            for i, number in enumerate(spectre_number):  # Распределяем на список распределений и спектров
+                if number == '--':
+                    distributions.append(spectre_file_name[i])
+                else:
+                    _spectres.append(spectre_file_name[i])
+                    _spectres_number.append(spectre_number[i])
+
+            if len(distributions) != 0:  # блок доставки распределения в БД
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'distribution', distributions)
+            else:
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'distribution', None)
+
+            if len(_spectres) != 0:  # блок доставки распределения в БД
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', _spectres)
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers', _spectres_number)
+            else:
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', None)
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers', None)
+
+        else:  # обработка доставки в БД данных всего остального
+
+            if self.spectre_name_values != ['Файл не выбран'] and self.spectre_number_values == [
+                '--'] and self.spectre_type_values == ['--']:  # Доставка в БД для Current Energy
+
+                if 'Current' not in self.sk and 'Energy' not in self.sk:
+                    mb.showerror('Ошибка', 'Выбранный файл подходит для источников Current или Energy.\n'
+                                           'Добавление невозможно.')
+
+                    self.spectre_name_values = ['Файл не выбран']
+                    self._set_spectre_data_to_interface()
+                    return
+
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'distribution', spectre_file_name)
+
+            else:  # Доставка в БД для всех остальных источников
                 self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', spectre_file_name)
-                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers',
-                                                         [random.randint(1000, 9999)])
-
-                return
-
-            if 'Current' not in self.sk and 'Energy' not in self.sk:
-                mb.showerror('Ошибка', 'Выбранный файл подходит для источников Current или Energy.\n'
-                                       'Добавление невозможно.')
-
-                self.spectre_name_values = ['Файл не выбран']
-                self._set_spectre_data_to_interface()
-                return
-
-            self.db[self.db_name].insert_third_level(self.fk, self.sk, 'distribution', spectre_file_name)
-
-        else:  # Доставка в БД для всех остальных источников
-            self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', spectre_file_name)
-            self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers', spectre_number)
+                self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers', spectre_number)
 
     def __flux_auto_search(self):
         """Автоматический поиск спектров в проекте для FLUX'"""

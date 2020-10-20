@@ -61,16 +61,16 @@ class Save_remp:
                             print(a)
                             return
 
-                    # if 'Volume78' in s_key:
-                    #     a = self.volume78_save(gsource_db, f_key, s_key, name)
-                    #     out += a
-                    #     if 'None' in a:
-                    #         print(f'Введены не все данные в источнике {s_key}')
-                    #         mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
-                    #         print(a)
-                    #         return
+                    if s_key.split('_')[0] == 'Volume78':
+                        a = self.volume78_save(gsource_db, f_key, s_key, name)
+                        out += a
+                        if 'None' in a:
+                            print(f'Введены не все данные в источнике {s_key}')
+                            mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key}')
+                            print(a)
+                            return
 
-                    if 'Volume' in s_key:
+                    if s_key.split('_')[0] == 'Volume':
                         a = self.volume_save(gsource_db, f_key, s_key, name)
                         out += a
                         if 'None' in a:
@@ -228,11 +228,16 @@ class Save_remp:
         out += f'<lag (1 - PLANE, 2 - SPHERE), parameters>\n'
         out += f'{gsource_db.get_share_data("lag").strip()}\n'
 
-        out += f'<spectre>\n'
-        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre') + '\n'
+        if gsource_db.get_last_level_data(f_key, s_key, 'spectre') is not None:
+            out += f'<spectre>\n'
+            out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre') + '\n'
 
-        out += f'<spectre number>\n'
-        out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre numbers') + '\n'
+            out += f'<spectre number>\n'
+            out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'spectre numbers') + '\n'
+
+        if gsource_db.get_last_level_data(f_key, s_key, 'distribution') is not None:
+            out += f'<distribution>\n'
+            out += self._get_last_level_data_with_exception(gsource_db, f_key, s_key, 'distribution') + '\n'
 
         out += '\n'
 

@@ -984,6 +984,8 @@ class ScrolledWidget(tk.Frame):
     def onFrameConfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.mw_scroll = self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
 
 
 if __name__ == '__main__':

@@ -55,6 +55,8 @@ class FrameGen(ttk.LabelFrame):
 
         self.grd_def = self.child_parcecer_grid()
 
+        self._error_label = None
+
         # self.spectr = []
 
         # self.path = os.path.normpath(config_read()[0])
@@ -142,6 +144,9 @@ class FrameGen(ttk.LabelFrame):
         self.cf = ScrolledWidget(self, (420, 600))
         self.cf.grid(row=4, column=0, padx=25)
 
+        self._error_label = tk.Label(self.cf.frame)
+        self._error_label.grid(row=0, column=0, padx=5, pady=5, sticky='WN', columnspan=3)
+
         self.entry_func_fr = tk.LabelFrame(self.cf.frame, text='Временная функция')
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, rowspan=20)
 
@@ -171,7 +176,7 @@ class FrameGen(ttk.LabelFrame):
 
     def constants_frame(self):
         self.constants_fr = tk.Frame(self)
-        self.constants_fr.grid(row=0, column=0, sticky='NWSE', padx=5, columnspan=3)
+        self.constants_fr.grid(row=0, column=0, sticky='NW', padx=5, columnspan=3)
 
         self.entry_f_val.set(f'')
 
@@ -257,6 +262,10 @@ class FrameGen(ttk.LabelFrame):
         self.entry_time_fix = tk.Entry(self.entry_func_fr, textvariable=self.entry_time_fix_val, width=10,
                                        justify='center')
         self.entry_time_fix.grid(row=6, column=2, sticky='W')
+
+        self._error_label = tk.Label(self.entry_func_fr)
+        self._error_label.grid(row=8, column=0, padx=5, pady=5, sticky='WN', columnspan=5)
+
 
         self.fix_bind_id = self.entry_time_fix.bind("<FocusOut>", self.__get_row_callback)
 
@@ -640,6 +649,8 @@ class FrameGen(ttk.LabelFrame):
             print('Размерности не совпадают!')
             self.entry_time.configure(bg='red')
             self.entry_func.configure(bg='red')
+            if 'Размерности не совпадают' not in self._error_label['text']:
+                self._error_label['text'] += '\nРазмерности не совпадают'
             # mb.showerror('Index error', 'Размерности не совпадают!')
             return
 
@@ -653,8 +664,8 @@ class FrameGen(ttk.LabelFrame):
         self.time_list = list(time_list)
         self.func_list = list(func_list)
 
-        print('time = ', self.time_list)
-        print('func = ', self.func_list)
+        # print('time = ', self.time_list)
+        # print('func = ', self.func_list)
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
@@ -893,9 +904,28 @@ class FrameGen(ttk.LabelFrame):
                 time_cell = None
                 pass
 
+        tmp_time_error = []
         for i in range(len(entry_t) - 1):
             if entry_t[i] > entry_t[i + 1]:
-                print(f'Value error время уменьшается на одном из отрезков {i}')
+                tmp_time_error.append(f'{i} - {i + 1}')
+                if type(self.entry_time) is list:
+                    self.entry_time[i].configure(bg='#F08080')
+                else:
+                    self.entry_time.configure(bg='#F08080')
+
+            else:
+                if type(self.entry_time) is list:
+                    self.entry_time[i].configure(bg='#FFFFFF')
+                else:
+                    self.entry_time.configure(bg='#FFFFFF')
+
+        if len(tmp_time_error) != 0:
+            # mb.showerror('Ошибка ввода времени', f'Время уменьшается на отрезке(ах): {" ".join(tmp_time_error)}\n'
+            #                                      f'Исправьте ошибку или примините сортировку (клавиша enter)')
+            self._error_label['text'] = f'Время уменьшается на отрезке(ах): {" ; ".join(tmp_time_error)}\n' \
+                                        f'Исправьте ошибку или примините сортировку (клавиша enter)'
+        else:
+            self._error_label['text'] = ''
 
         return entry_t, entry_f, time_cell
 
@@ -997,7 +1027,8 @@ class FrameGen(ttk.LabelFrame):
         func = self.func_entry_vel.get().split()
 
         if len(time) != len(func):
-            print('Размерности не сопадают, сортировка невозможна')
+            # print('Размерности не сопадают, сортировка невозможна')
+            mb.showerror('Index error', 'Размерности не сопадают, сортировка невозможна')
             return
 
         try:

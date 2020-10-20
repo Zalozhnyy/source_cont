@@ -1154,13 +1154,13 @@ class MainWindow(tk.Frame):
         self.marple_menu.entryconfigure(1, state='normal')
 
         self._marple = {'ion': ion, 'sigma': sigma}
-        mb.showinfo('Marple', 'Marple будет сохранён в remp source')
+        mb.showinfo('Задача обтекания', 'Задача обтекания будет сохранёна в remp source')
 
     def __delete_marple(self):
         self.marple_menu.entryconfigure(0, state='normal')
         self.marple_menu.entryconfigure(1, state='disabled')
 
-        mb.showinfo('Marple', 'Marple не будет сохранён в remp source')
+        mb.showinfo('Задача обтекания', 'Задача обтекания не будет сохранёна в remp source')
 
         self._marple = None
 
@@ -1178,7 +1178,7 @@ class MainWindow(tk.Frame):
         self.electronics_menu.entryconfigure(1, state='normal')
 
         self._micro_electronics = {'field78': field, 'density78': density}
-        mb.showinfo('Marple', 'Микроэлектроника будет сохранёна в remp source')
+        mb.showinfo('Микроэлектроника', 'Микроэлектроника будет сохранёна в remp source')
 
     def __delete_microel(self):
         self.electronics_menu.entryconfigure(0, state='normal')

@@ -142,11 +142,18 @@ class PeSource:
         if save_path == '':
             return
 
-        if self.sp_ds.spectre_type == 5:
+        if self.sp_ds.spectre_type == 5 and self.sp_ds.five_spectre_type == 0:
             save_array = np.column_stack((self.sp_ds.old_data[:, 1] * 1e3, self.out_spectre[:, 1]))
 
             header = f'SP_TYPE=DISCRETE\n' \
                      f'[DATA]'
+
+        elif self.sp_ds.spectre_type == 5 and self.sp_ds.five_spectre_type == 1:
+            save_array = np.column_stack((self.sp_ds.old_data[:, 2] * 1e3, self.out_spectre[:, 1]))
+
+            header = f'SP_TYPE=CONTINUOUS\n' \
+                     f'[DATA]\n' \
+                     f'{self.sp_ds.old_data[0, 0]}'
 
         elif self.sp_ds.spectre_type == 'DISCRETE':
             save_array = self.out_spectre[:, :]
@@ -284,6 +291,7 @@ class SpectreDataWithConvertation:
 
         self.data = None
         self.old_data = None
+        self.five_spectre_type = None
 
         self.spectre_type_identifier()
 
@@ -302,6 +310,7 @@ class SpectreDataWithConvertation:
                 self.spectre_type = int(lines[6].strip())
                 if self.spectre_type != 5:
                     print('Спектр не подходит')
+                    mb.showerror('Ошибка','тип спектра не подходит.')
                     self.data = None
                     return
             except:
@@ -320,8 +329,10 @@ class SpectreDataWithConvertation:
 
             if self.data.shape[1] == 5:
                 self.data = self.data[:, 1:3]
+                self.five_spectre_type = 0
             elif self.data.shape[1] == 7:
                 self.data = self.data[:, 3:5]
+                self.five_spectre_type = 1
 
         if self.spectre_type == 'DISCRETE':
             self.data = np.loadtxt(self.spectre_path, skiprows=2, dtype=float)

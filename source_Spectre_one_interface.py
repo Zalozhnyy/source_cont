@@ -23,9 +23,9 @@ class SpectreOneInterface(tk.Frame):
         self.parent_frame.resizable(width=True, height=True)
 
         self.parts_count_db = {
-            'phi': 1,
-            'theta': 1,
-            'energy': 1,
+            'phi': 0,
+            'theta': 0,
+            'energy': 0,
             'starts': 1
         }
 
@@ -122,7 +122,7 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         # number of elements
-        p = 'Количество элементов по fi, theta, энергии (укажите через пробел)'
+        p = 'Количество элементов по fi, theta, энергии'
         elem_label = tk.Label(self.frame_description, text=p, justify='left')
         elem_label.grid(row=self.row, column=0, columnspan=12, sticky='NW')
         self.row += 1
@@ -170,7 +170,8 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         p_t = ['0', '1', '3']
-        combobox_values = ['детерминированный', 'равномерный', 'нормальное распределение']
+        # combobox_values = ['детерминированный', 'равномерный', 'нормальное распределение']
+        combobox_values = ['детерминированный', 'равномерный']
         self.phi_decode = dict(zip(combobox_values, p_t))
 
         self.phi_type_cobbobox = ttk.Combobox(self.frame_description, value=[val for val in combobox_values], width=20,
@@ -188,7 +189,8 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         t_num = ['0', '1', '-1', '3']
-        combobox_values = ['детерминированный', 'равномерный', 'равномерный по площади', 'нормальное распределение']
+        # combobox_values = ['детерминированный', 'равномерный', 'равномерный по площади', 'нормальное распределение']
+        combobox_values = ['детерминированный', 'равномерный', 'равномерный по площади']
         self.theta_decode = dict(zip(combobox_values, t_num))
         self.theta_type_cobbobox = ttk.Combobox(self.frame_description, value=[val for val in combobox_values],
                                                 width=20,
@@ -206,7 +208,8 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         e_num = ['0', '1', '2', '3']
-        combobox_values = ['детерминированный', 'равномерный', 'по распределению', 'нормальное распределение']
+        # combobox_values = ['детерминированный', 'равномерный', 'по распределению', 'нормальное распределение']
+        combobox_values = ['детерминированный', 'равномерный', 'по распределению']
         self.energy_decode = dict(zip(combobox_values, e_num))
         self.energy_type_cobbobox = ttk.Combobox(self.frame_description, value=[val for val in combobox_values],
                                                  width=20,
@@ -233,6 +236,10 @@ class SpectreOneInterface(tk.Frame):
         energy_row += 1
 
         if cb == '0' or cb == '2':
+            a = self.elem_count_val.get().split()
+            self.elem_count_val.set(f'{a[0]} {a[1]} {0}')
+            self.parts_count_db['energy'] = 0
+
             # phi levels
             p = 'Количество уровней по энергии'
             phy_label = tk.Label(self.energy_frame_description, text=p, justify='left')
@@ -254,7 +261,7 @@ class SpectreOneInterface(tk.Frame):
 
         elif cb == '1':
             a = self.elem_count_val.get().split()
-            self.elem_count_val.set(f'{a[0]} {a[1]} {2}')
+            self.elem_count_val.set(f'{a[0]} {a[1]} {1}')
             self.parts_count_db['energy'] = 1
 
             self.energy_frame_entry = ttk.Frame(self.energy_frame_description)
@@ -275,7 +282,7 @@ class SpectreOneInterface(tk.Frame):
 
         elif cb == '3':
             a = self.elem_count_val.get().split()
-            self.elem_count_val.set(f'{a[0]} {a[1]} {2}')
+            self.elem_count_val.set(f'{a[0]} {a[1]} {1}')
             self.parts_count_db['energy'] = 1
 
             self.energy_angles_entry = []
@@ -300,6 +307,9 @@ class SpectreOneInterface(tk.Frame):
                 tk.Entry(self.energy_frame_entry, width=14, textvariable=self.energy_angles_val[1]))
             self.energy_angles_entry[1].grid(row=3, column=0, sticky='NW', padx=3, pady=3)
 
+        self.__change_count_callback()
+
+
     def __theta_constructor(self, event):
         theta_row = 0
         try:
@@ -316,6 +326,10 @@ class SpectreOneInterface(tk.Frame):
         theta_row += 1
 
         if cb == '0':
+            a = self.elem_count_val.get().split()
+            self.elem_count_val.set(f'{a[0]} {0} {a[2]}')
+            self.parts_count_db['theta'] = 0
+
             # phi levels
             p = 'Количество уровней по theta'
             phy_label = tk.Label(self.theta_frame_description, text=p, justify='left')
@@ -334,7 +348,7 @@ class SpectreOneInterface(tk.Frame):
 
         elif cb == '1' or cb == '-1':
             a = self.elem_count_val.get().split()
-            self.elem_count_val.set(f'{a[0]} {2} {a[2]}')
+            self.elem_count_val.set(f'{a[0]} {1} {a[2]}')
             self.parts_count_db['theta'] = 1
 
             self.theta_frame_entry = ttk.Frame(self.theta_frame_description)
@@ -355,7 +369,7 @@ class SpectreOneInterface(tk.Frame):
 
         elif cb == '3':
             a = self.elem_count_val.get().split()
-            self.elem_count_val.set(f'{a[0]} {2} {a[2]}')
+            self.elem_count_val.set(f'{a[0]} {1} {a[2]}')
             self.parts_count_db['theta'] = 1
 
             self.theta_angles_entry = []
@@ -380,6 +394,8 @@ class SpectreOneInterface(tk.Frame):
                 tk.Entry(self.theta_frame_entry, width=14, textvariable=self.theta_angles_val[1]))
             self.theta_angles_entry[1].grid(row=3, column=0, sticky='NW', padx=3, pady=3)
 
+        self.__change_count_callback()
+
     def __phi_constructor(self, event):
         phi_row = 0
         try:
@@ -398,6 +414,10 @@ class SpectreOneInterface(tk.Frame):
         self.row += 1
 
         if cb == '0':
+            a = self.elem_count_val.get().split()
+            self.elem_count_val.set(f'{0} {a[1]} {a[2]}')
+            self.parts_count_db['phi'] = 0
+
             # phi levels
             p = 'Количество уровней по fi'
             phy_label = tk.Label(self.phi_frame_description, text=p, justify='left')
@@ -417,7 +437,7 @@ class SpectreOneInterface(tk.Frame):
         elif cb == '1':
 
             a = self.elem_count_val.get().split()
-            self.elem_count_val.set(f'{2} {a[1]} {a[2]}')
+            self.elem_count_val.set(f'{1} {a[1]} {a[2]}')
             self.parts_count_db['phi'] = 1
 
             self.phi_frame_entry = ttk.Frame(self.phi_frame_description)
@@ -438,7 +458,7 @@ class SpectreOneInterface(tk.Frame):
 
         elif cb == '3':
             a = self.elem_count_val.get().split()
-            self.elem_count_val.set(f'{2} {a[1]} {a[2]}')
+            self.elem_count_val.set(f'{1} {a[1]} {a[2]}')
             self.parts_count_db['phi'] = 1
 
             self.phi_angles_entry = []
@@ -462,6 +482,8 @@ class SpectreOneInterface(tk.Frame):
             self.phi_angles_entry.append(
                 tk.Entry(self.phi_frame_entry, width=14, textvariable=self.phi_angles_val[1]))
             self.phi_angles_entry[1].grid(row=3, column=0, sticky='NW', padx=3, pady=3)
+
+        self.__change_count_callback()
 
     def __energy_entry_constructor(self, r, event):
         try:
@@ -985,7 +1007,6 @@ class ScrolledWidget(tk.Frame):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         self.mw_scroll = self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-
 
 
 if __name__ == '__main__':

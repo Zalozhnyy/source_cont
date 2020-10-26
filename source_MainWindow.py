@@ -390,6 +390,7 @@ class MainWindow(tk.Frame):
 
         return out
 
+    @logger.catch()
     def check_project(self):
         if self.path is None:
             return
@@ -720,6 +721,7 @@ class MainWindow(tk.Frame):
                             obj.insert_third_level(particle, name, 'spectre', file)
                             obj.insert_third_level(particle, name, 'spectre numbers', sp_number)
 
+    @logger.catch()
     def tree_view_constructor(self, ask_name=True, load=False, load_data=None):
         if self.path is None:
             mb.showerror('Path', 'Сначала выберите проект')
@@ -1083,6 +1085,7 @@ class MainWindow(tk.Frame):
                                                        index=index,
                                                        name=item[0]: self._left_button_menu(name, index, _))
 
+    @logger.catch()
     def save(self):
         ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
 

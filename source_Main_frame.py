@@ -57,28 +57,6 @@ class FrameGen(ttk.LabelFrame):
 
         self._error_label = None
 
-        # self.spectr = []
-
-        # self.path = os.path.normpath(config_read()[0])
-        # self.path = fd.askdirectory(title='Укажите путь к проекту REMP', initialdir=os.getcwd())
-
-        # self.dir_name = config_read()[0].split('/')[-1]
-
-        # self.gursa_count = []
-        #
-        # self.existe_gursa_label = []
-        # self.gursa_dict = {}
-        # self.gursa_label_dict = {}
-        #
-        # self.x = []
-        #
-        # self.external_tf_num = []
-        #
-        # self.gursa_out_dict = {}
-        #
-        # self.spectr_dir = ''
-        # self.spectr_type = ''
-
     def _notebooks(self):
 
         self.button_change_method = tk.Button(self)

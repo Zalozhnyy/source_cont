@@ -883,6 +883,8 @@ class FrameGen(ttk.LabelFrame):
                 pass
 
         tmp_time_error = []
+        out_of_grid_bounds_flag = False
+
         for i in range(len(entry_t) - 1):
             if entry_t[i] > entry_t[i + 1]:
                 tmp_time_error.append(f'{i} - {i + 1}')
@@ -897,13 +899,25 @@ class FrameGen(ttk.LabelFrame):
                 else:
                     self.entry_time.configure(bg='#FFFFFF')
 
+        for i in range(len(entry_t)):
+            if entry_t[i] > self.A[-1]:
+                if type(self.entry_time) is list:
+                    self.entry_time[i].configure(bg='#F08080')
+                else:
+                    self.entry_time.configure(bg='#F08080')
+
+                out_of_grid_bounds_flag = True
+
         if len(tmp_time_error) != 0:
             # mb.showerror('Ошибка ввода времени', f'Время уменьшается на отрезке(ах): {" ".join(tmp_time_error)}\n'
             #                                      f'Исправьте ошибку или примините сортировку (клавиша enter)')
             self._error_label['text'] = f'Время уменьшается на отрезке(ах): {" ; ".join(tmp_time_error)}\n' \
-                                        f'Исправьте ошибку или примините сортировку (клавиша enter)'
+                                        f'Исправьте ошибку или примините сортировку'
         else:
             self._error_label['text'] = ''
+
+        if out_of_grid_bounds_flag:
+            self._error_label['text'] += '\nЗначения превышают обозначенный диапазон времени'
 
         return entry_t, entry_f, time_cell
 

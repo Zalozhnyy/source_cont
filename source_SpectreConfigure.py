@@ -19,6 +19,7 @@ from source_Spectre_one_interface import SpectreOneInterface, ScrolledWidget
 
 @logger.catch()
 class SpectreConfigure(tk.Frame):
+    @logger.catch()
     def __init__(self, path='', parent=None):
         super().__init__(parent)
 
@@ -134,6 +135,7 @@ class SpectreConfigure(tk.Frame):
 
         # self.bind_class(self.spetre_type_cobbobox, "<<ComboboxSelected>>", self.__cb_react)
 
+    @logger.catch()
     def open_spectre(self, use_constructor=True, use_chose_spectre=None):
         if use_chose_spectre is None:
             self.spectre_path = fd.askopenfilename(title='Выберите файл spectre', initialdir=self.path,
@@ -274,6 +276,7 @@ class SpectreConfigure(tk.Frame):
         os.system(osCommandString)
         self.parent.destroy()
 
+    @logger.catch()
     def create_spectre(self):
         self.__cb_react()
 
@@ -582,7 +585,7 @@ class SpectreConfigure(tk.Frame):
                 tmp_entry.append(tk.Entry(self.spectre_frame, textvariable=self.spectre_entry_val[i][j], width=15,
                                           justify='center'))
                 tmp_entry[j].grid(row=1 + i, column=j)
-                tmp_entry[j].bind("<FocusOut>", lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
+                tmp_entry[j].bind('<FocusOut>', lambda _, a=i, b=j: self.__insert_data_to_data_struct(a, b, _))
 
             self.spectre_entry.append(tmp_entry)
 
@@ -919,6 +922,7 @@ class SpectreConfigure(tk.Frame):
 
                 self.__insert_to_interface_from_data_struct(i, j)
 
+    @logger.catch()
     def _save_data(self, save_as):
 
         all_field_correct = self._check_data_for_save()
@@ -1324,21 +1328,30 @@ class SpectreConfigure(tk.Frame):
 
     def __direction_vector_calc(self):
         try:
-            x = float(self.direction_vector_val.get().split()[0])
-            y = float(self.direction_vector_val.get().split()[1])
-            z = float(self.direction_vector_val.get().split()[2])
+            string = self.direction_vector_val.get().split()
+            if len(string) != 3:
+                raise Exception
+
+            x = float(string[0])
+            y = float(string[1])
+            z = float(string[2])
 
             length = (x ** 2 + y ** 2 + z ** 2) ** 0.5
 
-            if length < 0.99 or length > 1.01:
-                self.direction_vector.configure(bg='#F08080')
-                self.direction_vector_result['text'] = 'Длина вектора = {:.2g} |  Должна быть равна 1'.format(length)
+            x, y, z = x / length, y / length, z / length
+
+            if length < 0.999 or length > 1.001:
+                self.direction_vector.configure(bg='white')
+                self.direction_vector_result['text'] = '%g %g %g = %g - %s' % (x, y, z, length, 'должен быть равен 1')
 
             else:
                 self.direction_vector.configure(bg='white')
-                self.direction_vector_result['text'] = 'Длина вектора = {:.2g}'.format(length)
+                self.direction_vector_result['text'] = '%g %g %g  =  %g' % (x, y, z, length)
+
+
         except:
             self.direction_vector.configure(bg='#F08080')
+            self.direction_vector_result['text'] = 'Ошибка'
 
     def __cb_react(self):
         self.spectre_type_cb = self.sp_type_dict.get(self.spetre_type_cobbobox.get())
@@ -1404,7 +1417,6 @@ class SpectreConfigure(tk.Frame):
     def elph_ext(self, point):
         X = self.elph[:, 0]
         Y = self.elph[:, 1]
-
 
         x0, y0 = X[-1], Y[-1]
         x1, y1 = X[1000], Y[1000]
@@ -1580,6 +1592,7 @@ class SpectreConfigure(tk.Frame):
         if five_type == 1:  # CONTINUOUS
             self.description_discrete_cont()
             self.data_struct.create_empty_data((five_data.shape[0], 2))
+            self.data_struct.data[0, 1] = 0
 
             for i in range(1, five_data.shape[0]):
                 self.data_struct.data[i - 1, 0] = five_data[i - 1, 1] * 1e3
@@ -1762,7 +1775,23 @@ class SpectreDataStructure:
 
     def create_empty_data(self, shape=(0, 0)):
         self.data = np.zeros((shape[0], shape[1]), dtype=float)
+        self.configure_array()
 
+    def change_shape(self, rows, append_shape):
+        d = [0 for _ in range(append_shape)]
+
+        if rows < self.data.shape[0]:
+            delta = self.data.shape[0] - rows
+            for i in range(delta):
+                self.data = np.delete(self.data, -1, axis=0)
+        elif rows > self.data.shape[0]:
+            delta = rows - self.data.shape[0]
+            for i in range(delta):
+                self.data = np.append(self.data, [d], axis=0)
+
+            self.configure_array_add_element()
+
+    def configure_array(self):
         if self.spectre_type != 'DISCRETE' and self.spectre_type != 'CONTINUOUS':
             if self.spectre_type == 0:
                 self.data[:, 1] = None
@@ -1783,19 +1812,24 @@ class SpectreDataStructure:
             for i in range(self.data.shape[0]):
                 self.data[i, 0] = i + 1
 
-    def change_shape(self, rows, append_shape):
-        d = [None for _ in range(append_shape)]
+    def configure_array_add_element(self):
+        if self.spectre_type != 'DISCRETE' and self.spectre_type != 'CONTINUOUS':
+            if self.spectre_type == 0:
+                self.data[-1, 1] = None
 
-        if rows < self.data.shape[0]:
-            delta = self.data.shape[0] - rows
-            for i in range(delta):
-                self.data = np.delete(self.data, -1, axis=0)
-        elif rows > self.data.shape[0]:
-            delta = rows - self.data.shape[0]
-            for i in range(delta):
-                self.data = np.append(self.data, [d], axis=0)
+            if self.spectre_type == 2:
+                if self.sp_5_type == 0:
+                    self.data[-1, 1] = None
+                elif self.sp_5_type == 1:
+                    self.data[-1, 1:3] = None
 
-        if self.spectre_type == 0 or self.spectre_type == 5:
+            if self.spectre_type == 5:
+                if self.sp_5_type == 0:
+                    self.data[-1, 1] = None
+                elif self.sp_5_type == 1:
+                    self.data[-1, 1:4] = None
+                    self.data[-1, 5:] = None
+
             for i in range(self.data.shape[0]):
                 self.data[i, 0] = i + 1
 
@@ -1853,7 +1887,7 @@ class SpectreDataStructure:
 if __name__ == '__main__':
     root = tk.Tk()
 
-    x = SpectreConfigure(parent=root, path=r'C:\Users\Zalozhnyy_N\Dropbox\work_cloud\PERENOS_Example')
+    x = SpectreConfigure(parent=root, path=r'C:\Work\Test_projects\wpala')
     x.grid(sticky='NWSE')
 
     root.protocol("WM_DELETE_WINDOW", x.onExit)

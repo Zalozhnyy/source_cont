@@ -438,6 +438,8 @@ class SelectLagInterface(tk.Toplevel):
         [self._entry_vector_values[i].set('') for i in range(3)]
 
         self._entry_vector = []
+        self._enable_var = tk.IntVar()
+        self._enable_var.set(0)
 
         if len(init_values) != 0:
             for i in range(len(self._entry_vector_values)):
@@ -470,14 +472,14 @@ class SelectLagInterface(tk.Toplevel):
                 self.destroy()
 
             elif ask is False:
-                self.vector_data = self._restore_init_values
+                if self.vector_data != [None, None, None]:
+                    self.vector_data = self._restore_init_values
                 self.destroy()
 
     def initUi(self):
         labl = tk.Label(self, text='Задание параметров задержки')
         labl.grid(row=1, column=0, sticky='N', padx=5, pady=5, columnspan=2)
 
-        self._enable_var = tk.IntVar()
         enable = tk.Checkbutton(self, text='Включить', command=self.en_change, variable=self._enable_var,
                                 onvalue=1, offvalue=0)
         enable.grid(row=1, column=2, sticky='N', padx=5, pady=5)

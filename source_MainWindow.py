@@ -295,7 +295,12 @@ class MainWindow(tk.Frame):
             a = []
 
         ex = SelectLagInterface(self.path, a)
-        ex._enable_var.set(1)
+
+        if self.lag == '0':
+            ex._enable_var.set(0)
+        else:
+            ex._enable_var.set(1)
+
         ex.en_change()
 
         self.wait_window(ex)

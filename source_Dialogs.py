@@ -204,7 +204,8 @@ class MarpleInterface(tk.Toplevel):
         self.initUi()
 
     def initUi(self):
-        tk.Label(self, text='Создание источника Marple').grid(row=0, column=0, columnspan=3, sticky='NW')
+
+        tk.Label(self, text='Создание источника обтекания').grid(row=0, column=0, columnspan=3, sticky='NW')
 
         self.sigma_label_text = 'Проводимость:  '
         sigma_label = tk.Label(self, text=self.sigma_label_text)
@@ -215,12 +216,12 @@ class MarpleInterface(tk.Toplevel):
         sigma_label.grid(row=1, column=0, columnspan=5, sticky='NW')
         ion_label.grid(row=2, column=0, columnspan=5, sticky='NW')
 
-        sigma_but_title = 'Выберите файл проводимости _marple'
+        sigma_but_title = 'Выберите файл проводимости обтекания'
         sigma_but = tk.Button(self, text='Выбрать проводимость', width=28,
                               command=lambda: self.__choice_file(sigma_label, 'sigma', sigma_but_title))
         sigma_but.grid(row=1, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
 
-        ion_but_title = 'Выберите файл степени ионизации _marple'
+        ion_but_title = 'Выберите файл степени ионизации обтекания'
         ion_but = tk.Button(self, text='Выбрать степень ионизации', width=28,
                             command=lambda: self.__choice_file(ion_label, 'ion', ion_but_title))
         ion_but.grid(row=2, column=5, columnspan=1, sticky='NW', pady=3, padx=20)

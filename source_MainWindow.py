@@ -779,7 +779,7 @@ class MainWindow(tk.Frame):
 
         if load is False:
             self.global_tree_db.update({name: self.tree_db_insert(name)})
-            fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
+            fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent))
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
             fr_data._notebooks()
 
@@ -799,7 +799,7 @@ class MainWindow(tk.Frame):
                 source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
                 self.particle_tree_constr(part_name, source_keys, source, ind)
 
-            fr_data = FrameGen(fr, self.path, self.global_tree_db[name])
+            fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent))
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
             if self.global_tree_db[name].get_share_data('count') is not None:
                 fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
@@ -866,6 +866,12 @@ class MainWindow(tk.Frame):
             elif 'Boundaries' in s_key:
                 self.tree[ind].insert(boundary_source, i, text=f'{s_key}', open=True)
 
+        self.update()
+        w = self.notebook.winfo_width()
+        h = self.notebook.winfo_height()
+        if w > 500:
+            self.parent.geometry(f'{w}x{h}')
+
     def __tree_select_react(self, index, name, e):
         # print([self.tree[-1].item(x) for x in self.tree[-1].selection()])
 
@@ -883,7 +889,8 @@ class MainWindow(tk.Frame):
             if self.tree[index].item(x)['text'] in self.global_tree_db.keys():
                 if self.tabs_dict[name][2] is False:
                     self.__destroy_data_frame(name)
-                    fr_data = FrameGen(self.tabs_dict[name][1], self.path, self.global_tree_db[name])
+                    fr_data = FrameGen(self.tabs_dict[name][1], self.path, self.global_tree_db[name],
+                                       (self.notebook, self.parent))
                     if self.global_tree_db[name].get_share_data('count') is not None:
                         fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
                         fr_data._notebooks()

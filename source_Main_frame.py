@@ -20,7 +20,7 @@ from source_Spectre_one_interface import ScrolledWidget
 
 @logger.catch()
 class FrameGen(ttk.LabelFrame):
-    def __init__(self, parent, path, data_obj):
+    def __init__(self, parent, path, data_obj, size_objects: tuple):
         super().__init__(parent)
 
         self.parent = parent
@@ -31,6 +31,8 @@ class FrameGen(ttk.LabelFrame):
 
         self.path = path
         self.pr_dir = path
+        self.__nb_widget = size_objects[0]
+        self.__root_widget = size_objects[1]
 
         # parent.geometry('1180x800')
         # parent.resizable(width=False, height=False)
@@ -136,6 +138,13 @@ class FrameGen(ttk.LabelFrame):
         self.ent(from_row)
 
         self.button_change_method.configure(text='Строчный ввод', command=self.rows_metod, width=15)
+
+        self.update()
+        w = self.__nb_widget.winfo_width()
+        h = self.__nb_widget.winfo_height()
+        if w > 500:
+            self.__root_widget.geometry(f'{w}x{h}')
+
 
     def description_fr(self):
         self.d_fr = ttk.LabelFrame(self, text='Подсказка')
@@ -244,7 +253,6 @@ class FrameGen(ttk.LabelFrame):
         self._error_label = tk.Label(self.entry_func_fr)
         self._error_label.grid(row=8, column=0, padx=5, pady=5, sticky='WN', columnspan=5)
 
-
         self.fix_bind_id = self.entry_time_fix.bind("<FocusOut>", self.__get_row_callback)
 
         self.__row_grid_configure()
@@ -253,6 +261,12 @@ class FrameGen(ttk.LabelFrame):
         # self.button_save.configure(state='disabled')
         self.button_change_method.configure(text='Дискретный метод', width=15,
                                             command=lambda: (self.entry_func_frame()))
+
+        self.update()
+        w = self.__nb_widget.winfo_width()
+        h = self.__nb_widget.winfo_height()
+        if w > 500:
+            self.__root_widget.geometry(f'{w}x{h}')
 
     def ent(self, row_m):
         self.entry_func = []
@@ -594,7 +608,6 @@ class FrameGen(ttk.LabelFrame):
             except ValueError:
                 print(f'{i} не может быть преобразовано в float')
                 # mb.showerror('Value error', f'{i} не может быть преобразовано в float')
-                # return 0
             except:
                 pass
 
@@ -605,8 +618,8 @@ class FrameGen(ttk.LabelFrame):
                 calc = func_string.replace('T', f'{self.time_list[i]}')
 
                 try:
-                    self.func_list.append(eval(calc))
-                    tmp += '{:.5g} '.format(eval(calc))
+                    self.func_list.append(float(calc))
+                    tmp += '{:.5g} '.format(float(calc))
                 except:
                     pass
 
@@ -632,7 +645,8 @@ class FrameGen(ttk.LabelFrame):
             # mb.showerror('Index error', 'Размерности не совпадают!')
             return
 
-        time_list, func_list, _ = self.data_control()
+        # time_list, func_list, _ = self.data_control()
+        time_list, func_list, _ = np.array(self.time_list), np.array(self.time_list), None
 
         if time_list is None:
             return

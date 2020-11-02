@@ -145,7 +145,6 @@ class FrameGen(ttk.LabelFrame):
         if w > 500:
             self.__root_widget.geometry(f'{w}x{h}')
 
-
     def description_fr(self):
         self.d_fr = ttk.LabelFrame(self, text='Подсказка')
         self.d_fr.grid(row=0, column=3, columnspan=4, rowspan=5, padx=5, sticky='NE')
@@ -173,6 +172,28 @@ class FrameGen(ttk.LabelFrame):
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
         self.entry_f.grid(row=0, column=2, padx=3)
+
+        combobox_values = ['шт', 'шт/с']
+        decode = [True, False]
+
+        self._integrate_decode_dict = dict(zip(combobox_values, decode))
+
+        self._integrate_combobox = ttk.Combobox(self.constants_fr, value=[val for val in combobox_values],
+                                                width=15, state='readonly')
+
+        self._integrate_combobox.bind("<<ComboboxSelected>>", self.__change_db_integrate_flag_state)
+
+        self._integrate_combobox.grid(row=0, column=3, columnspan=2, sticky='W')
+
+        try:
+            if self.db.get_share_data('integrate'):
+                self._integrate_combobox.set(combobox_values[0])
+            else:
+                self._integrate_combobox.set(combobox_values[1])
+        except KeyError:
+            self._integrate_combobox.set(combobox_values[0])
+
+        self.__change_db_integrate_flag_state(None)
 
         self.entry_f.bind("<FocusOut>", self.__get_amplitude_callback)
 
@@ -1086,6 +1107,14 @@ class FrameGen(ttk.LabelFrame):
 
     def onExit(self):
         self.quit()
+
+    def __change_db_integrate_flag_state(self, event):
+
+        if self._integrate_decode_dict[self._integrate_combobox.get()]:
+            self.db.insert_share_data('integrate', True)
+
+        else:
+            self.db.insert_share_data('integrate', False)
 
 
 if __name__ == '__main__':

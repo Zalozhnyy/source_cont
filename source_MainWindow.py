@@ -43,7 +43,8 @@ class TreeDataStructure:
                                                    'lag': None,
                                                    'time_full': None,
                                                    'func_full': None,
-                                                   'tf_break': None})
+                                                   'tf_break': None,
+                                                   'integrate': True})
 
     def insert_share_data(self, key, value):
         self.__obj_structure['share_data'].update({key: value})
@@ -537,15 +538,20 @@ class MainWindow(tk.Frame):
                 for axis in create_list:
                     energy_type = f'Ток по оси {axis} слой {self.layer_numbers[i]}'
                     name = f'Current_{axis}_layer_{self.layer_numbers[i]}'
-                    d = f'J{axis.upper()}_{self.layer_numbers[i]}'
+                    if name in obj.get_second_level_keys('Current'):
+                        continue
+
                     obj.insert_second_level('Current', f'{name}', {})
 
                     obj.insert_third_level('Current', f'{name}', 'name', name)
                     obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
-                    # obj.insert_third_level('Current', f'{name}', 'spectre', None)
-                    # obj.insert_third_level('Current', f'{name}', 'spectre numbers', None)
-                    # obj.insert_third_level('Current', f'{name}', 'distribution', distr_list[distr_list.index(d)])
-                    obj.insert_third_level('Current', f'{name}', 'distribution', None)
+
+                    current_file = DataParser(self.path).get_distribution_for_current_and_energy(
+                        obj.get_share_data('influence number')
+                        , i,
+                        f'j{axis.lower()}')
+
+                    obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
 
             if self.LAY[i, 2] == 1:
                 energy_type = 'Energy'
@@ -554,7 +560,10 @@ class MainWindow(tk.Frame):
 
                 obj.insert_third_level('Energy', f'{name}', 'name', name)
                 obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
-                obj.insert_third_level('Energy', f'{name}', 'distribution', None)
+
+                current_file = DataParser(self.path).get_distribution_for_current_and_energy(
+                    obj.get_share_data('influence number'), i, f'en')
+                obj.insert_third_level('Energy', f'{name}', 'distribution', current_file)
 
         return obj
 
@@ -583,7 +592,6 @@ class MainWindow(tk.Frame):
                     for axis in create_list:
                         energy_type = f'Ток по оси {axis} слой {self.layer_numbers[i]}'
                         name = f'Current_{axis}_layer_{self.layer_numbers[i]}'
-                        d = f'J{axis.upper()}_{self.layer_numbers[i]}'
                         if name in obj.get_second_level_keys('Current'):
                             continue
 
@@ -591,7 +599,10 @@ class MainWindow(tk.Frame):
 
                         obj.insert_third_level('Current', f'{name}', 'name', name)
                         obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
-                        obj.insert_third_level('Current', f'{name}', 'distribution', None)
+
+                        current_file = DataParser(self.path).get_distribution_for_current_and_energy(number, i,
+                                                                                                     f'j{axis.upper()}')
+                        obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
 
                 if self.LAY[i, 2] == 1:
                     energy_type = 'Energy'
@@ -603,7 +614,9 @@ class MainWindow(tk.Frame):
 
                     obj.insert_third_level('Energy', f'{name}', 'name', name)
                     obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
-                    obj.insert_third_level('Energy', f'{name}', 'distribution', None)
+
+                    current_file = DataParser(self.path).get_distribution_for_current_and_energy(number, i, f'en')
+                    obj.insert_third_level('Energy', f'{name}', 'distribution', current_file)
 
         ar = self.PL_surf.get(number)
 

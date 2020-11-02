@@ -44,7 +44,10 @@ class Save_remp:
             gsource_db = item[1]
             name = item[0]
             try:
-                self.calc_amplitude = self.amplitude_calculation(gsource_db)
+                if gsource_db.get_share_data('integrate'):
+                    self.calc_amplitude = self.amplitude_calculation(gsource_db)
+                else:
+                    self.calc_amplitude = gsource_db.get_share_data('amplitude')
             except:
                 print(f'Введены не все данные в источнике {name}')
                 mb.showerror('Предупреждение', f'Введены не все данные в источнике {name}')
@@ -134,7 +137,7 @@ class Save_remp:
         out += f'<particle index>\n'
         out += f'{s_key.split("_")[2]}\n'
         out += f'<amplitude>\n'
-        out += '{:5g}\n'.format(self.calc_amplitude)
+        out += '{:.5g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''
@@ -174,7 +177,7 @@ class Save_remp:
         out += f'<particle index>\n'
         out += f'{s_key.split("_")[1]}\n'
         out += f'<amplitude>\n'
-        out += '{:6g}\n'.format(self.calc_amplitude)
+        out += '{:.5g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''
@@ -214,7 +217,7 @@ class Save_remp:
         out += f'<particle index>\n'
         out += f'{s_key.split("_")[1]}\n'
         out += f'<amplitude>\n'
-        out += '{:6g}\n'.format(self.calc_amplitude)
+        out += '{:.5g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''
@@ -264,7 +267,7 @@ class Save_remp:
         out += f'<layer index>\n'
         out += f'{s_key.split("_")[-1]}\n'
         out += f'<amplitude>\n'
-        out += '{:6g}\n'.format(self.calc_amplitude)
+        out += '{:.5g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''
@@ -296,7 +299,7 @@ class Save_remp:
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<amplitude>\n'
-        out += '{:6g}\n'.format(self.calc_amplitude)
+        out += '{:.5g}\n'.format(self.calc_amplitude)
         out += f'<time function>\n'
         out += f'{gsource_db.get_share_data("count")}\n'
         time = ''

@@ -636,13 +636,7 @@ class SubtaskDecoder:
 
 
 if __name__ == '__main__':
-    # test_file = r'C:\work\Test_projects\pr_test\PROJECT_1.PL'
-    # test_file = r'C:\work\Test_projects\wpala\shpala_new.PL'
-    # test_file = r'C:\work\Test_projects\wpala\remp_sources'
-    test_file = r'C:\Work\Test_projects\Sphere\SPHERE.PL'
-    a = DataParser(test_file)
-    x, y, z, k = a.pl_decoder()
-    print(x)
-    print(y)
-    print(z)
-    print(k)
+
+    path = r'C:\Work\Test_projects\wpala'
+    a = DataParser(path)
+    print(a.get_distribution_for_current_and_energy(1,1,'jx'))

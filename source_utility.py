@@ -139,6 +139,22 @@ def rusian_words_analysis(word):
         return -1
 
 
+def permission_denied_test():
+    try:
+        test_file = os.path.join(os.path.dirname(__file__), 'permission_denied_test')
+
+        with open(test_file, 'w') as file:
+            file.write('test string')
+
+    except PermissionError:
+        mb.showerror('Предупреждение', 'Программа не имеет доступа к файловой системе.\n'
+                                       'Запустите программу от имени администратора')
+
+    finally:
+        if os.path.exists(test_file):
+            os.remove(test_file)
+
+
 # source_list = []
 # gursa_dict = {}
 # source_number = 1

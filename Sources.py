@@ -8,12 +8,15 @@ import tkinter as tk
 from loguru import logger
 
 from source_MainWindow import MainWindow
+from source_utility import permission_denied_test
 
 
 @logger.catch()
 def main():
     root = tk.Tk()
     root.geometry('1350x800')
+
+    permission_denied_test()
 
     try:
         print(f'Проект {projectfilename}')

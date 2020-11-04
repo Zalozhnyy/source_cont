@@ -337,6 +337,20 @@ class Save_remp:
 
         return out
 
+    def save_micro_electronics(self):
+        out = ''
+        out += 'Field78\n'
+        out += '<distribution>\n'
+        out += f'{self.micro_electronics["field78"]}\n'
+        out += '\n'
+
+        out += 'Density78\n'
+        out += '<distribution>\n'
+        out += f'{self.micro_electronics["density78"]}\n'
+        out += '\n'
+
+        return out
+
     def save_file(self, string):
 
         file = os.path.join(self.path, 'remp_sources')
@@ -468,19 +482,6 @@ class Save_remp:
 
         return out
 
-    def save_micro_electronics(self):
-        out = ''
-        out += 'Field78\n'
-        out += '<distribution>\n'
-        out += f'{self.micro_electronics["field78"]}\n'
-        out += '\n'
-
-        out += 'Density78\n'
-        out += '<distribution>\n'
-        out += f'{self.micro_electronics["density78"]}\n'
-        out += '\n'
-
-        return out
 
 
 if __name__ == '__main__':

@@ -13,8 +13,7 @@ from source_utility import *
 from source_Project_reader import DataParser, SubtaskDecoder
 from source_Save_for_remp import Save_remp
 from source_Main_frame import FrameGen
-from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectSpectreToView, MarpleInterface, \
-    MicroElectronicsInterface, SelectLagInterface
+from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectLagInterface, MarpleElectronicsInterface
 from source_PE_SOURCE import PeSource
 
 
@@ -196,7 +195,8 @@ class MainWindow(tk.Frame):
         self.marple_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Задача обтекания", menu=self.marple_menu, state='disabled')
 
-        self.marple_menu.add_command(label="Добавить задачу обтекания", command=self.__add_marple, state='normal')
+        self.marple_menu.add_command(label="Добавить/Изменить задачу обтекания", command=self.__add_marple,
+                                     state='normal')
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
         self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.start_pechs)
@@ -451,6 +451,8 @@ class MainWindow(tk.Frame):
                         part_number = None
                     self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
 
+                self._marple, self._micro_electronics = DataParser(self.path).load_marple_data_from_remp_source()
+
             elif ask is False:
                 self.set_lag()
         else:
@@ -601,7 +603,7 @@ class MainWindow(tk.Frame):
                         obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
 
                         current_file = DataParser(self.path).get_distribution_for_current_and_energy(number, i,
-                                                                                                     f'j{axis.upper()}')
+                                                                                                     f'j{axis.lower()}')
                         obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
 
                 if self.LAY[i, 2] == 1:
@@ -1173,16 +1175,29 @@ class MainWindow(tk.Frame):
         return fr_data
 
     def __add_marple(self):
-        ex = MarpleInterface(self.path)
+        if self._marple is not None and all([i is not None for i in self._marple.values()]):
+
+            tup = tuple(self._marple.values())
+            ex = MarpleElectronicsInterface(self.path,
+                                            'Проводимость',
+                                            'Степень ионизации',
+                                            'Создание источника обтекания',
+                                            tup)
+
+        else:
+            ex = MarpleElectronicsInterface(self.path,
+                                            'Проводимость',
+                                            'Степень ионизации',
+                                            'Создание источника обтекания')
         self.wait_window(ex)
 
-        ion = ex.ion_path
-        sigma = ex.sigma_path
+        ion = ex.first_item
+        sigma = ex.second_item
 
         if ion is None or sigma is None:
             return
 
-        self.marple_menu.entryconfigure(0, state='disabled')
+        # self.marple_menu.entryconfigure(0, state='disabled')
         self.marple_menu.entryconfigure(1, state='normal')
 
         self._marple = {'ion': ion, 'sigma': sigma}
@@ -1197,7 +1212,21 @@ class MainWindow(tk.Frame):
         self._marple = None
 
     def __add_microel(self):
-        ex = MicroElectronicsInterface(self.path)
+
+        if self._micro_electronics is not None and all([i is not None for i in self._micro_electronics.values()]):
+
+            tup = tuple(self._micro_electronics.values())
+            ex = MarpleElectronicsInterface(self.path,
+                                            'Рабочее поле в изделии микроэлектроники',
+                                            'Собственная концентрация электронов проводимости\nи дырок волентной зоны',
+                                            'Задание параметров для изделий микроэлектроники',
+                                            tup)
+
+        else:
+            ex = MarpleElectronicsInterface(self.path,
+                                            'Рабочее поле в изделии микроэлектроники',
+                                            'Собственная концентрация электронов проводимости\nи дырок волентной зоны',
+                                            'Задание параметров для изделий микроэлектроники',)
         self.wait_window(ex)
 
         field = ex.field78_path
@@ -1206,7 +1235,7 @@ class MainWindow(tk.Frame):
         if field is None or density is None:
             return
 
-        self.electronics_menu.entryconfigure(0, state='disabled')
+        # self.electronics_menu.entryconfigure(0, state='disabled')
         self.electronics_menu.entryconfigure(1, state='normal')
 
         self._micro_electronics = {'field78': field, 'density78': density}

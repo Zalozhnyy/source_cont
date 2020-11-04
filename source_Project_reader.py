@@ -270,6 +270,39 @@ class DataParser:
 
         return out
 
+    def load_marple_data_from_remp_source(self):
+
+        if not os.path.exists(os.path.join(self.path, 'remp_sources')):
+            return None, None
+
+        with open(os.path.join(self.path, 'remp_sources'), 'r') as file:
+            lines = file.readlines()
+
+        if len(lines) < 8:
+            return None, None
+
+        marple, microele = {}, {}
+
+        for i in range(len(lines)):
+            if 'Marple_sigma' in lines[i]:
+                marple.update({'sigma': lines[i + 2].strip()})
+
+            if 'Marple_ionization' in lines[i]:
+                marple.update({'ion': lines[i + 2].strip()})
+
+            if 'Field78' in lines[i]:
+                microele.update({'field78': lines[i + 2].strip()})
+
+            if 'Density78' in lines[i]:
+                microele.update({'density78': lines[i + 2].strip()})
+
+        marple = None if len(marple) == 0 else marple
+        microele = None if len(microele) == 0 else microele
+
+        return marple, microele
+
+
+
     def pech_check(self):
         self.source_path = os.path.normpath((os.path.join(self.path, r'pechs/initials/source')))
 
@@ -636,7 +669,6 @@ class SubtaskDecoder:
 
 
 if __name__ == '__main__':
-
     path = r'C:\Work\Test_projects\wpala'
     a = DataParser(path)
-    print(a.get_distribution_for_current_and_energy(1,1,'jx'))
+    print(a.get_distribution_for_current_and_energy(1, 1, 'jx'))

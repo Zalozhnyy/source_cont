@@ -189,74 +189,6 @@ class FAQ(tk.Toplevel):
 
 
 @logger.catch()
-class MarpleInterface(tk.Toplevel):
-    def __init__(self, path):
-        super().__init__()
-
-        self.grab_set()
-
-        self.path = path
-        self.protocol("WM_DELETE_WINDOW", self.onExit)
-
-        self.sigma_path = ''
-        self.ion_path = ''
-
-        self.initUi()
-
-    def initUi(self):
-
-        tk.Label(self, text='Создание источника обтекания').grid(row=0, column=0, columnspan=3, sticky='NW')
-
-        self.sigma_label_text = 'Проводимость:  '
-        sigma_label = tk.Label(self, text=self.sigma_label_text)
-
-        self.ion_label_text = 'Степень ионизации:  '
-        ion_label = tk.Label(self, text=self.ion_label_text)
-
-        sigma_label.grid(row=1, column=0, columnspan=5, sticky='NW')
-        ion_label.grid(row=2, column=0, columnspan=5, sticky='NW')
-
-        sigma_but_title = 'Выберите файл проводимости обтекания'
-        sigma_but = tk.Button(self, text='Выбрать проводимость', width=28,
-                              command=lambda: self.__choice_file(sigma_label, 'sigma', sigma_but_title))
-        sigma_but.grid(row=1, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
-
-        ion_but_title = 'Выберите файл степени ионизации обтекания'
-        ion_but = tk.Button(self, text='Выбрать степень ионизации', width=28,
-                            command=lambda: self.__choice_file(ion_label, 'ion', ion_but_title))
-        ion_but.grid(row=2, column=5, columnspan=1, sticky='NW', pady=3, padx=20)
-
-    def onExit(self):
-        if self.ion_path == '' or self.sigma_path == '':
-            ask = mb.askyesno('Закрыть окно?', 'Выбраны не все файлы. Закрыть окно?')
-
-            if ask is True:
-                self.ion_path = None
-                self.sigma_path = None
-            if ask is False:
-                return
-        self.destroy()
-
-    def __choice_file(self, label, type, title):
-        distribution_file = fd.askopenfilename(title=title,
-                                               initialdir=self.path,
-                                               filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
-
-        if distribution_file == '':
-            return
-
-        distribution_file = copy_to_project(distribution_file, self.path)
-
-        if type == 'ion':
-            self.ion_path = os.path.basename(distribution_file)
-            label['text'] = self.ion_label_text + f'{os.path.basename(distribution_file)}'
-
-        elif type == 'sigma':
-            self.sigma_path = os.path.basename(distribution_file)
-            label['text'] = self.sigma_label_text + f'{os.path.basename(distribution_file)}'
-
-
-@logger.catch()
 class MicroElectronicsInterface(tk.Toplevel):
     def __init__(self, path):
         super().__init__()
@@ -569,12 +501,100 @@ class SelectLagInterface(tk.Toplevel):
             self.vector_data = [None, None, None]
 
 
+@logger.catch()
+class MarpleElectronicsInterface(tk.Toplevel):
+    def __init__(self, path, label_1, label_2, title_label, set_starter_items: tuple = (None, None)):
+        super().__init__()
+
+        self.grab_set()
+
+        self.path = path
+        self.protocol("WM_DELETE_WINDOW", self.onExit)
+
+        if all([i is not None for i in set_starter_items]):
+            self.first_item, self.second_item = set_starter_items
+        else:
+            self.first_item = 'Файл не выбран'
+            self.second_item = 'Файл не выбран'
+
+        self.first_item_label = label_1
+        self.second_item_label = label_2
+        self.title_label = title_label
+
+        self.initUi()
+
+    def initUi(self):
+        row = 0
+        tk.Label(self, text=self.title_label).grid(row=row, column=0, columnspan=3, sticky='NW')
+
+        row += 1
+
+        first_item_frame = ttk.Labelframe(self, text=self.first_item_label)
+        first_item_frame.grid(row=1)
+
+        self.first_item = tk.Label(first_item_frame, text=self.first_item)
+        self.first_item.grid(row=row, column=0, columnspan=2, sticky='NWSE', padx=30, pady=5)
+
+        item_1_add_button = tk.Button(first_item_frame, text='Выбрать файл',
+                                      command=lambda: self.choice_file(self.first_item))
+        # item_1_clear_button = tk.Button(first_item_frame, text='Удалить',
+        #                                 command=lambda: self.delete_choice(self.first_item))
+
+        item_1_add_button.grid(row=row, column=2, sticky='NW', padx=3)
+        # item_1_clear_button.grid(row=row, column=3, sticky='NW', padx=3)
+        row += 1
+
+        second_item_frame = ttk.Labelframe(self, text=self.second_item_label)
+        second_item_frame.grid(row=2)
+
+        self.second_item = tk.Label(second_item_frame, text=self.second_item)
+        self.second_item.grid(row=row, column=0, columnspan=2, sticky='NWSE', padx=30, pady=5)
+
+        item_2_add_button = tk.Button(second_item_frame, text='Выбрать файл',
+                                      command=lambda: self.choice_file(self.second_item))
+        # item_2_clear_button = tk.Button(second_item_frame, text='Удалить',
+        #                                 command=lambda: self.delete_choice(self.second_item))
+
+        item_2_add_button.grid(row=row, column=2, sticky='NW', padx=3)
+        # item_2_clear_button.grid(row=row, column=3, sticky='NW', padx=3)
+        row += 1
+
+    def onExit(self):
+        return_tuple = (self.first_item['text'], self.second_item['text'])
+
+        if '' in return_tuple or 'Файл не выбран' in return_tuple:
+            ask = mb.askyesno('Закрыть окно?', 'Выбраны не все файлы. Закрыть окно?')
+
+            if ask is True:
+                self.first_item = None
+                self.second_item = None
+            if ask is False:
+                return
+
+        else:
+            self.first_item = return_tuple[0]
+            self.second_item = return_tuple[1]
+        self.destroy()
+
+    def delete_choice(self, item):
+        item['text'] = 'Файл не выбран'
+
+    def choice_file(self, item):
+        distribution_file = fd.askopenfilename(title='Выберите файл',
+                                               initialdir=self.path,
+                                               filetypes=(("all files", "*.*"), ("txt files", "*.txt*")))
+
+        if distribution_file == '':
+            return
+
+        distribution_file = copy_to_project(distribution_file, self.path)
+        item['text'] = os.path.split(distribution_file)[-1]
+
+
 if __name__ == '__main__':
     root = tk.Tk()
 
     path = r'C:\Work\Test_projects\template_faraday'
-    a = SelectLagInterface(path, [0, 0, 1])
+    a = MarpleElectronicsInterface(path, 'place_holder1', 'place_holder2', 'place_holder3')
 
     root.mainloop()
-
-    print(a.vector_data)

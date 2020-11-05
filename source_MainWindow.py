@@ -108,6 +108,8 @@ class MainWindow(tk.Frame):
         self._marple = None
         self._micro_electronics = None
 
+        self._save_flag = False
+
         self.lag = None
 
         try:
@@ -325,7 +327,7 @@ class MainWindow(tk.Frame):
             with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
                 load_db = pickle.load(f)
 
-            if load_db.keys() == self.global_tree_db.keys():
+            if load_db.keys() == self.global_tree_db.keys() and not self._save_flag:
                 if self.check_saved_ds(load_db, self.global_tree_db) is True:
                     self.parent.quit()
                     self.parent.destroy()
@@ -1201,7 +1203,9 @@ class MainWindow(tk.Frame):
         self.marple_menu.entryconfigure(1, state='normal')
 
         self._marple = {'ion': ion, 'sigma': sigma}
-        mb.showinfo('Задача обтекания', 'Задача обтекания будет сохранёна в remp source')
+        self._save_flag = True
+
+        mb.showinfo('Задача обтекания', 'Задача обтекания будет добавлена в remp source при сохранении проекта')
 
     def __delete_marple(self):
         self.marple_menu.entryconfigure(0, state='normal')
@@ -1210,6 +1214,8 @@ class MainWindow(tk.Frame):
         mb.showinfo('Задача обтекания', 'Задача обтекания не будет сохранёна в remp source')
 
         self._marple = None
+        self._save_flag = True
+
 
     def __add_microel(self):
 
@@ -1239,7 +1245,9 @@ class MainWindow(tk.Frame):
         self.electronics_menu.entryconfigure(1, state='normal')
 
         self._micro_electronics = {'field78': field, 'density78': density}
-        mb.showinfo('Микроэлектроника', 'Микроэлектроника будет сохранёна в remp source')
+        self._save_flag = True
+
+        mb.showinfo('Микроэлектроника', 'Микроэлектроника будет добавлена в remp source при сохранении проекта')
 
     def __delete_microel(self):
         self.electronics_menu.entryconfigure(0, state='normal')
@@ -1248,3 +1256,5 @@ class MainWindow(tk.Frame):
         mb.showinfo('Marple', 'Marple не будет сохранён в remp source')
 
         self._micro_electronics = None
+        self._save_flag = True
+

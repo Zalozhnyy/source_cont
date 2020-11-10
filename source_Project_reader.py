@@ -301,8 +301,6 @@ class DataParser:
 
         return marple, microele
 
-
-
     def pech_check(self):
         self.source_path = os.path.normpath((os.path.join(self.path, r'pechs/initials/source')))
 
@@ -416,7 +414,7 @@ class DataParser:
 
     def get_distribution_for_current_and_energy(self, part_number, layer_number, find_type):
 
-        find_item = f'{find_type}_{part_number}_{layer_number}'
+        find_item = f'{find_type}_{layer_number}_{part_number}'
 
         if find_item in os.listdir(self.path):
             return find_item

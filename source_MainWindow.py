@@ -15,6 +15,7 @@ from source_Save_for_remp import Save_remp
 from source_Main_frame import FrameGen
 from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectLagInterface, MarpleElectronicsInterface
 from source_PE_SOURCE import PeSource
+from remp_parameters_tests import main_test as remp_files_test
 
 
 class TreeDataStructure:
@@ -361,6 +362,19 @@ class MainWindow(tk.Frame):
 
     def browse_from_recent(self, path):
         self.prj_path = path
+
+        test_complete, error_messages = remp_files_test(self.prj_path)
+
+        test_passed = True
+        for item, value in test_complete.items():
+            if not value:
+                test_passed = False
+                print(error_messages[item])
+                mb.showerror('ERROR', error_messages[item])
+
+        if not test_passed:
+            return
+
         self.path = os.path.dirname(self.prj_path)
         self.check_project()
 
@@ -370,6 +384,17 @@ class MainWindow(tk.Frame):
         if self.prj_path == '' or self.prj_path is None:
             return None
 
+        test_complete, error_messages = remp_files_test(self.prj_path)
+
+        test_passed = True
+        for item, value in test_complete.items():
+            if value is False:
+                test_passed = False
+                print(error_messages[item])
+                mb.showerror('ERROR', error_messages[item])
+
+        if not test_passed:
+            return
         self.path = os.path.dirname(self.prj_path)
         self.check_project()
 
@@ -1216,7 +1241,6 @@ class MainWindow(tk.Frame):
         self._marple = None
         self._save_flag = True
 
-
     def __add_microel(self):
 
         if self._micro_electronics is not None and all([i is not None for i in self._micro_electronics.values()]):
@@ -1232,7 +1256,7 @@ class MainWindow(tk.Frame):
             ex = MarpleElectronicsInterface(self.path,
                                             'Рабочее поле в изделии микроэлектроники',
                                             'Собственная концентрация электронов проводимости\nи дырок волентной зоны',
-                                            'Задание параметров для изделий микроэлектроники',)
+                                            'Задание параметров для изделий микроэлектроники', )
         self.wait_window(ex)
 
         field = ex.field78_path
@@ -1257,4 +1281,3 @@ class MainWindow(tk.Frame):
 
         self._micro_electronics = None
         self._save_flag = True
-

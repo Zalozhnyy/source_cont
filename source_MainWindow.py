@@ -44,7 +44,8 @@ class TreeDataStructure:
                                                    'time_full': None,
                                                    'func_full': None,
                                                    'tf_break': None,
-                                                   'integrate': True})
+                                                   'integrate': True,
+                                                   'particle number': set()})
 
     def insert_share_data(self, key, value):
         self.__obj_structure['share_data'].update({key: value})
@@ -73,6 +74,9 @@ class TreeDataStructure:
 
     def get_first_level_keys(self):
         return self.__obj_structure[self.obj_name].keys()
+
+    def get_first_level_value(self, key):
+        return self.__obj_structure[self.obj_name][key]
 
     def get_second_level_keys(self, first_key):
         return self.__obj_structure[self.obj_name][first_key].keys()
@@ -204,6 +208,8 @@ class MainWindow(tk.Frame):
 
         self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.start_pechs)
 
+        self._create_micro_electronics_menubar()
+
     def _create_micro_electronics_menubar(self):
 
         self.electronics_menu = tk.Menu(self.menubar, tearoff=0)
@@ -215,9 +221,9 @@ class MainWindow(tk.Frame):
         self.electronics_menu.add_command(label="Удалить  файлы микроэлектроники", command=self.__delete_microel,
                                           state='disabled')
 
-    def _activate_micro_electronics_menubar(self):
+    def _activate_micro_electronics_menubar(self, state='normal'):
         microele_index = self.menubar.index('Микроэлектроника')
-        self.menubar.entryconfigure(microele_index, state='normal')
+        self.menubar.entryconfigure(microele_index, state=state)
 
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
@@ -443,14 +449,7 @@ class MainWindow(tk.Frame):
         if self.from_project_reader() != 0:
             return
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
-
-        try:
-            for i in self.PAR.keys():
-                if self.PAR[i]['type'] == 7 or self.PAR[i]['type'] == 8:
-                    self._create_micro_electronics_menubar()
-                    break
-        except:
-            pass
+        self._activate_micro_electronics_menubar(state='disabled')
 
         if 'remp_sources' in os.listdir(self.path):
 
@@ -473,10 +472,16 @@ class MainWindow(tk.Frame):
                     self.tree_db_delete_old(i[1])
 
                     try:
-                        part_number = self.global_tree_db[i[0]].get_share_data('particle number')
+                        part_number_tuple = self.global_tree_db[i[0]].get_share_data('particle number')
+
+                        if type(part_number_tuple) is not set:
+                            part_number_tuple = {part_number_tuple}
+                            self.global_tree_db[i[0]].insert_share_data('particle number', part_number_tuple)
+
                     except KeyError:
-                        part_number = None
-                    self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number))
+                        part_number_tuple = None
+
+                    self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number_tuple))
 
                 self._marple, self._micro_electronics = DataParser(self.path).load_marple_data_from_remp_source()
 
@@ -504,17 +509,11 @@ class MainWindow(tk.Frame):
 
     def tree_db_delete_old(self, obj):
         try:
-            part_number = obj.get_share_data('particle number')
+            part_number_tuple = obj.get_share_data('particle number')
         except KeyError:
-            part_number = None
+            part_number_tuple = None
 
-        # удаление из базы данных несуществующих частиц
-        for f_key in obj.get_first_level_keys():
-            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Energy':
-                obj.delete_first_level(f_key)
-                continue
-
-        if part_number is None:
+        if part_number_tuple is None:
             return
 
         db_s_keys = []
@@ -522,6 +521,12 @@ class MainWindow(tk.Frame):
         for f_key in obj.get_first_level_keys():
             for s_key in obj.get_second_level_keys(f_key):
                 db_s_keys.append(s_key)
+
+        # удаление из базы данных несуществующих частиц
+        for f_key in obj.get_first_level_keys():
+            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Energy':
+                obj.delete_first_level(f_key)
+                continue
 
         for key in db_s_keys:
             if 'Current' in key:
@@ -535,25 +540,37 @@ class MainWindow(tk.Frame):
             if 'Flu' in key:
                 from_l = int(key.split('_')[-2])
                 to_l = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-3])
                 if self.PL_surf[part_number][to_l, from_l] == 0:
                     obj.delete_second_level(key)
-            if 'Volume78' in key:
+            if 'Volume78' == key.split('_')[0]:
                 vol_lay = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-2])
                 if self.PL_vol[part_number][vol_lay] == 0:
                     obj.delete_second_level(key)
-            if 'Volume' in key:
+            if 'Volume' == key.split('_')[0]:
                 vol_lay = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-2])
                 if self.PL_vol[part_number][vol_lay] == 0:
                     obj.delete_second_level(key)
             if 'Boundaries' in key:
                 boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
                 bo_lay_k = key.split('_')[-1]
+                part_number = int(key.split('_')[-2])
                 for i in boundaries_decode.items():
                     if i[1] == bo_lay_k:
                         bo_lay = i[0]
                         break
                 if self.PL_bound[part_number][bo_lay] == 0:
                     obj.delete_second_level(key)
+
+        delete_f_level_set = set()
+        for f_key in obj.get_first_level_keys():  # удаляем пустые сущности частиц
+            if len(obj.get_first_level_value(f_key)) == 0 and f_key != 'Current' and f_key != 'Energy':
+                delete_f_level_set.add(f_key)
+
+        for f_key in delete_f_level_set:
+            obj.delete_first_level(f_key)
 
     def tree_db_insert(self, obj_name):
         obj = TreeDataStructure(obj_name)
@@ -609,7 +626,7 @@ class MainWindow(tk.Frame):
         number = self.PAR[particle]['number']
         type = self.PAR[particle]['type']
 
-        obj.insert_share_data('particle number', self.PAR[particle]['number'])
+        obj.insert_share_data('particle number', {*obj.get_share_data('particle number'), self.PAR[particle]['number']})
 
         if load:
             if particle not in obj.get_first_level_keys():
@@ -829,17 +846,21 @@ class MainWindow(tk.Frame):
             # self.global_tree_db.update({name: self.tree_db_insert(name)})
 
             part_name = None
-            for i in self.PAR.keys():
-                if self.PAR[i]['number'] == load_data[1]:
-                    part_name = i
-                    if self.PAR[i]['type'] == 7 or self.PAR[i]['type'] == 8:
-                        self._activate_micro_electronics_menubar()
-                    break
+            microele_flag_activate = False
+            for particle_from_load in load_data[1]:
+                for i in self.PAR.keys():
+                    if self.PAR[i]['number'] == particle_from_load:
+                        part_name = i
 
-            if part_name is not None:  # костыль для загрузки в структуры воздействий без частиц
-                self.tree_db_insert_particle(self.global_tree_db[name], part_name, True)
-                source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
-                self.particle_tree_constr(part_name, source_keys, source, ind)
+                        if self.PAR[i]['type'] == 7 or self.PAR[i]['type'] == 8:
+                            microele_flag_activate = True
+                        break
+
+                if part_name is not None and part_name in self.global_tree_db[
+                    name].get_first_level_keys():  # костыль для загрузки в структуры воздействий без частиц
+                    self.tree_db_insert_particle(self.global_tree_db[name], part_name, True)
+                    source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
+                    self.particle_tree_constr(part_name, source_keys, source, ind)
 
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent))
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
@@ -850,6 +871,9 @@ class MainWindow(tk.Frame):
 
         fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
         # self.main_frame_exist = True
+
+        if microele_flag_activate:
+            self._activate_micro_electronics_menubar()
 
         for index, s_type in enumerate(self.global_tree_db[name].get_first_level_keys()):
             source_keys = self.global_tree_db[name].get_second_level_keys(s_type)

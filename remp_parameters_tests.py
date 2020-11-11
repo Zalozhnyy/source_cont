@@ -4,8 +4,14 @@ import locale
 
 
 def get_project_files_dict(prj_path: str):
-    with open(prj_path, 'r', encoding='utf-8') as file:
-        lines = file.readlines()
+    try:
+        with open(prj_path, 'r', encoding=f'utf-8') as file:
+            lines = file.readlines()
+
+    except UnicodeDecodeError:
+        with open(prj_path, 'r', encoding=f'{locale.getpreferredencoding()}') as file:
+            lines = file.readlines()
+
 
     project_dir = os.path.dirname(prj_path)
 

@@ -744,8 +744,18 @@ class FrameGen(ttk.LabelFrame):
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
-        self.db.insert_share_data('func_full', list(self.backup_fu))
-        self.db.insert_share_data('time_full', list(self.backup_tf))
+
+        try:
+            if self.backup_fu is None or self.backup_tf is None:
+                raise Exception
+
+            self.db.insert_share_data('func_full', list(self.backup_fu))
+            self.db.insert_share_data('time_full', list(self.backup_tf))
+
+        except TypeError:
+            self.db.insert_share_data('func_full', None)
+            self.db.insert_share_data('time_full', None)
+
         self.db.insert_share_data('tf_break', self.user_timeset)
 
         self.__painter()

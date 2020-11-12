@@ -316,10 +316,11 @@ class MainWindow(tk.Frame):
         self.wait_window(ex)
 
         x, y, z = ex.vector_data
-        self.lag = f'1 {x} {y} {z}'
 
         if any([i is None for i in [x, y, z]]):
             self.lag = f'0'
+        else:
+            self.lag = f'1 {x} {y} {z}'
 
         for name in self.global_tree_db.keys():
             self.global_tree_db[name].insert_share_data('lag', self.lag)
@@ -523,46 +524,52 @@ class MainWindow(tk.Frame):
                 db_s_keys.append(s_key)
 
         # удаление из базы данных несуществующих частиц
+        delete_part_list = []
         for f_key in obj.get_first_level_keys():
             if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Energy':
-                obj.delete_first_level(f_key)
+                delete_part_list.append(f_key)
                 continue
+        for f_key in delete_part_list:
+            obj.delete_first_level(f_key)
 
         for key in db_s_keys:
-            if 'Current' in key:
-                cur_lay = int(key.split('_')[-1])
-                if self.LAY[cur_lay, 1] == 0:
-                    obj.delete_second_level(key)
-            if 'Energy' in key:
-                cur_lay = int(key.split('_')[-1])
-                if self.LAY[cur_lay, 2] == 0:
-                    obj.delete_second_level(key)
-            if 'Flu' in key:
-                from_l = int(key.split('_')[-2])
-                to_l = int(key.split('_')[-1])
-                part_number = int(key.split('_')[-3])
-                if self.PL_surf[part_number][to_l, from_l] == 0:
-                    obj.delete_second_level(key)
-            if 'Volume78' == key.split('_')[0]:
-                vol_lay = int(key.split('_')[-1])
-                part_number = int(key.split('_')[-2])
-                if self.PL_vol[part_number][vol_lay] == 0:
-                    obj.delete_second_level(key)
-            if 'Volume' == key.split('_')[0]:
-                vol_lay = int(key.split('_')[-1])
-                part_number = int(key.split('_')[-2])
-                if self.PL_vol[part_number][vol_lay] == 0:
-                    obj.delete_second_level(key)
-            if 'Boundaries' in key:
-                boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
-                bo_lay_k = key.split('_')[-1]
-                part_number = int(key.split('_')[-2])
-                for i in boundaries_decode.items():
-                    if i[1] == bo_lay_k:
-                        bo_lay = i[0]
-                        break
-                if self.PL_bound[part_number][bo_lay] == 0:
-                    obj.delete_second_level(key)
+            try:
+                if 'Current' in key:
+                    cur_lay = int(key.split('_')[-1])
+                    if self.LAY[cur_lay, 1] == 0:
+                        obj.delete_second_level(key)
+                if 'Energy' in key:
+                    cur_lay = int(key.split('_')[-1])
+                    if self.LAY[cur_lay, 2] == 0:
+                        obj.delete_second_level(key)
+                if 'Flu' in key:
+                    from_l = int(key.split('_')[-2])
+                    to_l = int(key.split('_')[-1])
+                    part_number = int(key.split('_')[-3])
+                    if self.PL_surf[part_number][to_l, from_l] == 0:
+                        obj.delete_second_level(key)
+                if 'Volume78' == key.split('_')[0]:
+                    vol_lay = int(key.split('_')[-1])
+                    part_number = int(key.split('_')[-2])
+                    if self.PL_vol[part_number][vol_lay] == 0:
+                        obj.delete_second_level(key)
+                if 'Volume' == key.split('_')[0]:
+                    vol_lay = int(key.split('_')[-1])
+                    part_number = int(key.split('_')[-2])
+                    if self.PL_vol[part_number][vol_lay] == 0:
+                        obj.delete_second_level(key)
+                if 'Boundaries' in key:
+                    boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
+                    bo_lay_k = key.split('_')[-1]
+                    part_number = int(key.split('_')[-2])
+                    for i in boundaries_decode.items():
+                        if i[1] == bo_lay_k:
+                            bo_lay = i[0]
+                            break
+                    if self.PL_bound[part_number][bo_lay] == 0:
+                        obj.delete_second_level(key)
+            except KeyError:
+                pass
 
         delete_f_level_set = set()
         for f_key in obj.get_first_level_keys():  # удаляем пустые сущности частиц
@@ -835,6 +842,7 @@ class MainWindow(tk.Frame):
                             self.__tree_select_react(sv, name, _))
 
         source = self.tree[ind].insert('', 0, text=f'{name}', open=True)
+        microele_flag_activate = False
 
         if load is False:
             self.global_tree_db.update({name: self.tree_db_insert(name)})
@@ -846,7 +854,6 @@ class MainWindow(tk.Frame):
             # self.global_tree_db.update({name: self.tree_db_insert(name)})
 
             part_name = None
-            microele_flag_activate = False
             for particle_from_load in load_data[1]:
                 for i in self.PAR.keys():
                     if self.PAR[i]['number'] == particle_from_load:

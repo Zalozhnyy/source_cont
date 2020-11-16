@@ -92,7 +92,7 @@ class Save_remp:
                         else:
                             out += d
 
-                    if 'Energy' in s_key:
+                    if 'Sigma' in s_key:
                         d = self.current_save(gsource_db, f_key, s_key, name, energy=True)
                         out += d
                         if d is None:
@@ -249,7 +249,7 @@ class Save_remp:
     def current_save(self, gsource_db, f_key, s_key, name, energy=False):
         out = ''
         if energy:
-            out += f'Energy\n'
+            out += f'Sigma\n'
         else:
             out += f'{"_".join(s_key.split("_")[:2])}\n'
         out += '<influence number>\n'
@@ -381,7 +381,7 @@ class Save_remp:
 
             for f_key in gsource_db.get_first_level_keys():
                 for s_key in gsource_db.get_second_level_keys(f_key):
-                    if 'Current' in s_key or 'Energy' in s_key:
+                    if 'Current' in s_key or 'Sigma' in s_key:
                         continue
 
                     spectre = gsource_db.get_last_level_data(f_key, s_key, "spectre")

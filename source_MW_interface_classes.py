@@ -125,7 +125,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         self._buttons_state()
 
     def _choice_file_button(self):
-        if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk:
+        if 'Boundaries' in self.sk or 'Current' in self.sk or 'Sigma' in self.sk:
             # if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk or 'Volume78' in self.sk:
             self.__choice_files(one_file=True)
         else:
@@ -326,7 +326,7 @@ class StandardizedSourceMainInterface(tk.Frame):
             self.spectre_number_values = []
             self.spectre_type_values = []
 
-            if 'Current' in self.sk or 'Energy' in self.sk:
+            if 'Current' in self.sk or 'Sigma' in self.sk:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
             else:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
@@ -404,8 +404,8 @@ class StandardizedSourceMainInterface(tk.Frame):
             if self.spectre_name_values != ['Файл не выбран'] and self.spectre_number_values == [
                 '--'] and self.spectre_type_values == ['--']:  # Доставка в БД для Current Energy
 
-                if 'Current' not in self.sk and 'Energy' not in self.sk:
-                    mb.showerror('Ошибка', 'Выбранный файл подходит для источников Current или Energy.\n'
+                if 'Current' not in self.sk and 'Sigma' not in self.sk:
+                    mb.showerror('Ошибка', 'Выбранный файл подходит для источников Current или Sigma.\n'
                                            'Добавление невозможно.')
 
                     self.spectre_name_values = ['Файл не выбран']
@@ -470,7 +470,7 @@ class StandardizedSourceMainInterface(tk.Frame):
             if all([os.path.exists(os.path.join(self.path, i)) for i in self.spectre_name_values]):
                 self.configure_spectre_button['state'] = 'normal'
 
-        elif 'Energy' in self.sk:
+        elif 'Sigma' in self.sk:
             self.delete_current_source_from_db_button.grid_remove()
             self.create_spectre_button.grid_remove()
             self.flux_auto_search_button.grid_remove()

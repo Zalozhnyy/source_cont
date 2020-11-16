@@ -29,7 +29,7 @@ class TreeDataStructure:
             self.__obj_structure[self.obj_name].update({f'{i}': {}})
 
         self.__obj_structure[self.obj_name].update({'Current': {}})
-        self.__obj_structure[self.obj_name].update({'Energy': {}})
+        self.__obj_structure[self.obj_name].update({'Sigma': {}})
 
     def __insert_share_data(self):
         self.__obj_structure['share_data'].update({'amplitude': None,
@@ -82,6 +82,9 @@ class TreeDataStructure:
 
     def get_dict_object(self):
         return self.__obj_structure
+
+    def replace_legacy_energy_to_sigma(self, value):
+        self.__obj_structure[self.obj_name].update({'Sigma': value})
 
 
 @logger.catch()
@@ -510,21 +513,43 @@ class MainWindow(tk.Frame):
         except KeyError:
             part_number_tuple = None
 
-        if part_number_tuple is None:
+        # удаление из базы данных несуществующих частиц
+        delete_part_list = set()
+
+        """удаление источников energy для совместимости старых source.pkl удалить при добавлении источника energy"""
+        for f_key in obj.get_first_level_keys():
+            if f_key == 'Energy':
+                delete_part_list.add(f_key)
+
+        if len(delete_part_list) != 0:
+            for f_key in delete_part_list:
+                for key2 in obj.get_second_level_keys(f_key):
+                    name = obj.get_last_level_data(f_key, key2, 'name').replace('Energy', 'Sigma')
+                    energy_type = 'Sigma'
+                    distribution = obj.get_last_level_data(f_key, key2, 'name')
+
+                    insert_dict = {name: {
+                        'name': name,
+                        'energy_type': energy_type,
+                        'distribution': distribution
+                    }
+                    }
+
+                    obj.replace_legacy_energy_to_sigma(insert_dict)
+
+        if part_number_tuple is None and len(delete_part_list) == 0:
             return
 
-        db_s_keys = []
+        db_s_keys = set()
 
         for f_key in obj.get_first_level_keys():
             for s_key in obj.get_second_level_keys(f_key):
-                db_s_keys.append(s_key)
+                db_s_keys.add(s_key)
 
-        # удаление из базы данных несуществующих частиц
-        delete_part_list = []
         for f_key in obj.get_first_level_keys():
-            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Energy':
-                delete_part_list.append(f_key)
-                continue
+            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Sigma':
+                delete_part_list.add(f_key)
+
         for f_key in delete_part_list:
             obj.delete_first_level(f_key)
 
@@ -532,7 +557,7 @@ class MainWindow(tk.Frame):
             if 'Current' in key:
                 cur_lay = int(key.split('_')[-1])
                 self._delete_source_safely((lambda: self.LAY[cur_lay, 1] == 0), obj, key)
-            if 'Energy' in key:
+            if 'Sigma' in key:
                 cur_lay = int(key.split('_')[-1])
                 self._delete_source_safely(lambda: (self.LAY[cur_lay, 2] == 0), obj, key)
             if 'Flu' in key:
@@ -560,7 +585,7 @@ class MainWindow(tk.Frame):
 
         delete_f_level_set = set()
         for f_key in obj.get_first_level_keys():  # удаляем пустые сущности частиц
-            if len(obj.get_first_level_value(f_key)) == 0 and f_key != 'Current' and f_key != 'Energy':
+            if len(obj.get_first_level_value(f_key)) == 0 and f_key != 'Current' and f_key != 'Sigma':
                 delete_f_level_set.add(f_key)
 
         for f_key in delete_f_level_set:
@@ -602,16 +627,16 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
 
             if self.LAY[i, 2] == 1:
-                energy_type = 'Energy'
-                name = f'Energy_layer_{self.layer_numbers[i]}'
-                obj.insert_second_level('Energy', f'{name}', {})
+                energy_type = 'Sigma'
+                name = f'Sigma_layer_{self.layer_numbers[i]}'
+                obj.insert_second_level('Sigma', f'{name}', {})
 
-                obj.insert_third_level('Energy', f'{name}', 'name', name)
-                obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
+                obj.insert_third_level('Sigma', f'{name}', 'name', name)
+                obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
 
                 current_file = DataParser(self.path).get_distribution_for_current_and_energy(
                     obj.get_share_data('influence number'), i, f'en')
-                obj.insert_third_level('Energy', f'{name}', 'distribution', current_file)
+                obj.insert_third_level('Sigma', f'{name}', 'distribution', current_file)
 
         return obj
 
@@ -653,18 +678,18 @@ class MainWindow(tk.Frame):
                         obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
 
                 if self.LAY[i, 2] == 1:
-                    energy_type = 'Energy'
-                    name = f'Energy_layer_{self.layer_numbers[i]}'
-                    if name in obj.get_second_level_keys('Energy'):
+                    energy_type = 'Sigma'
+                    name = f'Sigma_layer_{self.layer_numbers[i]}'
+                    if name in obj.get_second_level_keys('Sigma'):
                         continue
 
-                    obj.insert_second_level('Energy', f'{name}', {})
+                    obj.insert_second_level('Sigma', f'{name}', {})
 
-                    obj.insert_third_level('Energy', f'{name}', 'name', name)
-                    obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level('Sigma', f'{name}', 'name', name)
+                    obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
 
                     current_file = DataParser(self.path).get_distribution_for_current_and_energy(number, i, f'en')
-                    obj.insert_third_level('Energy', f'{name}', 'distribution', current_file)
+                    obj.insert_third_level('Sigma', f'{name}', 'distribution', current_file)
 
         ar = self.PL_surf.get(number)
 
@@ -851,7 +876,8 @@ class MainWindow(tk.Frame):
             # self.global_tree_db.update({name: self.tree_db_insert(name)})
 
             part_name = None
-            for particle_from_load in load_data[1]:
+            load_particles = [load_data[1]] if load_data[1] is None else load_data[1]
+            for particle_from_load in load_particles:
                 for i in self.PAR.keys():
                     if self.PAR[i]['number'] == particle_from_load:
                         part_name = i
@@ -883,7 +909,7 @@ class MainWindow(tk.Frame):
             source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
             if len(source_keys) == 0:
                 continue
-            if any(['Energy' in s_key for s_key in source_keys]):
+            if any(['Sigma' in s_key for s_key in source_keys]):
                 lb = 'Энерговыделение'
                 self.__energy_tree_view_section = self.tree[ind].insert(source, index, text=lb, open=True)
 
@@ -1054,7 +1080,7 @@ class MainWindow(tk.Frame):
             particle_list = []
             sources_list = []
             for key in self.global_tree_db[name].get_first_level_keys():
-                if 'Current' not in key and 'Energy' not in key:
+                if 'Current' not in key and 'Sigma' not in key:
                     particle_list.append(key)
                 for item in self.global_tree_db[name].get_second_level_keys(key):
                     sources_list.append(item)
@@ -1080,7 +1106,7 @@ class MainWindow(tk.Frame):
                 self.tree[index].selection_set(iid)
                 self.contextMenu.post(event.x_root, event.y_root)
 
-            elif 'Current' in self.tree[index].item(iid)['text'] or 'Energy' in self.tree[index].item(iid)['text']:
+            elif 'Current' in self.tree[index].item(iid)['text'] or 'Sigma' in self.tree[index].item(iid)['text']:
                 self.contextMenu = tk.Menu(tearoff=0)
 
                 self.contextMenu.add_command(label="Удалить", command=lambda: self.delete_particle(index, name, iid),
@@ -1190,7 +1216,10 @@ class MainWindow(tk.Frame):
                         obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
                         obj.insert_third_level('Current', f'{name}', 'distribution', None)
 
-                        self.tree[index].insert(self.__current_tree_view_section, i, text=f'{name}', open=True)
+                        try:
+                            self.tree[index].insert(self.__current_tree_view_section, i, text=f'{name}', open=True)
+                        except AttributeError:
+                            print('Не отрисован сторонний ток')
 
     def __restore_energy_distribution(self, object_name, index):
 
@@ -1198,14 +1227,14 @@ class MainWindow(tk.Frame):
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 2] == 1:
-                energy_type = 'Energy'
-                name = f'Energy_layer_{self.layer_numbers[i]}'
-                if name not in obj.get_second_level_keys('Energy'):
-                    obj.insert_second_level('Energy', f'{name}', {})
+                energy_type = 'Sigma'
+                name = f'Sigma_layer_{self.layer_numbers[i]}'
+                if name not in obj.get_second_level_keys('Sigma'):
+                    obj.insert_second_level('Sigma', f'{name}', {})
 
-                    obj.insert_third_level('Energy', f'{name}', 'name', name)
-                    obj.insert_third_level('Energy', f'{name}', 'energy_type', energy_type)
-                    obj.insert_third_level('Energy', f'{name}', 'distribution', None)
+                    obj.insert_third_level('Sigma', f'{name}', 'name', name)
+                    obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
+                    obj.insert_third_level('Sigma', f'{name}', 'distribution', None)
 
                     self.tree[index].insert(self.__energy_tree_view_section, i, text=f'{name}', open=True)
 

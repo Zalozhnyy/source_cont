@@ -218,7 +218,7 @@ class DataParser:
             with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
                 lines = file.readlines()
 
-        triggers = ['Volume', 'Volume78', 'Current_x', 'Current_y', 'Current_z', 'Energy', 'Flux', 'Boundaries']
+        triggers = ['Volume', 'Volume78', 'Current_x', 'Current_y', 'Current_z', 'Sigma', 'Flux', 'Boundaries']
         r = []
         for i, line in enumerate(lines):
             if any([line.strip() == j for j in triggers]):

@@ -1,21 +1,17 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog as fd
-from tkinter import messagebox as mb
-from tkinter import simpledialog as sd
-
 import pickle
+from tkinter import simpledialog as sd
+from tkinter import ttk
 
 from loguru import logger
 
+from remp_parameters_tests import main_test as remp_files_test
+from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectLagInterface, MarpleElectronicsInterface
 from source_MW_interface_classes import StandardizedSourceMainInterface
-from source_utility import *
+from source_Main_frame import FrameGen
+from source_PE_SOURCE import PeSource
 from source_Project_reader import DataParser, SubtaskDecoder
 from source_Save_for_remp import Save_remp
-from source_Main_frame import FrameGen
-from source_Dialogs import SelectParticleDialog, DeleteGSourceDialog, SelectLagInterface, MarpleElectronicsInterface
-from source_PE_SOURCE import PeSource
-from remp_parameters_tests import main_test as remp_files_test
+from source_utility import *
 
 
 class TreeDataStructure:
@@ -533,43 +529,34 @@ class MainWindow(tk.Frame):
             obj.delete_first_level(f_key)
 
         for key in db_s_keys:
-            try:
-                if 'Current' in key:
-                    cur_lay = int(key.split('_')[-1])
-                    if self.LAY[cur_lay, 1] == 0:
-                        obj.delete_second_level(key)
-                if 'Energy' in key:
-                    cur_lay = int(key.split('_')[-1])
-                    if self.LAY[cur_lay, 2] == 0:
-                        obj.delete_second_level(key)
-                if 'Flu' in key:
-                    from_l = int(key.split('_')[-2])
-                    to_l = int(key.split('_')[-1])
-                    part_number = int(key.split('_')[-3])
-                    if self.PL_surf[part_number][to_l, from_l] == 0:
-                        obj.delete_second_level(key)
-                if 'Volume78' == key.split('_')[0]:
-                    vol_lay = int(key.split('_')[-1])
-                    part_number = int(key.split('_')[-2])
-                    if self.PL_vol[part_number][vol_lay] == 0:
-                        obj.delete_second_level(key)
-                if 'Volume' == key.split('_')[0]:
-                    vol_lay = int(key.split('_')[-1])
-                    part_number = int(key.split('_')[-2])
-                    if self.PL_vol[part_number][vol_lay] == 0:
-                        obj.delete_second_level(key)
-                if 'Boundaries' in key:
-                    boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
-                    bo_lay_k = key.split('_')[-1]
-                    part_number = int(key.split('_')[-2])
-                    for i in boundaries_decode.items():
-                        if i[1] == bo_lay_k:
-                            bo_lay = i[0]
-                            break
-                    if self.PL_bound[part_number][bo_lay] == 0:
-                        obj.delete_second_level(key)
-            except KeyError:
-                pass
+            if 'Current' in key:
+                cur_lay = int(key.split('_')[-1])
+                self._delete_source_safely((lambda: self.LAY[cur_lay, 1] == 0), obj, key)
+            if 'Energy' in key:
+                cur_lay = int(key.split('_')[-1])
+                self._delete_source_safely(lambda: (self.LAY[cur_lay, 2] == 0), obj, key)
+            if 'Flu' in key:
+                from_l = int(key.split('_')[-2])
+                to_l = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-3])
+                self._delete_source_safely(lambda: (self.PL_surf[part_number][to_l, from_l] == 0), obj, key)
+            if 'Volume78' == key.split('_')[0]:
+                vol_lay = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-2])
+                self._delete_source_safely(lambda: (self.PL_vol[part_number][vol_lay] == 0), obj, key)
+            if 'Volume' == key.split('_')[0]:
+                vol_lay = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-2])
+                self._delete_source_safely(lambda: self.PL_vol[part_number][vol_lay] == 0, obj, key)
+            if 'Boundaries' in key:
+                boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
+                bo_lay_k = key.split('_')[-1]
+                part_number = int(key.split('_')[-2])
+                for i in boundaries_decode.items():
+                    if i[1] == bo_lay_k:
+                        bo_lay = i[0]
+                        break
+                self._delete_source_safely(lambda: (self.PL_bound[part_number][bo_lay] == 0), obj, key)
 
         delete_f_level_set = set()
         for f_key in obj.get_first_level_keys():  # удаляем пустые сущности частиц
@@ -578,6 +565,14 @@ class MainWindow(tk.Frame):
 
         for f_key in delete_f_level_set:
             obj.delete_first_level(f_key)
+
+    def _delete_source_safely(self, statment, data_object, key):
+        try:
+            if statment():
+                data_object.delete_second_level(key)
+
+        except (KeyError, IndexError):
+            pass
 
     def tree_db_insert(self, obj_name):
         obj = TreeDataStructure(obj_name)
@@ -672,6 +667,8 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level('Energy', f'{name}', 'distribution', current_file)
 
         ar = self.PL_surf.get(number)
+
+        assert ar is not None
 
         for i in range(ar.shape[0]):  # surfCE
             for j in range(0, ar.shape[1]):

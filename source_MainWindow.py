@@ -523,19 +523,22 @@ class MainWindow(tk.Frame):
 
         if len(delete_part_list) != 0:
             for f_key in delete_part_list:
-                for key2 in obj.get_second_level_keys(f_key):
-                    name = obj.get_last_level_data(f_key, key2, 'name').replace('Energy', 'Sigma')
-                    energy_type = 'Sigma'
-                    distribution = obj.get_last_level_data(f_key, key2, 'name')
+                if len(obj.get_second_level_keys(f_key)) == 0:
+                    obj.replace_legacy_energy_to_sigma({})
+                else:
+                    for key2 in obj.get_second_level_keys(f_key):
+                        name = obj.get_last_level_data(f_key, key2, 'name').replace('Energy', 'Sigma')
+                        energy_type = 'Sigma'
+                        distribution = obj.get_last_level_data(f_key, key2, 'name')
 
-                    insert_dict = {name: {
-                        'name': name,
-                        'energy_type': energy_type,
-                        'distribution': distribution
-                    }
-                    }
+                        insert_dict = {name: {
+                            'name': name,
+                            'energy_type': energy_type,
+                            'distribution': distribution
+                        }
+                        }
 
-                    obj.replace_legacy_energy_to_sigma(insert_dict)
+                        obj.replace_legacy_energy_to_sigma(insert_dict)
 
         if part_number_tuple is None and len(delete_part_list) == 0:
             return

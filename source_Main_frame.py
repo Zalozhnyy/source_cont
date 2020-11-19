@@ -70,6 +70,13 @@ class FrameGen(ttk.LabelFrame):
 
         self.a, self.A = self.time_grid()
 
+        self.update()
+        w = self.__nb_widget.winfo_width()
+        h = self.__nb_widget.winfo_height()
+        if w > 500:
+            self.__root_widget.geometry(f'{w}x{h}')
+
+
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
         self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
@@ -666,8 +673,7 @@ class FrameGen(ttk.LabelFrame):
             # mb.showerror('Index error', 'Размерности не совпадают!')
             return
 
-        # time_list, func_list, _ = self.data_control()
-        time_list, func_list, _ = np.array(self.time_list), np.array(self.time_list), None
+        time_list, func_list, _ = self.data_control()
 
         if time_list is None:
             return
@@ -682,8 +688,18 @@ class FrameGen(ttk.LabelFrame):
         self.db.insert_share_data('count', len(self.time_list))
         self.db.insert_share_data('time', self.time_list)
         self.db.insert_share_data('func', self.func_list)
-        self.db.insert_share_data('func_full', list(self.backup_fu))
-        self.db.insert_share_data('time_full', list(self.backup_tf))
+
+        try:
+            if self.backup_fu is None or self.backup_tf is None:
+                raise Exception
+
+            self.db.insert_share_data('func_full', list(self.backup_fu))
+            self.db.insert_share_data('time_full', list(self.backup_tf))
+
+        except:
+            self.db.insert_share_data('func_full', None)
+            self.db.insert_share_data('time_full', None)
+
         self.db.insert_share_data('tf_break', self.user_timeset)
 
         self.__painter()
@@ -752,7 +768,7 @@ class FrameGen(ttk.LabelFrame):
             self.db.insert_share_data('func_full', list(self.backup_fu))
             self.db.insert_share_data('time_full', list(self.backup_tf))
 
-        except TypeError:
+        except:
             self.db.insert_share_data('func_full', None)
             self.db.insert_share_data('time_full', None)
 
@@ -851,6 +867,7 @@ class FrameGen(ttk.LabelFrame):
         try:
             self.user_timeset = float(self.entry_time_fix_val.get())
         except:
+            print('Ошибка при чтении обрыва')
             return None, None, None
 
         # print(f'функция {self.func_list}')

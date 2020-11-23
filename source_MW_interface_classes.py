@@ -327,7 +327,7 @@ class StandardizedSourceMainInterface(tk.Frame):
             self.spectre_type_values = []
 
             if 'Current' in self.sk or 'Sigma' in self.sk:
-                db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+                db_value = [self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')]
 
             elif 'Volume78' in self.sk:
                 sp_part = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
@@ -337,49 +337,28 @@ class StandardizedSourceMainInterface(tk.Frame):
             else:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
 
-            if type(db_value) is list:
-                for file in db_value:
-                    f_path = os.path.join(self.path, file)
-                    try:
-                        if not os.path.exists(f_path):
-                            raise Exception
+            for file in db_value:
+                f_path = os.path.join(self.path, file)
+                try:
+                    if not os.path.exists(f_path):
+                        raise Exception
 
-                        f, number, sp_type = self.__read_spectre(f_path)
+                    f, number, sp_type = self.__read_spectre(f_path)
 
-                        if f is None:
-                            raise Exception
+                    if f is None:
+                        raise Exception
 
-                        number = '--' if number == -1 else number
-                        sp_type = '--' if sp_type == -1 else sp_type
+                    number = '--' if number == -1 else number
+                    sp_type = '--' if sp_type == -1 else sp_type
 
-                        self.spectre_name_values.append(f)
-                        self.spectre_number_values.append(number)
-                        self.spectre_type_values.append(sp_type)
-
-                    except:
-                        self.spectre_name_values.append('Файл не обнаружен в проекте')
-                        self.spectre_number_values.append('')
-                        self.spectre_type_values.append('')
-
-            else:
-                if db_value is None:
-                    self.spectre_name_values = ['Файл не выбран']
-                    self.spectre_number_values = ['--']
-                    self.spectre_type_values = ['--']
-
-                    return
-                f_path = os.path.join(self.path, db_value)
-                f, number, sp_type = self.__read_spectre(f_path)
-
-                if f is None:
-                    self.spectre_name_values.append('Файл не обнаружен в проекте')
-                    self.spectre_number_values.append('')
-                    self.spectre_type_values.append('')
-
-                else:
                     self.spectre_name_values.append(f)
                     self.spectre_number_values.append(number)
                     self.spectre_type_values.append(sp_type)
+
+                except:
+                    self.spectre_name_values.append('Файл не обнаружен в проекте')
+                    self.spectre_number_values.append('')
+                    self.spectre_type_values.append('')
 
     def _set_data_to_data_structure(self, spectre_file_name, spectre_number):
 

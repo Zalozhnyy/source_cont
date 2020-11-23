@@ -328,11 +328,17 @@ class StandardizedSourceMainInterface(tk.Frame):
 
             if 'Current' in self.sk or 'Sigma' in self.sk:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+
+            elif 'Volume78' in self.sk:
+                sp_part = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
+                en_part = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+                db_value = list(sp_part + en_part)
+
             else:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
 
             if type(db_value) is list:
-                for file in self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre'):
+                for file in db_value:
                     f_path = os.path.join(self.path, file)
                     try:
                         if not os.path.exists(f_path):
@@ -342,6 +348,9 @@ class StandardizedSourceMainInterface(tk.Frame):
 
                         if f is None:
                             raise Exception
+
+                        number = '--' if number == -1 else number
+                        sp_type = '--' if sp_type == -1 else sp_type
 
                         self.spectre_name_values.append(f)
                         self.spectre_number_values.append(number)

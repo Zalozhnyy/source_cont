@@ -328,7 +328,7 @@ class StandardizedSourceMainInterface(tk.Frame):
 
             if 'Current' in self.sk or 'Sigma' in self.sk:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
-                if db_value is not None:
+                if type(db_value) is not list and db_value is not None:
                     db_value = [db_value]
 
             elif 'Volume78' in self.sk:

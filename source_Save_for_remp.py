@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as mb
+from typing import Dict, Any
+
 import numpy as np
 from scipy import integrate
 import os
@@ -117,6 +119,8 @@ class Save_remp:
 
         with open(os.path.join(self.path, 'Sources.pkl'), 'wb') as f:
             pickle.dump(self.db, f)
+
+        JsonSave(self.marple, self.micro_electronics, self.db, self.path)
 
         self.saved = True
 
@@ -493,8 +497,17 @@ class JsonSave:
         self.micro_electronics = micro_electronics
 
         self.save_dict = {
-            "Influences": {}
+            "Influences": {
+                "Lag": {
+                    "Type": 0,
+                    "X": 0,
+                    "Y": 0,
+                    "Z": 0,
+                }
+            }
         }
+
+        self.local_influence_dict = {}
 
         self.calc_amplitude = 0.
 
@@ -503,16 +516,28 @@ class JsonSave:
     def init_save_dict(self):
 
         if self.marple is not None:
-            pass
+            marple_dict = {
+                'Marple': {
+                    'Sigma': f'{self.marple["sigma"]}',
+                    'Ionization': f'{self.marple["ion"]}'
+                }
+            }
+            self.save_dict = {**marple_dict, **self.save_dict}
 
         if self.micro_electronics is not None:
-            pass
+            mic_dict = {
+                'Microelectronics': {
+                    'Field78': f'{self.micro_electronics["field78"]}',
+                    'Density78': f'{self.micro_electronics["density78"]}'
+                }
+            }
+            self.save_dict = {**mic_dict, **self.save_dict}
 
         for item in self.db.items():
             gsource_db = item[1]
             name = item[0]
 
-            local_influence_dict = {}
+            self.local_influence_dict.clear()
 
             try:
                 if gsource_db.get_share_data('integrate'):
@@ -524,7 +549,166 @@ class JsonSave:
                 mb.showerror('Предупреждение', f'Введены не все данные в источнике {name}')
                 return
 
+            lag = list(map(float, gsource_db.get_share_data("lag").strip().split()))
+            self.save_dict['Influences']["Lag"]['Type'] = int(lag[0])
+            self.save_dict['Influences']["Lag"]['X'] = lag[1] if lag[0] != 0 else 0
+            self.save_dict['Influences']["Lag"]['Y'] = lag[2] if lag[0] != 0 else 0
+            self.save_dict['Influences']["Lag"]['Z'] = lag[3] if lag[0] != 0 else 0
 
+            self.local_influence_dict = {
+                name: {
+                    "Influence number": int(gsource_db.get_share_data('influence number')),
+                    "Amplitude": float('{:.5g}'.format(self.calc_amplitude)),
+                    "Time function": {
+                        "Count": gsource_db.get_share_data("count"),
+                        # "Time": gsource_db.get_share_data("time"),
+                        # "Value": gsource_db.get_share_data("func"),
+                        "Time": ' '.join(list(map(str, gsource_db.get_share_data("time")))),
+                        "Value": ' '.join(list(map(str, gsource_db.get_share_data("func")))),
+                    },
+
+                    "Sources": {
+
+                    }
+                }
+            }
+
+            self.write_sources_to_local_dict(name, gsource_db)
+
+            self.save_dict['Influences'] = {**self.save_dict['Influences'], **self.local_influence_dict}
+
+        path = os.path.join(self.path, 'remp_sources.json')
+        with open(path, 'w') as file:
+            json.dump(self.save_dict, file, indent=4)
+
+    def write_sources_to_local_dict(self, name, gsource_db):
+
+        for f_key in gsource_db.get_first_level_keys():
+            if 'Current' in f_key:
+                if 'Currents' not in self.local_influence_dict[name]['Sources'].keys():
+                    self.local_influence_dict[name]['Sources'].update({'Currents': {}})
+
+                self.write_current_to_local_dict(name, gsource_db, f_key)
+
+            elif 'Sigma' in f_key:
+                if 'Sigmas' not in self.local_influence_dict[name]['Sources'].keys():
+                    self.local_influence_dict[name]['Sources'].update({'Sigmas': {}})
+
+                self.write_sigma_to_local_dict(name, gsource_db, f_key)
+
+            else:  # частицы
+                for s_key in gsource_db.get_second_level_keys(f_key):
+                    if 'Flu' in s_key:
+                        if 'Surface' not in self.local_influence_dict[name]['Sources'].keys():
+                            self.local_influence_dict[name]['Sources'].update({'Surface': {}})
+
+                        self.write_flux_to_local_dict(name, gsource_db, f_key, s_key)
+
+                    elif s_key.split('_')[0] == 'Volume78':
+                        if 'Volume' not in self.local_influence_dict[name]['Sources'].keys():
+                            self.local_influence_dict[name]['Sources'].update({'Volume': {}})
+
+                        self.write_volume78_to_local_dict(name, gsource_db, f_key, s_key)
+
+                    elif s_key.split('_')[0] == 'Volume':
+                        if 'Volume' not in self.local_influence_dict[name]['Sources'].keys():
+                            self.local_influence_dict[name]['Sources'].update({'Volume': {}})
+
+                        self.write_volume_to_local_dict(name, gsource_db, f_key, s_key)
+
+                    elif 'Boundaries' in s_key:
+                        if 'From boundaries' not in self.local_influence_dict[name]['Sources'].keys():
+                            self.local_influence_dict[name]['Sources'].update({'From boundaries': {}})
+
+                        self.write_boundaries_to_local_dict(name, gsource_db, f_key, s_key)
+
+                    else:
+                        print(f'{s_key} не распознан')
+
+    def write_current_to_local_dict(self, name, gsource_db, first_key):
+        for second_key in gsource_db.get_second_level_keys(first_key):
+            source_name = second_key
+
+            current_dict = {
+                'Type': f'{"_".join(source_name.split("_")[:2])}',
+                'Layer index': int(f'{source_name.split("_")[-1]}'),
+                'Distribution': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                         'distribution')
+            }
+
+            self.local_influence_dict[name]['Sources']['Currents'].update({source_name: current_dict})
+
+    def write_sigma_to_local_dict(self, name, gsource_db, first_key):
+        for second_key in gsource_db.get_second_level_keys(first_key):
+            source_name = second_key
+
+            sigma_dict = {
+                'Type': 'Sigma',
+                'Layer index': int(f'{source_name.split("_")[-1]}'),
+                'Distribution': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                         'distribution')
+            }
+
+            self.local_influence_dict[name]['Sources']['Sigmas'].update({source_name: sigma_dict})
+
+    def write_flux_to_local_dict(self, name, gsource_db, first_key, second_key):
+        source_name = second_key
+
+        flux_dict = {
+            'Type': 'Flux',
+            'Layer index from': int(f'{second_key.split("_")[-2]}'),
+            'Layer index to': int(f'{second_key.split("_")[-1]}'),
+            'Particle index': int(f'{second_key.split("_")[2]}'),
+            'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
+            'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                       'spectre numbers'),
+        }
+
+        self.local_influence_dict[name]['Sources']['Surface'].update({source_name: flux_dict})
+
+    def write_volume78_to_local_dict(self, name, gsource_db, first_key, second_key):
+        source_name = second_key
+
+        flux_dict = {
+            'Type': 'Volume78',
+            'Layer index': int(f'{second_key.split("_")[-1]}'),
+            'Particle index': int(f'{second_key.split("_")[1]}'),
+            'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
+            'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                       'spectre numbers'),
+            'Distribution': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                     'distribution') if gsource_db.get_last_level_data(
+                first_key, second_key, 'distribution') is not None else None
+        }
+
+        self.local_influence_dict[name]['Sources']['Volume'].update({source_name: flux_dict})
+
+    def write_volume_to_local_dict(self, name, gsource_db, first_key, second_key):
+        source_name = second_key
+
+        flux_dict = {
+            'Type': 'Volume',
+            'Layer index': int(f'{second_key.split("_")[-1]}'),
+            'Particle index': int(f'{second_key.split("_")[1]}'),
+            'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
+            'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                       'spectre numbers')
+        }
+
+        self.local_influence_dict[name]['Sources']['Volume'].update({source_name: flux_dict})
+
+    def write_boundaries_to_local_dict(self, name, gsource_db, first_key, second_key):
+        source_name = second_key
+
+        flux_dict = {
+            'Type': f'{second_key.split("_")[0]}',
+            'Particle index': int(f'{second_key.split("_")[1]}'),
+            'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
+            'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
+                                                                       'spectre numbers')
+        }
+
+        self.local_influence_dict[name]['Sources']['From boundaries'].update({source_name: flux_dict})
 
     def amplitude_calculation(self, gsource_db):
         time = np.array(gsource_db.get_share_data("time"), dtype=float)
@@ -539,15 +723,28 @@ class JsonSave:
 
         return ampl_save
 
+    def _get_last_level_data_with_exception(self, data_object, first_key, second_key, last_key):
+        out = ''
+
+        db_vel = data_object.get_last_level_data(first_key, second_key, last_key)
+
+        if db_vel is None:
+            out = 'None'
+            return out
+
+        if type(db_vel) is list:
+            out = ' '.join(list(map(str, db_vel)))
+
+        else:
+            out += str(db_vel)
+
+        return out
+
 
 if __name__ == '__main__':
+    path = r'C:\Work\Test_projects\test_sources_project'
 
-    path = r'C:\work\Test_projects\wpala'
-
-    with open(os.path.join(path, 'Sources.pkl'), 'rb') as f:
+    with open('Sources.pkl', 'rb') as f:
         db = pickle.load(f)
 
-    ex = Save_remp(None, db, path)
-
-    ex.create_spectre_list()
-    print(ex.exist_spectres)
+    ex = JsonSave(None, None, db, path)

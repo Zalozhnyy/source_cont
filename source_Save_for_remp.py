@@ -5,9 +5,9 @@ import numpy as np
 from scipy import integrate
 import os
 import pickle
+import json
 
 from loguru import logger
-
 
 from source_Dialogs import ShowDuplicateSpectreNumbers
 
@@ -483,9 +483,64 @@ class Save_remp:
         return out
 
 
+@logger.catch()
+class JsonSave:
+    def __init__(self, marple, micro_electronics, data_object, path):
+        self.db = data_object
+        self.path = path
+
+        self.marple = marple
+        self.micro_electronics = micro_electronics
+
+        self.save_dict = {
+            "Influences": {}
+        }
+
+        self.calc_amplitude = 0.
+
+        self.init_save_dict()
+
+    def init_save_dict(self):
+
+        if self.marple is not None:
+            pass
+
+        if self.micro_electronics is not None:
+            pass
+
+        for item in self.db.items():
+            gsource_db = item[1]
+            name = item[0]
+
+            local_influence_dict = {}
+
+            try:
+                if gsource_db.get_share_data('integrate'):
+                    self.calc_amplitude = self.amplitude_calculation(gsource_db)
+                else:
+                    self.calc_amplitude = gsource_db.get_share_data('amplitude')
+            except:
+                print(f'Введены не все данные в источнике {name}')
+                mb.showerror('Предупреждение', f'Введены не все данные в источнике {name}')
+                return
+
+
+
+    def amplitude_calculation(self, gsource_db):
+        time = np.array(gsource_db.get_share_data("time"), dtype=float)
+        func = np.array(gsource_db.get_share_data("func"), dtype=float)
+        amplitude = abs(float(gsource_db.get_share_data("amplitude")))
+
+        try:
+            ampl_save = amplitude / integrate.trapz(x=time, y=func)
+        except RuntimeWarning:
+            ampl_save = amplitude
+            print('Амплитуда не была поделена, найдено деление на ноль')
+
+        return ampl_save
+
 
 if __name__ == '__main__':
-    import pickle
 
     path = r'C:\work\Test_projects\wpala'
 

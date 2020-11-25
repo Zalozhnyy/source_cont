@@ -814,8 +814,8 @@ class MainWindow(tk.Frame):
                             file = item[0]
                             sp_number = item[1]['number']
 
-                            obj.insert_third_level(particle, name, 'spectre', file)
-                            obj.insert_third_level(particle, name, 'spectre numbers', sp_number)
+                            obj.insert_third_level(particle, name, 'spectre', [file])
+                            obj.insert_third_level(particle, name, 'spectre numbers', [sp_number])
 
     @logger.catch()
     def tree_view_constructor(self, ask_name=True, load=False, load_data=None):

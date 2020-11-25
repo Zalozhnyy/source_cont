@@ -327,7 +327,9 @@ class StandardizedSourceMainInterface(tk.Frame):
             self.spectre_type_values = []
 
             if 'Current' in self.sk or 'Sigma' in self.sk:
-                db_value = [self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')]
+                db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+                if db_value is not None:
+                    db_value = [db_value]
 
             elif 'Volume78' in self.sk:
                 sp_part = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
@@ -336,6 +338,12 @@ class StandardizedSourceMainInterface(tk.Frame):
 
             else:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
+
+            if db_value is None:
+                self.spectre_name_values = ['Файл не выбран']
+                self.spectre_number_values = ['--']
+                self.spectre_type_values = ['--']
+                return
 
             for file in db_value:
                 f_path = os.path.join(self.path, file)

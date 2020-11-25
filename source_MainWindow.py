@@ -187,7 +187,7 @@ class MainWindow(tk.Frame):
 
         self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder, state='disabled')
 
-        self.filemenu.add_command(label="Изменить параметр задержки", command=self._configure_lag, state='disabled')
+        self.filemenu.add_command(label="Направление падения излучения", command=self._configure_lag, state='disabled')
 
         self.filemenu.add_command(label="Exit", command=self.onExit)
 
@@ -230,7 +230,7 @@ class MainWindow(tk.Frame):
 
         open_folder_index = self.filemenu.index('Открыть папку с проектом')
         save_for_remp_index = self.filemenu.index('Сохранение для РЭМП')
-        configure_lag_index = self.filemenu.index('Изменить параметр задержки')
+        configure_lag_index = self.filemenu.index('Направление падения излучения')
 
         self.filemenu.entryconfigure(open_folder_index, state='normal')
         self.filemenu.entryconfigure(save_for_remp_index, state='normal')

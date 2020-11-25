@@ -76,7 +76,6 @@ class FrameGen(ttk.LabelFrame):
         if w > 500:
             self.__root_widget.geometry(f'{w}x{h}')
 
-
     def load_save_frame(self):
         self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
         self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
@@ -173,9 +172,9 @@ class FrameGen(ttk.LabelFrame):
 
         self.entry_f_val.set(f'')
 
-        label_f = tk.Label(self.constants_fr, text='Суммарный выход\nиз источника')
+        self.amplitude_label = tk.Label(self.constants_fr, text='Суммарный выход\nиз источника')
         # label_f = tk.Label(self.constants_fr, text='Суммарный выход частиц\nиз источника')
-        label_f.grid(row=0, column=0, padx=3, sticky='E', pady=3)
+        self.amplitude_label.grid(row=0, column=0, padx=3, sticky='E', pady=3)
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
         self.entry_f.grid(row=0, column=2, padx=3)
@@ -1139,9 +1138,11 @@ class FrameGen(ttk.LabelFrame):
 
         if self._integrate_decode_dict[self._integrate_combobox.get()]:
             self.db.insert_share_data('integrate', True)
+            self.amplitude_label['text'] = 'Суммарный выход\nиз источника'
 
         else:
             self.db.insert_share_data('integrate', False)
+            self.amplitude_label['text'] = 'Мощность источника'
 
 
 if __name__ == '__main__':

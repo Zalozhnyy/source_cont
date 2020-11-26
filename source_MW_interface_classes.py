@@ -332,14 +332,20 @@ class StandardizedSourceMainInterface(tk.Frame):
                     db_value = [db_value]
 
             elif 'Volume78' in self.sk:
-                sp_part = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
-                en_part = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+                sp = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
+                sp_part = sp if sp is not None else []
+
+                try:
+                    distr = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+                    en_part = distr if distr is not None else []
+                except KeyError:
+                    en_part = []
                 db_value = list(sp_part + en_part)
 
             else:
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
 
-            if db_value is None:
+            if db_value is None or len(db_value) == 0:
                 self.spectre_name_values = ['Файл не выбран']
                 self.spectre_number_values = ['--']
                 self.spectre_type_values = ['--']

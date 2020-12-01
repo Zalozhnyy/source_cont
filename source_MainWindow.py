@@ -60,6 +60,9 @@ class MainWindow(tk.Frame):
         self.pl_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PL')))
         self.lay_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('LAY')))
         self.par_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PAR')))
+        self.grd_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('GRD')))
+
+        self._time_grid_data = DataParser(self.grd_dir).grid_parcer()
 
         # self.TOK = DataParcer(self.tok_dir).tok_decoder()
         if os.path.exists(self.pl_dir):
@@ -114,7 +117,7 @@ class MainWindow(tk.Frame):
 
         self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder, state='disabled')
 
-        self.filemenu.add_command(label="Направление падения излучения", command=self._configure_lag, state='disabled')
+        self.filemenu.add_command(label="Направление воздействия", command=self._configure_lag, state='disabled')
 
         self.filemenu.add_command(label="Exit", command=self.onExit)
 
@@ -157,7 +160,7 @@ class MainWindow(tk.Frame):
 
         open_folder_index = self.filemenu.index('Открыть папку с проектом')
         save_for_remp_index = self.filemenu.index('Сохранение для РЭМП')
-        configure_lag_index = self.filemenu.index('Направление падения излучения')
+        configure_lag_index = self.filemenu.index('Направление воздействия')
 
         self.filemenu.entryconfigure(open_folder_index, state='normal')
         self.filemenu.entryconfigure(save_for_remp_index, state='normal')
@@ -798,7 +801,8 @@ class MainWindow(tk.Frame):
 
         if load is False:
             self.global_tree_db.update({name: self.tree_db_insert(name)})
-            fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent))
+            fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent),
+                               self._time_grid_data)
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
             fr_data._notebooks()
 
@@ -822,7 +826,8 @@ class MainWindow(tk.Frame):
                     source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
                     self.particle_tree_constr(part_name, source_keys, source, ind)
 
-            fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent))
+            fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent),
+                               self._time_grid_data)
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
             if self.global_tree_db[name].get_share_data('count') is not None:
                 fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
@@ -916,7 +921,7 @@ class MainWindow(tk.Frame):
                 if self.tabs_dict[name][2] is False:
                     self.__destroy_data_frame(name)
                     fr_data = FrameGen(self.tabs_dict[name][1], self.path, self.global_tree_db[name],
-                                       (self.notebook, self.parent))
+                                       (self.notebook, self.parent), self._time_grid_data)
                     if self.global_tree_db[name].get_share_data('count') is not None:
                         fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
                         fr_data._notebooks()

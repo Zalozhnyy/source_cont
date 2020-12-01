@@ -20,7 +20,7 @@ from source_Spectre_one_interface import ScrolledWidget
 
 @logger.catch()
 class FrameGen(ttk.LabelFrame):
-    def __init__(self, parent, path, data_obj, size_objects: tuple):
+    def __init__(self, parent, path, data_obj, size_objects: tuple, grd_array):
         super().__init__(parent)
 
         self.parent = parent
@@ -55,7 +55,8 @@ class FrameGen(ttk.LabelFrame):
 
         self.cell_numeric = 2
 
-        self.grd_def = self.child_parcecer_grid()
+        self._grd_data = grd_array
+        self._grd_corners = f'[{self._grd_data[0]} - {self._grd_data[-1]}]'
 
         self._error_label = None
 
@@ -68,34 +69,15 @@ class FrameGen(ttk.LabelFrame):
         self.constants_frame()
         self.entry_func_frame()
 
-        self.a, self.A = self.time_grid()
-
         self.update()
         w = self.__nb_widget.winfo_width()
         h = self.__nb_widget.winfo_height()
         if w > 500:
             self.__root_widget.geometry(f'{w}x{h}')
 
-    def load_save_frame(self):
-        self.load_safe_fr = tk.LabelFrame(self, text='Сохранение/Загрузка .dtf')
-        self.load_safe_fr.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='WN', padx=5)
+    def _initial_start_values(self):
 
-        self.button_browse = tk.Button(self.load_safe_fr, width=12, text='Загрузить', state='active',
-                                       command=lambda: self.ent_load(
-                                           fd.askopenfilename(filetypes=[('Dtf files', '.dtf')],
-                                                              initialdir=rf'{self.path}/time functions/user configuration')))
-        self.button_browse.grid(row=0, column=0, padx=3, pady=3)
-        self.button_browse_def = tk.Button(self.load_safe_fr, width=12, text='Загр. стандарт', state='active',
-                                           command=lambda: self.ent_load(
-                                               rf'{self.path}/time functions/user configuration/default.dtf'))
-        self.button_browse_def.grid(row=0, column=1, padx=3, pady=3)
-        self.button_save = tk.Button(self.load_safe_fr, width=12, text='Сохранить как', state='disabled',
-                                     command=self.time_save)
-        self.button_save.grid(row=1, column=0, padx=3, pady=3)
-        self.button_save_def = tk.Button(self.load_safe_fr, width=12, text='Сохр. как станд.',
-                                         command=self.time_save_def,
-                                         state='disabled')
-        self.button_save_def.grid(row=1, column=1, padx=3, pady=3)
+        tf = 0
 
     def entry_func_frame(self):
 
@@ -141,7 +123,10 @@ class FrameGen(ttk.LabelFrame):
         label_time = tk.Label(self.entry_func_fr, text='Время', width=15)
         label_time.grid(row=3, column=0, padx=2, pady=2)
 
-        self.ent(from_row)
+        initiate = True if self.db.get_share_data('time_full') is None or len(
+            self.db.get_share_data('time_full')) == 0 else False
+
+        self.ent(from_row, initiate)
 
         self.button_change_method.configure(text='Строчный ввод', command=self.rows_metod, width=15)
 
@@ -170,7 +155,7 @@ class FrameGen(ttk.LabelFrame):
         self.constants_fr = tk.Frame(self)
         self.constants_fr.grid(row=0, column=0, sticky='NW', padx=5, columnspan=3)
 
-        self.entry_f_val.set(f'')
+        self.entry_f_val.set(f"{self.db.get_share_data('amplitude')}")
 
         self.amplitude_label = tk.Label(self.constants_fr, text='Суммарный выход\nиз источника')
         # label_f = tk.Label(self.constants_fr, text='Суммарный выход частиц\nиз источника')
@@ -263,7 +248,7 @@ class FrameGen(ttk.LabelFrame):
         # self.button_read_gen.grid(row=7, column=1, padx=3, pady=3)
 
         tk.Label(self.entry_func_fr, text='Ограничение времени').grid(row=4, column=0, columnspan=2, sticky='W')
-        self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{self.a}')
+        self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{self._grd_corners}')
         self.entry_time_label.grid(row=4, column=2, sticky='W')
         tk.Label(self.entry_func_fr, text='Ограничение функции').grid(row=5, column=0, columnspan=2, sticky='W')
         self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
@@ -295,7 +280,7 @@ class FrameGen(ttk.LabelFrame):
         if w > 500:
             self.__root_widget.geometry(f'{w}x{h}')
 
-    def ent(self, row_m):
+    def ent(self, row_m, initiate=False):
         self.entry_func = []
         self.entry_time = []
         self.func_bind_id = []
@@ -305,9 +290,14 @@ class FrameGen(ttk.LabelFrame):
             self.func_entry_vel.clear()
             self.time_entry_vel.clear()
 
-            # self.cell_numeric = simpledialog.askinteger('Введите число ячеек.', 'Число ячеек = ')
             self.time_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
             self.func_entry_vel = [tk.StringVar() for _ in range(self.cell_numeric)]
+
+            if initiate:
+                [self.func_entry_vel[i].set('1') for i in range(len(self.func_entry_vel))]
+
+                self.time_entry_vel[0].set(f'{self._grd_data[0]}')
+                self.time_entry_vel[-1].set(f'{self._grd_data[-1]}')
 
         elif row_m is True:
             self.cell_numeric = len(self.time_entry_vel)
@@ -341,11 +331,10 @@ class FrameGen(ttk.LabelFrame):
 
             self.entry_time[i].bind('<Return>', self.__sort_method)
 
-        a, A = self.time_grid()
-        self.entry_time_fix_val.set(f'{A[-1]}')
-        self.end_time = A
+        self.entry_time_fix_val.set(f'{self._grd_data[-1]}')
+        self.end_time = self._grd_data
 
-        self.entry_time_label = tk.Label(self.entry_func_fr, text=f'{a}')
+        self.entry_time_label = tk.Label(self.entry_func_fr, text=self._grd_corners)
         self.entry_time_label.grid(row=5 + int(self.cell_numeric), column=0)
         self.entry_func_label = tk.Label(self.entry_func_fr, text='[0 : 1]')
         self.entry_func_label.grid(row=5 + int(self.cell_numeric), column=1)
@@ -366,6 +355,9 @@ class FrameGen(ttk.LabelFrame):
         self.discrete_description_label = tk.Label(self.entry_func_fr, text=d_t, justify='left')
         self.discrete_description_label.grid(row=8 + len(self.func_entry_vel), column=0, columnspan=3)
 
+        if initiate:
+            self.get()
+
         self.__grid_configure()
 
     def load_data(self):
@@ -377,7 +369,10 @@ class FrameGen(ttk.LabelFrame):
             self.func_entry_vel[i].set(str(func[i]))
             self.time_entry_vel[i].set(str(time[i]))
 
-        self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
+        try:
+            self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
+        except TypeError:
+            self.entry_f_val.set('1')
 
         self.get()
 
@@ -655,7 +650,7 @@ class FrameGen(ttk.LabelFrame):
         else:
             for i in self.func_entry_vel.get().split():
                 try:
-                    self.func_list.append(eval(i))
+                    self.func_list.append(float(i))
                 except ValueError:
                     print(f'{i} не может быть преобразовано в float')
                     # mb.showerror('Value error', f'{i} не может быть преобразовано в float')
@@ -665,20 +660,21 @@ class FrameGen(ttk.LabelFrame):
 
         if len(self.func_list) != len(self.time_list):
             print('Размерности не совпадают!')
-            self.entry_time.configure(bg='red')
-            self.entry_func.configure(bg='red')
+            self.entry_time.configure(bg='#F08080')
+            self.entry_func.configure(bg='#F08080')
             if 'Размерности не совпадают' not in self._error_label['text']:
                 self._error_label['text'] += '\nРазмерности не совпадают'
             # mb.showerror('Index error', 'Размерности не совпадают!')
             return
+        else:
+            self.entry_time.configure(bg='#FFFFFF')
+            self.entry_func.configure(bg='#FFFFFF')
 
         time_list, func_list, _ = self.data_control()
 
         if time_list is None:
             return
 
-        self.entry_time.configure(bg='white')
-        self.entry_func.configure(bg='white')
         self.time_list = list(time_list)
         self.func_list = list(func_list)
 
@@ -768,17 +764,12 @@ class FrameGen(ttk.LabelFrame):
             self.db.insert_share_data('time_full', list(self.backup_tf))
 
         except:
-            self.db.insert_share_data('func_full', None)
-            self.db.insert_share_data('time_full', None)
+            self.db.insert_share_data('func_full', self.func_list)
+            self.db.insert_share_data('time_full', self.time_list)
 
         self.db.insert_share_data('tf_break', self.user_timeset)
 
         self.__painter()
-
-        # self.value_check(func=self.func_list, time=self.time_list)
-
-        # self.button_save.configure(state='normal')
-        # self.button_save_def.configure(state='normal')
 
     def eval_transformation(self, arg, replace):
         for x, i in enumerate(replace):
@@ -815,10 +806,6 @@ class FrameGen(ttk.LabelFrame):
                 file.write(f'{i} ')
             mb.showinfo('Save default',
                         f'Сохранено стандартной в time functions/user configuration/default.dtf')
-
-    def time_grid(self):
-        a = DataParser(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
-        return f'[{a[0]} : {a[-1]}]', a
 
     def interpolate_user_time(self):
 
@@ -880,8 +867,8 @@ class FrameGen(ttk.LabelFrame):
             return None, None, None
 
         # блок проверки на ограничение пользователем тайм функции
-        if self.grd_def[-1] == self.user_timeset:
-            time_cell = self.grd_def
+        if self._grd_data[-1] == self.user_timeset:
+            time_cell = self._grd_data
             self.backup_tf = np.copy(entry_t)
             self.backup_fu = np.copy(entry_f)
 
@@ -891,58 +878,58 @@ class FrameGen(ttk.LabelFrame):
             # if entry_t[0] != 0 and entry_f[0] != 0:
             #     entry_t = np.insert(entry_t, 0, 0)
             #     entry_f = np.insert(entry_f, 0, 0)
-        else:
-            try:
-                time_right_side = np.where(self.user_timeset == self.grd_def)[0]
 
-                # print(f'right side {time_right_side}')
+        else:  # тут происходит какая-то муть, не пытайся понять - просто пройди в дебаге
 
-                if len(time_right_side) == 0:
-                    time_right_side = \
-                        np.where(abs(self.user_timeset - self.grd_def) <= (
-                                self.grd_def[1] - self.grd_def[0]) / 2)[0]
-                    # print(f'right side 2nd try {time_right_side}')
+            time_right_side = np.where(self.user_timeset == self._grd_data)[0]
 
-                time_cell = self.grd_def[:time_right_side[0]]
+            if len(time_right_side) == 0:
+                time_right_side = \
+                    np.where(abs(self.user_timeset - self._grd_data) <= (
+                            self._grd_data[1] - self._grd_data[0]) / 2)[0]
+                # print(f'right side 2nd try {time_right_side}')
 
-                self.backup_tf = np.copy(entry_t)
-                self.backup_fu = np.copy(entry_f)
+            time_cell = self._grd_data[:time_right_side[0]]
 
-                if not self.user_timeset in self.backup_tf:
-                    for i in range(len(self.backup_tf)):
-                        if self.backup_tf[i] > self.user_timeset and i != 0:
-                            self.backup_tf = np.insert(self.backup_tf, i, self.user_timeset)
-                            self.backup_fu = np.insert(self.backup_fu, i, 0)
-                            break
+            self.backup_tf = np.copy(entry_t)
+            self.backup_fu = np.copy(entry_f)
 
-                    for i in range(len(self.backup_tf)):
-                        if self.backup_tf[i] >= time_cell[-1]:
-                            self.backup_fu[i] = 0
+            if self.user_timeset not in self.backup_tf:
+                for i in range(len(self.backup_tf)):
+                    if self.backup_tf[i] > self.user_timeset and i != 0:
+                        self.backup_tf = np.insert(self.backup_tf, i, self.user_timeset)
+                        self.backup_fu = np.insert(self.backup_fu, i, 0)
+                        break
 
-                for i in range(len(entry_t)):
-                    if entry_t[i] == self.user_timeset:
-                        entry_t = np.delete(entry_t, np.s_[i + 1:], 0)
-                        entry_f = np.delete(entry_f, np.s_[i + 1:], 0)
+                for i in range(len(self.backup_tf)):
+                    if self.backup_tf[i] >= time_cell[-1]:
+                        self.backup_fu[i] = 0
 
-                        entry_t = np.append(entry_t, self.grd_def[time_right_side[0] + 1])
+            for i in range(len(entry_t)):
+                if entry_t[i] == self.user_timeset:
+                    entry_t = np.delete(entry_t, np.s_[i + 1:], 0)
+                    entry_f = np.delete(entry_f, np.s_[i + 1:], 0)
+
+                    entry_t = np.append(entry_t, self._grd_data[time_right_side[0] + 1])
+                    entry_f = np.append(entry_f, 0)
+
+                    break
+
+                if entry_t[i] > time_cell[-1]:
+                    entry_t = np.delete(entry_t, np.s_[i:], 0)
+                    entry_f = np.delete(entry_f, np.s_[i:], 0)
+
+                    if entry_t[-1] != time_cell[-1]:
+                        entry_t = np.append(entry_t, time_cell[-1])
                         entry_f = np.append(entry_f, 0)
 
-                        break
+                    break
 
-                    if entry_t[i] > time_cell[-1]:
-                        entry_t = np.delete(entry_t, np.s_[i:], 0)
-                        entry_f = np.delete(entry_f, np.s_[i:], 0)
+        self._timefunction_interface_exceptions(entry_t)
 
-                        if entry_t[-1] != time_cell[-1]:
-                            entry_t = np.append(entry_t, time_cell[-1])
-                            entry_f = np.append(entry_f, 0)
+        return entry_t, entry_f, time_cell
 
-                        break
-
-            except:
-                time_cell = None
-                pass
-
+    def _timefunction_interface_exceptions(self, entry_t):
         tmp_time_error = []
         out_of_grid_bounds_flag = False
 
@@ -951,47 +938,43 @@ class FrameGen(ttk.LabelFrame):
                 tmp_time_error.append(f'{i} - {i + 1}')
                 if type(self.entry_time) is list:
                     self.entry_time[i].configure(bg='#F08080')
+
+            else:
+                if type(self.entry_time) is list:
+                    self.entry_time[i].configure(bg='#FFFFFF')
+
+        for i in range(len(entry_t)):
+            if entry_t[i] > self._grd_data[-1]:
+                if type(self.entry_time) is list:
+                    self.entry_time[i].configure(bg='#F08080')
                 else:
                     self.entry_time.configure(bg='#F08080')
+                    out_of_grid_bounds_flag = True
+                    break
+
+                out_of_grid_bounds_flag = True
 
             else:
                 if type(self.entry_time) is list:
                     self.entry_time[i].configure(bg='#FFFFFF')
                 else:
                     self.entry_time.configure(bg='#FFFFFF')
-
-        for i in range(len(entry_t)):
-            if entry_t[i] > self.A[-1]:
-                if type(self.entry_time) is list:
-                    self.entry_time[i].configure(bg='#F08080')
-                else:
-                    self.entry_time.configure(bg='#F08080')
-
-                out_of_grid_bounds_flag = True
+                    break
 
         if len(tmp_time_error) != 0:
             # mb.showerror('Ошибка ввода времени', f'Время уменьшается на отрезке(ах): {" ".join(tmp_time_error)}\n'
             #                                      f'Исправьте ошибку или примините сортировку (клавиша enter)')
             self._error_label['text'] = f'Время уменьшается на отрезке(ах): {" ; ".join(tmp_time_error)}\n' \
                                         f'Исправьте ошибку или примините сортировку'
+            if type(self.entry_time) is not list:
+                self.entry_time.configure(bg='#F08080')
         else:
             self._error_label['text'] = ''
+            if type(self.entry_time) is not list:
+                self.entry_time.configure(bg='#FFFFFF')
 
         if out_of_grid_bounds_flag:
             self._error_label['text'] += '\nЗначения превышают обозначенный диапазон времени'
-
-        return entry_t, entry_f, time_cell
-
-    def value_check(self, func, time):
-        for item in func:
-            if not (0 <= item <= 1):
-                mb.showerror('Value error', f'Значение функции {item} выходит за пределы')
-        for item in time:
-            if not (self.child_parcecer_grid()[0] <= item <= self.child_parcecer_grid()[-1]):
-                mb.showerror('Value error', f'Значение временной функции {item} выходит за пределы')
-
-    def child_parcecer_grid(self):
-        return DataParser(os.path.join(f'{self.path}', check_folder(self.path).get('GRD'))).grid_parcer()
 
     def __painter(self):
         try:
@@ -1047,10 +1030,10 @@ class FrameGen(ttk.LabelFrame):
 
     def __get_amplitude_callback(self, event):
         try:
-            self.db.insert_share_data('amplitude', eval(self.entry_f_val.get()))
-            # print(eval(self.entry_f_val.get()))
+            self.db.insert_share_data('amplitude', float(self.entry_f_val.get()))
+            self.entry_f.configure(bg='#FFFFFF')
         except:
-            pass
+            self.entry_f.configure(bg='#F08080')
 
     def set_amplitude(self):
         try:
@@ -1142,7 +1125,7 @@ class FrameGen(ttk.LabelFrame):
 
         else:
             self.db.insert_share_data('integrate', False)
-            self.amplitude_label['text'] = 'Мощность источника'
+            self.amplitude_label['text'] = 'Максимальная мощность источника'
 
 
 if __name__ == '__main__':

@@ -46,13 +46,16 @@ class Save_remp:
             gsource_db = item[1]
             name = item[0]
             try:
+                if gsource_db.get_share_data('amplitude') is None or gsource_db.get_share_data('amplitude') == 0:
+                    raise Exception
+
                 if gsource_db.get_share_data('integrate'):
                     self.calc_amplitude = self.amplitude_calculation(gsource_db)
                 else:
                     self.calc_amplitude = gsource_db.get_share_data('amplitude')
             except:
                 print(f'Введены не все данные в источнике {name}')
-                mb.showerror('Предупреждение', f'Введены не все данные в источнике {name}')
+                mb.showerror('Предупреждение', f'Некорректная амплитуда в {name}')
                 return
 
             for f_key in gsource_db.get_first_level_keys():
@@ -120,7 +123,10 @@ class Save_remp:
         with open(os.path.join(self.path, 'Sources.pkl'), 'wb') as f:
             pickle.dump(self.db, f)
 
-        JsonSave(self.marple, self.micro_electronics, self.db, self.path)
+        try:
+            JsonSave(self.marple, self.micro_electronics, self.db, self.path)
+        except:
+            print('Ошибка в новом формате сохранения (JSON).')
 
         self.saved = True
 
@@ -371,7 +377,7 @@ class Save_remp:
 
         try:
             ampl_save = amplitude / integrate.trapz(x=time, y=func)
-        except RuntimeWarning:
+        except (RuntimeWarning, ZeroDivisionError):
             ampl_save = amplitude
             print('Амплитуда не была поделена, найдено деление на ноль')
 
@@ -549,7 +555,8 @@ class JsonSave:
                 mb.showerror('Предупреждение', f'Введены не все данные в источнике {name}')
                 return
 
-            lag = list(map(float, gsource_db.get_share_data("lag").strip().split()))
+            lag = list(map(float, gsource_db.get_share_data("lag").strip().split())) if gsource_db.get_share_data(
+                "lag") is not None else [0, 0, 0, 0]
             self.save_dict['Influences']["Lag"]['Type'] = int(lag[0])
             self.save_dict['Influences']["Lag"]['X'] = lag[1] if lag[0] != 0 else 0
             self.save_dict['Influences']["Lag"]['Y'] = lag[2] if lag[0] != 0 else 0

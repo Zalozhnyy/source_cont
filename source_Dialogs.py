@@ -362,7 +362,7 @@ class SelectLagInterface(tk.Toplevel):
         self.focus()
         self.grab_set()
 
-        self.title = 'Задание параметра задержки'
+        self.title = 'Направление воздействия'
         self.resizable(width=False, height=False)
 
         self.protocol("WM_DELETE_WINDOW", lambda: self.onExit(False))
@@ -410,17 +410,17 @@ class SelectLagInterface(tk.Toplevel):
                 self.destroy()
 
     def initUi(self):
-        labl = tk.Label(self, text='Задание параметров задержки')
+        labl = tk.Label(self, text='Направление воздействия')
         labl.grid(row=1, column=0, sticky='N', padx=5, pady=5, columnspan=2)
 
         enable = tk.Checkbutton(self, text='Включить', command=self.en_change, variable=self._enable_var,
                                 onvalue=1, offvalue=0)
         enable.grid(row=1, column=2, sticky='N', padx=5, pady=5)
 
-        find_in_pech = tk.Button(self, text='Найти в проекте переноса', command=self.__find_lag_in_pechs, width=22)
+        find_in_pech = tk.Button(self, text='Из проекта переноса', command=self.__find_lag_in_pechs, width=22)
         find_in_pech.grid(row=1, column=3, sticky='N', padx=5, pady=5)
 
-        find_in_pech = tk.Button(self, text='Получить из подзадачи', command=self.__find_lag_in_subtask, width=22)
+        find_in_pech = tk.Button(self, text='Из настроек подзадачи', command=self.__find_lag_in_subtask, width=22)
         find_in_pech.grid(row=2, column=3, sticky='N', padx=5, pady=5)
 
         save_exit = tk.Button(self, text='Сохранить', command=self.onExit, width=14)

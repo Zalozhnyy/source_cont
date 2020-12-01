@@ -467,6 +467,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         elif 'Current' in self.sk:
             self.create_spectre_button.grid_remove()
             self.flux_auto_search_button.grid_remove()
+            self.delete_current_source_from_db_button.grid_remove()
 
             self.configure_spectre_button['state'] = 'disabled'
             if all([os.path.exists(os.path.join(self.path, i)) for i in self.spectre_name_values]):

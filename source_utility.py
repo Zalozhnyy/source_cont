@@ -24,7 +24,7 @@ class TreeDataStructure:
         self.__obj_structure[self.obj_name].update({'Sigma': {}})
 
     def __insert_share_data(self):
-        self.__obj_structure['share_data'].update({'amplitude': None,
+        self.__obj_structure['share_data'].update({'amplitude': 0,
                                                    'count': None,
                                                    'time': [],
                                                    'func': [],

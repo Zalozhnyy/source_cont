@@ -373,6 +373,10 @@ class MainWindow(tk.Frame):
 
         set_recent_projects(self.prj_path, get_recent_projects())
 
+        log_path = os.path.join(self.path, 'sources_debug.log')
+        logger.add(log_path, format="{time} {level} {message}",
+                   level='ERROR', rotation='10MB', compression='zip')
+
         self.notebook = ttk.Notebook(self.parent)
         self.notebook.grid(sticky='NWSE')
 
@@ -834,7 +838,7 @@ class MainWindow(tk.Frame):
                 fr_data._notebooks()
                 fr_data.load_data()
 
-        fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
+        # fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
         # self.main_frame_exist = True
 
         if microele_flag_activate:

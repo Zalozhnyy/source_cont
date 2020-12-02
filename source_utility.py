@@ -4,6 +4,7 @@ from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 import locale
 import re
+import tempfile
 
 
 class TreeDataStructure:
@@ -170,8 +171,10 @@ def open_button():
 
 def set_recent_projects(path, path_dict):
     unic_path = {}
+    p = os.path.join(tempfile.gettempdir(), 'sources_properties.ini')
+
     try:
-        with open('sources_properties.ini', 'r', encoding='utf-8') as file:
+        with open(p, 'r', encoding='utf-8') as file:
             lines = file.readlines()
         for i in lines:
             unic_path.update({i.strip(): ''})
@@ -183,15 +186,17 @@ def set_recent_projects(path, path_dict):
     for i in path_dict.keys():
         unic_path.update({i.strip(): ''})
 
-    with open('sources_properties.ini', 'w', encoding='utf-8') as file:
+    with open(p, 'w', encoding='utf-8') as file:
         for i, key in enumerate(unic_path.keys()):
             file.write(key + '\n')
 
 
 def get_recent_projects():
     out = {}
+
+    p = os.path.join(tempfile.gettempdir(), 'sources_properties.ini')
     try:
-        with open('sources_properties.ini', 'r', encoding='utf-8') as file:
+        with open(p, 'r', encoding='utf-8') as file:
             lines = file.readlines()
         for i in lines:
             if os.path.exists(i.strip()):
@@ -253,5 +258,4 @@ def permission_denied_test():
 
 
 if __name__ == '__main__':
-    a = rusian_words_analysis('asdas')
-    print(a)
+    get_recent_projects()

@@ -18,6 +18,8 @@ from source_Project_reader import DataParser
 from source_Spectre_one_interface import ScrolledWidget
 
 
+
+
 @logger.catch()
 class FrameGen(ttk.LabelFrame):
     def __init__(self, parent, path, data_obj, size_objects: tuple, grd_array):
@@ -59,6 +61,7 @@ class FrameGen(ttk.LabelFrame):
         self._grd_corners = f'[{self._grd_data[0]} - {self._grd_data[-1]}]'
 
         self._error_label = None
+        self.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
 
     def _notebooks(self):
 
@@ -361,13 +364,13 @@ class FrameGen(ttk.LabelFrame):
         self.__grid_configure()
 
     def load_data(self):
-        time = self.db.get_share_data('time_full')
+        time_ = self.db.get_share_data('time_full')
         func = self.db.get_share_data('func_full')
         self.entry_time_fix_val.set(self.db.get_share_data('tf_break'))
 
         for i in range(len(self.func_entry_vel)):
             self.func_entry_vel[i].set(str(func[i]))
-            self.time_entry_vel[i].set(str(time[i]))
+            self.time_entry_vel[i].set(str(time_[i]))
 
         try:
             self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
@@ -702,6 +705,7 @@ class FrameGen(ttk.LabelFrame):
     def get(self):
 
         # print('get', type(self.func_entry_vel[0]))
+
         self.func_list = []
         self.time_list = []
 

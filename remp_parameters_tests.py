@@ -34,25 +34,25 @@ def get_project_files_dict(prj_path: str):
     return out
 
 
-def permission_denied_test():
-    test_complete = True
-
-    try:
-        test_file = os.path.join(os.path.dirname(__file__), 'permission_denied_test')
-
-        with open(test_file, 'w') as file:
-            file.write('test string')
-
-    except PermissionError:
-        # mb.showerror('Предупреждение', 'Программа не имеет доступа к файловой системе.\n'
-        #                                'Запустите программу от имени администратора')
-        test_complete = False
-
-    finally:
-        if os.path.exists(test_file):
-            os.remove(test_file)
-
-    return test_complete
+# def permission_denied_test():
+#     test_complete = True
+#
+#     try:
+#         test_file = os.path.join(os.path.dirname(__file__), 'permission_denied_test')
+#
+#         with open(test_file, 'w') as file:
+#             file.write('test string')
+#
+#     except PermissionError:
+#         # mb.showerror('Предупреждение', 'Программа не имеет доступа к файловой системе.\n'
+#         #                                'Запустите программу от имени администратора')
+#         test_complete = False
+#
+#     finally:
+#         if os.path.exists(test_file):
+#             os.remove(test_file)
+#
+#     return test_complete
 
 
 def pl_decoder(pl_path: str):
@@ -172,8 +172,8 @@ def main_test(prj_file_path: str):
     lay_layers = lay_decoder(parameters_path_dict['LAY'])[:, 0]
 
     test_passed = {
-        'permission_denied':
-            permission_denied_test(),
+        # 'permission_denied':
+        #     permission_denied_test(),
         'same_layers_numbers_pl_lay_files':
             False if lay_layers.shape != pl_layers.shape else np.all(lay_layers == pl_layers),
         'same_particles_numbers_pl_lay_files':

@@ -34,7 +34,8 @@ class TreeDataStructure:
                                                    'func_full': None,
                                                    'tf_break': None,
                                                    'integrate': True,
-                                                   'particle number': set()})
+                                                   'particle number': set(),
+                                                   'influence number': None})
 
     def insert_share_data(self, key, value):
         self.__obj_structure['share_data'].update({key: value})

@@ -32,8 +32,6 @@ class MainWindow(tk.Frame):
 
         self.toolbar()
 
-        self.global_count_gsources = 0
-
         self.remp_source_exist = False
 
         self._marple = None
@@ -53,6 +51,19 @@ class MainWindow(tk.Frame):
                 raise Exception
         except Exception:
             self.path = path
+
+        self._influence_numbers = set()
+
+    def _set_influence_number(self):
+        i = 1
+        while True:
+            if not self._influence_numbers.__contains__(i):
+                self._influence_numbers.add(i)
+                break
+            else:
+                i += 1
+
+        return i
 
     def from_project_reader(self):
 
@@ -434,7 +445,7 @@ class MainWindow(tk.Frame):
         self.tabs_dict = {}
         self.tree = []
         self.global_tree_db = {}
-        self.global_count_gsources = 0
+        self._influence_numbers.clear()
 
     def open_folder(self):
         if self.path is None:
@@ -536,12 +547,12 @@ class MainWindow(tk.Frame):
         except (KeyError, IndexError):
             pass
 
-    def tree_db_insert(self, obj_name):
+    def tree_db_insert(self, obj_name, number):
         obj = TreeDataStructure(obj_name)
 
         create_list = ['x', 'y', 'z']
         obj.insert_share_data('lag', self.lag)
-        obj.insert_share_data('influence number', str(self.global_count_gsources))
+        obj.insert_share_data('influence number', str(number))
 
         for i in range(self.LAY.shape[0]):
             if self.LAY[i, 1] == 1:
@@ -756,14 +767,15 @@ class MainWindow(tk.Frame):
         if self.path is None:
             mb.showerror('Path', 'Сначала выберите проект')
             return
-        self.global_count_gsources += 1
+
+        influence_number = self._set_influence_number()
 
         if ask_name is True:
             while True:
                 name = sd.askstring('Назовите воздействие', 'Введите название воздействия (Английский язык)\n'
                                                             'Ok - название по умолчанию')
                 if name == '':
-                    name = f'Influence {self.global_count_gsources}'
+                    name = f'Influence {influence_number}'
                 if name is None:
                     return
                 if rusian_words_analysis(name) == 1:
@@ -804,14 +816,13 @@ class MainWindow(tk.Frame):
         microele_flag_activate = False
 
         if load is False:
-            self.global_tree_db.update({name: self.tree_db_insert(name)})
+            self.global_tree_db.update({name: self.tree_db_insert(name, influence_number)})
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent),
                                self._time_grid_data)
-            fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
+            fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {influence_number}')
             fr_data._notebooks()
 
         elif load is True:
-            # self.global_tree_db.update({name: self.tree_db_insert(name)})
 
             part_name = None
             load_particles = [load_data[1]] if load_data[1] is None else load_data[1]
@@ -832,7 +843,7 @@ class MainWindow(tk.Frame):
 
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent),
                                self._time_grid_data)
-            fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {self.global_count_gsources}')
+            fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {influence_number}')
             if self.global_tree_db[name].get_share_data('count') is not None:
                 fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
                 fr_data._notebooks()
@@ -1113,6 +1124,8 @@ class MainWindow(tk.Frame):
         self.notebook.forget(self.tabs_dict[delete_gsource][0])
         self.tree.pop(self.tabs_dict[delete_gsource][0])
         self.tabs_dict.pop(delete_gsource)
+        self._influence_numbers.remove(int(self.global_tree_db[delete_gsource].get_share_data('influence number')))
+
         self.global_tree_db.pop(delete_gsource)
 
         for item in self.tabs_dict.items():

@@ -925,9 +925,11 @@ class SpectreConfigure(tk.Frame):
     @logger.catch()
     def _save_data(self, save_as):
 
-        all_field_correct = self._check_data_for_save()
-        if all_field_correct is None:
-            return
+        if self.spectre_type_cb != 'SP_1':
+            all_field_correct = self._check_data_for_save()
+
+            if all_field_correct is None:
+                return
 
         if save_as is True:
             save_path = fd.asksaveasfilename(initialdir=self.path)

@@ -29,6 +29,7 @@ class MainWindow(tk.Frame):
         self.tabs_dict = {}
         self.tree = []
         self.global_tree_db = {}
+        self._influence_numbers = set()
 
         self.toolbar()
 
@@ -52,7 +53,6 @@ class MainWindow(tk.Frame):
         except Exception:
             self.path = path
 
-        self._influence_numbers = set()
 
     def _set_influence_number(self):
         i = 1

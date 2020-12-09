@@ -173,6 +173,7 @@ def open_button():
 def set_recent_projects(path, path_dict):
     unic_path = {}
     p = os.path.join(tempfile.gettempdir(), 'sources_properties.ini')
+    p = os.path.normpath(p)
 
     try:
         with open(p, 'r', encoding='utf-8') as file:

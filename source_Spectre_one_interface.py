@@ -309,7 +309,6 @@ class SpectreOneInterface(tk.Frame):
 
         self.__change_count_callback()
 
-
     def __theta_constructor(self, event):
         theta_row = 0
         try:
@@ -870,7 +869,8 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.phi_levels_val.get()}\n'
             out += 'Значения угла(градусы), доля(не нормируется)\n'
             for i in range(len(self.phi_angles_val)):
-                out += self.phi_angles_val[i].get() + '\t' + self.phi_parts_val[i].get() + '\n'
+                out += "{:8.5g}\t{:8.5g}\n".format(float(self.phi_angles_val[i].get()),
+                                                   float(self.phi_parts_val[i].get()))
 
         elif int(self.phi_decode[self.phi_type_cobbobox.get()]) == 1:
             out += 'Значение (от до) (градусы)\n'
@@ -892,7 +892,8 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.theta_levels_val.get()}\n'
             out += 'Значения угла(градусы), доля(не нормируется)\n'
             for i in range(len(self.theta_angles_val)):
-                out += self.theta_angles_val[i].get() + '\t' + self.theta_parts_val[i].get() + '\n'
+                out += "{:8.6E}\t{:8.6E}\n".format(float(self.theta_angles_val[i].get()),
+                                                   float(self.theta_parts_val[i].get()))
 
 
         elif int(self.theta_decode[self.theta_type_cobbobox.get()]) == 1 or int(
@@ -916,15 +917,19 @@ class SpectreOneInterface(tk.Frame):
             out += f'{self.energy_levels_val.get()}\n'
             out += 'Значения энергии(МэВ), доля(не нормируется)\n'
             for i in range(len(self.energy_angles_val)):
-                out += self.energy_angles_val[i].get() + '\t' + self.energy_parts_val[i].get() + '\n'
+                out += "{:8.6E}\t{:8.6E}\n".format(float(self.energy_angles_val[i].get()),
+                                                   float(self.energy_parts_val[i].get()))
+
 
         elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 2:
             out += 'Число энергий в спектре\n'
             out += f'{self.energy_levels_val.get()}\n'
             out += 'Энергия(МэВ) от	до доля(не нормируется)\n'
             for i in range(len(self.energy_angles_val)):
-                out += self.energy_angles_val[i].get() + '\t' + self.energy_angles_val_2[i].get() + \
-                       '\t' + self.energy_parts_val[i].get() + '\n'
+                out += "{:8.6E}\t{:8.6E}\t{:8.6E}\n".format(float(self.energy_angles_val[i].get()),
+                                                            float(self.energy_angles_val_2[i].get()),
+                                                            float(self.energy_parts_val[i].get()))
+
 
         elif int(self.energy_decode[self.energy_type_cobbobox.get()]) == 1:
             out += 'Значение(от до) (МэВ)\n'

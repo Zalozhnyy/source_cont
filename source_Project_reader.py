@@ -520,6 +520,7 @@ class SpOneReader:
 
             elif self.phi_type == 1:
                 if line == 3:
+                    self.phi_count = 2
                     for i in range(self.phi_count):
                         d = file.readline()
                         self.phi_angles.append(float(d.strip()))
@@ -557,6 +558,7 @@ class SpOneReader:
 
             elif self.theta_type == 1 or self.theta_type == -1:
                 if line == 3:
+                    self.theta_count = 2
                     for i in range(self.theta_count):
                         d = file.readline()
                         self.theta_angles.append(float(d.strip()))
@@ -593,6 +595,7 @@ class SpOneReader:
 
             elif self.energy_type == 1:
                 if line == 3:
+                    self.energy_count = 2
                     for i in range(self.energy_count):
                         d = file.readline()
                         self.energy_angles.append(float(d.strip()))
@@ -600,7 +603,6 @@ class SpOneReader:
 
 
             elif self.energy_type == 2:
-
                 if line == 5:
                     for i in range(self.energy_count):
                         d = file.readline()

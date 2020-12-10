@@ -1889,7 +1889,7 @@ class SpectreDataStructure:
 if __name__ == '__main__':
     root = tk.Tk()
 
-    x = SpectreConfigure(parent=root, path=r'C:\Work\Test_projects\wpala')
+    x = SpectreConfigure(parent=root, path=r'C:\Users\Zalozhnyy_N\Dropbox\work_cloud\source_cont\spectres_micr')
     x.grid(sticky='NWSE')
 
     root.protocol("WM_DELETE_WINDOW", x.onExit)

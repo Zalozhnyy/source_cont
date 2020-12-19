@@ -100,11 +100,22 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.choice_spectres_button = tk.Button(self, text='Выбрать спектр/спектры', width=self.button_width,
                                                 command=self._choice_file_button)
         self.choice_spectres_button.grid(row=row, column=3, padx=50, pady=3)
+
+        self.choice_sp_volume78 = tk.Button(self, text='Выбрать спектр', width=self.button_width,
+                                            command=self.__choice_sp_volume78)
+        self.choice_sp_volume78.grid(row=row, column=3, padx=50, pady=3)
+        self.choice_sp_volume78.grid_remove()
         row += 1
 
         self.flux_auto_search_button = tk.Button(self, text='Автоматич. поиск', width=self.button_width,
                                                  command=self._flux_auto_search_button)
         self.flux_auto_search_button.grid(row=row, column=3, padx=50, pady=3)
+
+        self.choice_en_volume78 = tk.Button(self, text='Выбрать распределение', width=self.button_width,
+                                            command=self.__choice_en_volume78)
+        self.choice_en_volume78.grid(row=row, column=3, padx=50, pady=3)
+        self.choice_en_volume78.grid_remove()
+
         row += 1
 
         self.configure_spectre_button = tk.Button(self, text='Редактировать', width=self.button_width,
@@ -125,8 +136,9 @@ class StandardizedSourceMainInterface(tk.Frame):
         self._buttons_state()
 
     def _choice_file_button(self):
+        assert 'Volume78' not in self.sk  # эта функция не для volume78
+
         if 'Boundaries' in self.sk or 'Current' in self.sk or 'Sigma' in self.sk:
-            # if 'Boundaries' in self.sk or 'Current' in self.sk or 'Energy' in self.sk or 'Volume78' in self.sk:
             self.__choice_files(one_file=True)
         else:
             self.__choice_files(one_file=False)
@@ -223,6 +235,86 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_number_values = ['--']
         self.spectre_type_values = ['--']
         self._set_spectre_data_to_interface()
+
+    def __choice_sp_volume78(self):
+        assert 'Volume78' in self.sk  # эта функция  для volume78
+
+        files = fd.askopenfilename(title=f'Выберите файлы спектров', initialdir=self.path)
+
+        if files == '':
+            return
+
+        else:
+            files = [files]
+
+        file_name, number, sp_type = [], [], []
+        for i in files:
+            a, b, c = self.__read_spectre(i)
+            if a is None:
+                self.spectre_name_values = ['Тип одного из файлов не распознан,\nдобавление невозможно']
+                self.spectre_number_values = [' ']
+                self.spectre_type_values = [' ']
+                return
+
+            if b == -1 or c == -1:  # Обработка если выбран JX или energy_distribution
+                mb.showerror('Ошибка', 'Выбран файл распределения!')
+                return
+
+            else:
+                file_name = a
+                number = b
+                sp_type = c
+
+        self.spectre_name_values[0] = file_name
+        self.spectre_number_values[0] = number
+        self.spectre_type_values[0] = sp_type
+
+        self._set_spectre_data_to_interface()
+
+        if all([os.path.exists(os.path.join(self.path, i)) for i in self.spectre_name_values]):
+            self.configure_spectre_button['state'] = 'normal'
+
+        self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', [file_name])
+        self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers', [number])
+
+    def __choice_en_volume78(self):
+        assert 'Volume78' in self.sk  # эта функция  для volume78
+
+        files = fd.askopenfilename(title=f'Выберите файлы спектров', initialdir=self.path)
+
+        if files == '':
+            return
+
+        else:
+            files = [files]
+
+        file_name, number, sp_type = [], [], []
+        for i in files:
+            a, b, c = self.__read_spectre(i)
+            if a is None:
+                self.spectre_name_values = ['Тип одного из файлов не распознан,\nдобавление невозможно']
+                self.spectre_number_values = [' ']
+                self.spectre_type_values = [' ']
+                return
+
+            if b == -1 and c == -1:  # Обработка если выбран JX или energy_distribution
+                file_name = a
+                number = '--'
+                sp_type = '--'
+
+            else:
+                mb.showerror('Ошибка', "Выбран файл спектра!")
+
+        self.spectre_name_values[1] = file_name
+        self.spectre_number_values[1] = number
+        self.spectre_type_values[1] = sp_type
+
+        self._set_spectre_data_to_interface()
+
+        if all([os.path.exists(os.path.join(self.path, i)) for i in self.spectre_name_values]):
+            self.configure_spectre_button['state'] = 'normal'
+
+        self.db[self.db_name].insert_third_level(self.fk, self.sk, 'distribution', [file_name])
 
     def __choice_files(self, one_file=False):
         if one_file is True:
@@ -346,9 +438,14 @@ class StandardizedSourceMainInterface(tk.Frame):
                 db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
 
             if db_value is None or len(db_value) == 0:
-                self.spectre_name_values = ['Файл не выбран']
-                self.spectre_number_values = ['--']
-                self.spectre_type_values = ['--']
+                if 'Volume78' in self.sk:
+                    self.spectre_name_values = ['Спектр - файл не выбран', 'Энерговыделение - файл не выбран']
+                    self.spectre_number_values = ['--', '--']
+                    self.spectre_type_values = ['--', '--']
+                else:
+                    self.spectre_name_values = ['Файл не выбран']
+                    self.spectre_number_values = ['--']
+                    self.spectre_type_values = ['--']
                 return
 
             for file in db_value:
@@ -454,12 +551,22 @@ class StandardizedSourceMainInterface(tk.Frame):
             self.spectre_type_values = ['']
 
     def _buttons_state(self):
-        if 'Volume' in self.sk:
+        if self.sk.split('_')[0] == 'Volume':
             self.delete_current_source_from_db_button.grid_remove()
             self.flux_auto_search_button.grid_remove()
             self.configure_spectre_button['state'] = 'disabled'
             if all([os.path.exists(os.path.join(self.path, i)) for i in self.spectre_name_values]):
                 self.configure_spectre_button['state'] = 'normal'
+
+        elif self.sk.split('_')[0] == 'Volume78':
+            self.delete_current_source_from_db_button.grid_remove()
+            self.flux_auto_search_button.grid_remove()
+            self.configure_spectre_button['state'] = 'disabled'
+            if all([os.path.exists(os.path.join(self.path, i)) for i in self.spectre_name_values]):
+                self.configure_spectre_button['state'] = 'normal'
+
+            self.choice_sp_volume78.grid()
+            self.choice_en_volume78.grid()
 
         elif 'Flu' in self.sk:
             self.delete_current_source_from_db_button.grid_remove()

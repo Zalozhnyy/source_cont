@@ -30,6 +30,7 @@ class DataParser:
             line = 2  # <Количество слоев> + 1 строка
             lay_numeric = int(lines[line])
             out_lay = np.zeros((lay_numeric, 3), dtype=int)
+            lay_ppn = {}
             # print(f'<Количество слоев> + 1 строка     {lines[line]}')
 
             line += 2  # <Номер, название слоя>
@@ -37,13 +38,14 @@ class DataParser:
 
             for layer in range(lay_numeric):
                 line += 1  # <Номер, название слоя> + 1 строка
-                # print(f'<Номер, название слоя> + 1 строка     {lines[line]}')
-
+                number, name = lines[line].strip().split()
                 out_lay[layer, 0] = int(lines[line].split()[0])  # 0 - номер слоя
 
                 line += 2  # <газ(0)/не газ(1), и тд + 1 строка
                 out_lay[layer, 1] = int(lines[line].split()[2])  # 1 - стороннй ток
                 out_lay[layer, 2] = int(lines[line].split()[3])  # 2 - стро. ист.
+                lay_ppn.update({int(number): {'name': name,
+                                              'ppn': int(lines[line].split()[0])}})
 
                 extended = False
                 if int(lines[line].split()[-1]) == 1:
@@ -56,10 +58,10 @@ class DataParser:
                     line += 2  # <молекулярный вес[г/моль] + 1 строка
 
                     line += 2  # следущая частица    <Номер, название слоя>
-            return out_lay
+            return out_lay, lay_ppn
         except Exception:
             print('Ошибка в чтении файла .LAY')
-            return None
+            return None, None
 
     def tok_decoder(self):
         #### .TOK DECODER
@@ -669,6 +671,6 @@ class SubtaskDecoder:
 
 
 if __name__ == '__main__':
-    path = r'C:\Work\Test_projects\wpala'
+    path = r'C:\Work\Test_projects\PROJECT_micr\PROJECT_micr.LAY'
     a = DataParser(path)
-    print(a.get_distribution_for_current_and_energy(1, 1, 'jx'))
+    print(a.lay_decoder())

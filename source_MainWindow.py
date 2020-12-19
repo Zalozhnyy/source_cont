@@ -53,7 +53,6 @@ class MainWindow(tk.Frame):
         except Exception:
             self.path = path
 
-
     def _set_influence_number(self):
         i = 1
         while True:
@@ -85,7 +84,7 @@ class MainWindow(tk.Frame):
             self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = None, None, None, None
 
         if os.path.exists(self.lay_dir):
-            self.LAY = DataParser(self.lay_dir).lay_decoder()
+            self.LAY, self.PPN = DataParser(self.lay_dir).lay_decoder()
             if self.LAY is None:
                 mb.showerror('ERROR', 'Нарушена структура файла LAY')
                 return
@@ -723,19 +722,20 @@ class MainWindow(tk.Frame):
 
                 obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
                 obj.insert_third_level(f'{particle}', f'{name}', 'name', name)
-                obj.insert_third_level(f'{particle}', f'{name}', 'spectre', None)
-                obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', None)
 
-                # if load:
-                #     try:
-                #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre',
-                #                                self.rs_data[number][name]['spectre'])
-                #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers',
-                #                                self.rs_data[number][name]['spectre number'])
-                #     except:
-                #         print(f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                #         obj.insert_third_level(particle, name, 'spectre', None)
-                #         obj.insert_third_level(particle, name, 'spectre numbers', None)
+                distr = DataParser(self.path).get_distribution_for_current_and_energy(number,
+                                                                                      self.layer_numbers[i],
+                                                                                      'en')
+
+                obj.insert_third_level(f'{particle}', f'{name}', 'distribution', [distr])
+
+                sp, sp_number = self.__find_spectre_in_project(type, self.layer_numbers[i])
+
+                obj.insert_third_level(f'{particle}', f'{name}', 'spectre', [sp])
+                obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', [sp_number])
+
+                if distr is None:
+                    print(f'Автоматичеки не найдено распределение для {name}')
 
         for i in range(len(self.PL_bound[number])):
             if self.PL_bound[number][i] != 0:
@@ -1290,3 +1290,43 @@ class MainWindow(tk.Frame):
 
         self._micro_electronics = None
         self._save_flag = True
+
+    def __find_spectre_in_project(self, part_type, lay_number):
+        ppn = self.PPN[lay_number]['ppn']
+
+        if part_type == 7 and ppn in (2, 4, 5):
+            sp = 'SP_1'
+            number = self.__get_sp_number(sp)
+            if number is None:
+                sp, number = None, None
+
+        elif part_type == 7 and ppn in (3):
+            sp = 'SP_3'
+            number = self.__get_sp_number(sp)
+            if number is None:
+                sp, number = None, None
+
+        elif part_type == 8 and ppn in (2, 4, 5):
+            sp = 'SP_2'
+            number = self.__get_sp_number(sp)
+            if number is None:
+                sp, number = None, None
+
+        elif part_type == 8 and ppn in (3):
+            mb.showerror('Ошибка', 'Переход в диоксид запрещён!')
+            sp, number = None, None
+
+        else:
+            sp, number = None, None
+
+        return sp, number
+
+    def __get_sp_number(self, fname):
+        try:
+            with open(os.path.join(self.path, fname), 'r') as file:
+                lines = file.readlines()
+
+                number = int(lines[2].strip())
+        except:
+            number = None
+        return number

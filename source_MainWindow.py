@@ -1268,8 +1268,8 @@ class MainWindow(tk.Frame):
                                             'Задание параметров для изделий микроэлектроники', )
         self.wait_window(ex)
 
-        field = ex.field78_path
-        density = ex.density78_path
+        field = ex.first_item
+        density = ex.second_item
 
         if field is None or density is None:
             return
@@ -1295,19 +1295,19 @@ class MainWindow(tk.Frame):
         ppn = self.PPN[lay_number]['ppn']
 
         if part_type == 7 and ppn in (2, 4, 5):
-            sp = 'SP_1'
+            sp = 'micr_1'
             number = self.__get_sp_number(sp)
             if number is None:
                 sp, number = None, None
 
         elif part_type == 7 and ppn in (3):
-            sp = 'SP_3'
+            sp = 'micr_3'
             number = self.__get_sp_number(sp)
             if number is None:
                 sp, number = None, None
 
         elif part_type == 8 and ppn in (2, 4, 5):
-            sp = 'SP_2'
+            sp = 'micr_2'
             number = self.__get_sp_number(sp)
             if number is None:
                 sp, number = None, None
@@ -1329,4 +1329,5 @@ class MainWindow(tk.Frame):
                 number = int(lines[2].strip())
         except:
             number = None
+            print(f'Спектр {fname} не найден в проекте')
         return number

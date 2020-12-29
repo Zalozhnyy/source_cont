@@ -271,8 +271,11 @@ class MainWindow(tk.Frame):
             return
 
         if 'Sources.pkl' in os.listdir(self.path):
-            with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
-                load_db = pickle.load(f)
+            try:
+                with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
+                    load_db = pickle.load(f)
+            except:
+                mb.showerror('Error', 'Ошибка при попытке прочитать бинарный файл сохранения. Сохраните проект зново')
 
             if load_db.keys() == self.global_tree_db.keys() and not self._save_flag:
                 if self.check_saved_ds(load_db, self.global_tree_db) is True:
@@ -408,8 +411,13 @@ class MainWindow(tk.Frame):
 
                 self.remp_source_exist = True
 
-                with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
-                    self.global_tree_db = pickle.load(f)
+                try:
+                    with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
+                        self.global_tree_db = pickle.load(f)
+                except:
+                    mb.showerror('Error',
+                                 'Ошибка при попытке прочитать бинарный файл сохранения. Загрузка невозможна.')
+                    return
 
                 for i in self.global_tree_db.items():
                     """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""

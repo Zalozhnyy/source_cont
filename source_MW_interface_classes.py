@@ -425,11 +425,11 @@ class StandardizedSourceMainInterface(tk.Frame):
 
             elif 'Volume78' in self.sk:
                 sp = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
-                sp_part = sp if sp is not None else []
+                sp_part = sp if None not in sp else []
 
                 try:
                     distr = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
-                    en_part = distr if distr is not None else []
+                    en_part = distr if None not in distr else []
                 except KeyError:
                     en_part = []
                 db_value = list(sp_part + en_part)

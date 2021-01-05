@@ -313,7 +313,7 @@ class SpectreDataWithConvertation:
                     mb.showerror('Ошибка','тип спектра не подходит.')
                     self.data = None
                     return
-            except:
+            except Exception:
                 print('Тип спектра не опознан')
                 self.data = None
                 return
@@ -368,7 +368,7 @@ if __name__ == '__main__':
     try:
         print(f'Проект {projectfilename}')
         ini = os.path.normpath(os.path.dirname(projectfilename))
-    except:
+    except Exception:
         mb.showerror('error', 'Проект не выбран')
         destr()
         exit()

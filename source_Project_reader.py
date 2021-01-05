@@ -152,7 +152,7 @@ class DataParser:
                     out_boundaries.update({cur_part: np.array(lines_pl[line].strip().split(), dtype=int)})
                     line += 1
 
-            except:
+            except Exception:
                 print('Старый файл PL')
                 out_boundaries = {}
                 for i in range(particle_count):
@@ -390,7 +390,7 @@ class DataParser:
                 if create_list[i] in file:
                     try:
                         f = open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding)
-                    except:
+                    except Exception:
                         f = open(fr'{os.path.join(self.dir_path, file)}', 'r', encoding=self.decoding_def)
 
                     try:
@@ -409,7 +409,7 @@ class DataParser:
                             'number': number
                         }
                         })
-                    except:
+                    except Exception:
                         out = {}
                         return out
         return out

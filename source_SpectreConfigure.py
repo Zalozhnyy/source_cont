@@ -261,13 +261,13 @@ class SpectreConfigure(tk.Frame):
         except IndexError:
             print('Файл не похож на спектр')
             self.open_notepad_with_chosen_file()
-        except:
+        except Exception:
             print('Тип спектра не распознан или структура нарушена.')
             self.open_notepad_with_chosen_file()
 
         try:
             self.__starts_count_change()
-        except:
+        except Exception:
             pass
 
     def open_notepad_with_chosen_file(self):
@@ -337,7 +337,7 @@ class SpectreConfigure(tk.Frame):
 
         try:
             self.__starts_count_change()
-        except:
+        except Exception:
             pass
 
     def description_sp_zero(self):
@@ -1167,7 +1167,7 @@ class SpectreConfigure(tk.Frame):
             self.__insert_data_to_data_struct_not_event(i, j + 3, energy_el, float)
 
 
-        except:
+        except Exception:
             self.spectre_entry_val[i][j + 2].set('')
             self.spectre_entry_val[i][j + 3].set('')
 
@@ -1211,7 +1211,7 @@ class SpectreConfigure(tk.Frame):
 
             self.spectre_entry_val[i][3].set('{:.5g}'.format(val))
             self.__insert_data_to_data_struct_not_event(i, 3, val, float)
-        except:
+        except Exception:
             self.spectre_entry_val[i][3].set('')
 
     def __energy_part_callback(self, index):
@@ -1224,7 +1224,7 @@ class SpectreConfigure(tk.Frame):
                 for i in range(len(self.spectre_entry_val)):
                     sum += float(self.spectre_entry_val[i][index].get())
             self.sum_energy_part['text'] = '{:.5g}'.format(sum)
-        except:
+        except Exception:
             self.sum_energy_part['text'] = 'Заполните ячейки'
 
     def __creator(self, event):
@@ -1233,7 +1233,7 @@ class SpectreConfigure(tk.Frame):
             rows = int(self.rows_count_val.get())
             if rows > 120 or rows < 0:
                 return
-        except:
+        except Exception:
             return
 
         if type == 'DISCRETE' or type == 'CONTINUOUS':
@@ -1351,7 +1351,7 @@ class SpectreConfigure(tk.Frame):
                 self.direction_vector_result['text'] = '%g %g %g  =  %g' % (x, y, z, length)
 
 
-        except:
+        except Exception:
             self.direction_vector.configure(bg='#F08080')
             self.direction_vector_result['text'] = 'Ошибка'
 
@@ -1369,7 +1369,7 @@ class SpectreConfigure(tk.Frame):
 
             self.rows_count_calc['text'] = f'{val_starts * val_row_count}'
 
-        except:
+        except Exception:
             self.rows_count_calc['text'] = f'{0}'
 
     def __destroy_frames(self):
@@ -1385,7 +1385,7 @@ class SpectreConfigure(tk.Frame):
                 i.destroy()
 
             self.delete_buttons.clear()
-        except:
+        except Exception:
             pass
 
         # self.spectre_frame.grid_forget()
@@ -1398,7 +1398,7 @@ class SpectreConfigure(tk.Frame):
             try:
                 self.sp_one_interface.destroy_widget()
                 self.sp_one_interface = None
-            except:
+            except Exception:
                 pass
 
     def __destroy_sp_frame(self):
@@ -1413,7 +1413,7 @@ class SpectreConfigure(tk.Frame):
 
             self.delete_buttons.clear()
 
-        except:
+        except Exception:
             pass
 
     def elph_ext(self, point):
@@ -1618,7 +1618,7 @@ class SpectreConfigure(tk.Frame):
 
         try:
             val = eval(value_obj.get())
-        except:
+        except Exception:
             val = None
 
         if type(val) not in dtype or val is None:
@@ -1710,7 +1710,7 @@ class SpectreDataStructure:
         else:
             try:
                 self.spectre_type = int(lines[6].strip())
-            except:
+            except Exception:
                 print('Тип спектра не опознан')
                 self.data = None
                 return

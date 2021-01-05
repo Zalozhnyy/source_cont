@@ -53,7 +53,7 @@ class Save_remp:
                     self.calc_amplitude = self.amplitude_calculation(gsource_db)
                 else:
                     self.calc_amplitude = gsource_db.get_share_data('amplitude')
-            except:
+            except Exception:
                 print(f'Введены не все данные в источнике {name}')
                 mb.showerror('Предупреждение', f'Некорректная амплитуда в {name}')
                 return
@@ -125,7 +125,7 @@ class Save_remp:
 
         try:
             JsonSave(self.marple, self.micro_electronics, self.db, self.path)
-        except:
+        except Exception:
             print('Ошибка в новом формате сохранения (JSON).')
 
         self.saved = True
@@ -550,7 +550,7 @@ class JsonSave:
                     self.calc_amplitude = self.amplitude_calculation(gsource_db)
                 else:
                     self.calc_amplitude = gsource_db.get_share_data('amplitude')
-            except:
+            except Exception:
                 print(f'Введены не все данные в источнике {name}')
                 mb.showerror('Предупреждение', f'Введены не все данные в источнике {name}')
                 return

@@ -191,7 +191,7 @@ class StandardizedSourceMainInterface(tk.Frame):
             ex.spectre_power['state'] = 'disabled'
             self.wait_window(top_level_root)
 
-        except:
+        except Exception:
             pass
 
         file_name, number, sp_type = self.__read_spectre(sp_path)
@@ -379,7 +379,7 @@ class StandardizedSourceMainInterface(tk.Frame):
                     print('Длина файла маленькая')
                     raise Exception
 
-        except:
+        except Exception:
             print('Ошибка чтения выбранных файлов')
             return None, None, None
 
@@ -466,7 +466,7 @@ class StandardizedSourceMainInterface(tk.Frame):
                     self.spectre_number_values.append(number)
                     self.spectre_type_values.append(sp_type)
 
-                except:
+                except Exception:
                     self.spectre_name_values.append('Файл не обнаружен в проекте')
                     self.spectre_number_values.append('')
                     self.spectre_type_values.append('')

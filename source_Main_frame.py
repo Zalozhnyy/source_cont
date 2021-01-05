@@ -624,7 +624,7 @@ class FrameGen(ttk.LabelFrame):
                     print('range_выполнен')
                 elif t is None:
                     raise Exception
-            except:
+            except Exception:
                 return
 
         for i in self.time_entry_vel.get().split():
@@ -633,7 +633,7 @@ class FrameGen(ttk.LabelFrame):
             except ValueError:
                 print(f'{i} не может быть преобразовано в float')
                 # mb.showerror('Value error', f'{i} не может быть преобразовано в float')
-            except:
+            except Exception:
                 pass
 
         func_string = self.func_entry_vel.get()
@@ -645,7 +645,7 @@ class FrameGen(ttk.LabelFrame):
                 try:
                     self.func_list.append(float(calc))
                     tmp += '{:.5g} '.format(float(calc))
-                except:
+                except Exception:
                     pass
 
             # self.func_entry_vel.set(tmp)
@@ -658,7 +658,7 @@ class FrameGen(ttk.LabelFrame):
                     print(f'{i} не может быть преобразовано в float')
                     # mb.showerror('Value error', f'{i} не может быть преобразовано в float')
                     # return 0
-                except:
+                except Exception:
                     pass
 
         if len(self.func_list) != len(self.time_list):
@@ -694,7 +694,7 @@ class FrameGen(ttk.LabelFrame):
             self.db.insert_share_data('func_full', list(self.backup_fu))
             self.db.insert_share_data('time_full', list(self.backup_tf))
 
-        except:
+        except Exception:
             self.db.insert_share_data('func_full', None)
             self.db.insert_share_data('time_full', None)
 
@@ -767,7 +767,7 @@ class FrameGen(ttk.LabelFrame):
             self.db.insert_share_data('func_full', list(self.backup_fu))
             self.db.insert_share_data('time_full', list(self.backup_tf))
 
-        except:
+        except Exception:
             self.db.insert_share_data('func_full', self.func_list)
             self.db.insert_share_data('time_full', self.time_list)
 
@@ -856,7 +856,7 @@ class FrameGen(ttk.LabelFrame):
     def data_control(self):
         try:
             self.user_timeset = float(self.entry_time_fix_val.get())
-        except:
+        except Exception:
             print('Ошибка при чтении обрыва')
             return None, None, None
 
@@ -1036,13 +1036,13 @@ class FrameGen(ttk.LabelFrame):
         try:
             self.db.insert_share_data('amplitude', float(self.entry_f_val.get()))
             self.entry_f.configure(bg='#FFFFFF')
-        except:
+        except Exception:
             self.entry_f.configure(bg='#F08080')
 
     def set_amplitude(self):
         try:
             self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
-        except:
+        except Exception:
             self.entry_f_val.set('')
 
     def __scrollHandler_func(self, *L):
@@ -1074,7 +1074,7 @@ class FrameGen(ttk.LabelFrame):
         try:
             time = list(map(eval, time))
             func = list(map(eval, func))
-        except:
+        except Exception:
             print('Заполнены не все ячейки')
             return
 
@@ -1103,7 +1103,7 @@ class FrameGen(ttk.LabelFrame):
         try:
             time = list(map(eval, time))
             func = list(map(eval, func))
-        except:
+        except Exception:
             print('Заполнены не все ячейки')
             return
 

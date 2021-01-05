@@ -225,7 +225,7 @@ class SpectreOneInterface(tk.Frame):
         try:
             self.energy_frame_description.destroy()
             self.energy_frame_entry.destroy()
-        except:
+        except Exception:
             pass
 
         cb = self.energy_decode[self.energy_type_cobbobox.get()]
@@ -314,7 +314,7 @@ class SpectreOneInterface(tk.Frame):
         try:
             self.theta_frame_description.destroy()
             self.theta_frame_entry.destroy()
-        except:
+        except Exception:
             pass
 
         cb = self.theta_decode[self.theta_type_cobbobox.get()]
@@ -403,7 +403,7 @@ class SpectreOneInterface(tk.Frame):
             self.phi_frame_entry.destroy()
             self.phi_frame_entry.grid_forget()
 
-        except:
+        except Exception:
             pass
 
         cb = self.phi_decode[self.phi_type_cobbobox.get()]
@@ -491,7 +491,7 @@ class SpectreOneInterface(tk.Frame):
 
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {a[1]} {count}')
-        except:
+        except Exception:
             return
 
         phi_row = r
@@ -577,7 +577,7 @@ class SpectreOneInterface(tk.Frame):
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{a[0]} {count} {a[2]}')
 
-        except:
+        except Exception:
             return
 
         phi_row = r
@@ -626,7 +626,7 @@ class SpectreOneInterface(tk.Frame):
 
             a = self.elem_count_val.get().split()
             self.elem_count_val.set(f'{count} {a[1]} {a[2]}')
-        except:
+        except Exception:
             return
 
         phi_row = r
@@ -758,7 +758,7 @@ class SpectreOneInterface(tk.Frame):
             delete_items[2].grid_remove()
             delete_items[2].destroy()
 
-        except:
+        except Exception:
             pass
 
         if count_type == 'energy':
@@ -769,7 +769,7 @@ class SpectreOneInterface(tk.Frame):
                 self.energy_parts_val.pop(index)
                 self.energy_angles_val.pop(index)
                 self.energy_angles_val_2.pop(index)
-            except:
+            except Exception:
                 pass
             self.energy_levels_val.set(str(len(self.energy_parts_entry)))
 
@@ -785,7 +785,7 @@ class SpectreOneInterface(tk.Frame):
                 self.phi_parts_val[index].destroy()
                 self.phi_angles_val[index].destroy()
 
-            except:
+            except Exception:
                 pass
             self.phi_levels_val.set(str(len(self.phi_parts_entry)))
 
@@ -798,7 +798,7 @@ class SpectreOneInterface(tk.Frame):
                 self.theta_angles_entry.pop(index)
                 self.theta_parts_val.pop(index)
                 self.theta_angles_val.pop(index)
-            except:
+            except Exception:
                 pass
             self.theta_levels_val.set(str(len(self.theta_parts_entry)))
 
@@ -808,7 +808,7 @@ class SpectreOneInterface(tk.Frame):
     def __change_count_callback(self, set=False):
         try:
             self.parts_count_db['starts'] = int(self.starts_count_val.get())
-        except:
+        except Exception:
             return
 
         # counts = self.elem_count_val.get().split()
@@ -820,7 +820,7 @@ class SpectreOneInterface(tk.Frame):
             c = self.parts_count_db['theta']
 
             starts = self.parts_count_db['starts']
-        except:
+        except Exception:
             return
 
         # print(self.parts_count_db.items())
@@ -835,7 +835,7 @@ class SpectreOneInterface(tk.Frame):
             for i in range(count):
                 sum += eval(array[i].get())
             label['text'] = 'сумма: {:.4g}'.format(sum)
-        except:
+        except Exception:
             label['text'] = 'Заполните ячейки'
 
     def save(self):
@@ -948,12 +948,12 @@ class SpectreOneInterface(tk.Frame):
     def check_data_in_entry(self):
         try:
             float(self.spectre_number_val.get())
-        except:
+        except Exception:
             print('Нечитаемый символ/не задан номер спектра')
             return -1
         try:
             float(self.spectre_power_val.get())
-        except:
+        except Exception:
             print('Нечитаемый символ/не задана мощность спетра')
             return -1
 
@@ -963,7 +963,7 @@ class SpectreOneInterface(tk.Frame):
 
         try:
             val = eval(value_obj.get())
-        except:
+        except Exception:
             val = None
 
         if type(val) not in dtype or val is None:
@@ -997,7 +997,7 @@ class ScrolledWidget(tk.Frame):
         try:
             if self.vsb.get() != (0., 1.):
                 self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        except:
+        except Exception:
             pass
 
     def populate(self):

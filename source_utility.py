@@ -180,7 +180,7 @@ def set_recent_projects(path, path_dict):
             lines = file.readlines()
         for i in lines:
             unic_path.update({i.strip(): ''})
-    except:
+    except Exception:
         pass
 
     unic_path.update({path: ''})
@@ -203,7 +203,7 @@ def get_recent_projects():
         for i in lines:
             if os.path.exists(i.strip()):
                 out.update({i.strip(): ''})
-    except:
+    except Exception:
         pass
     return out
 

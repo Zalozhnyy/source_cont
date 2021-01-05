@@ -344,7 +344,7 @@ class ShowDuplicateSpectreNumbers(tk.Toplevel):
             for label in l:
                 label.pack_forget()
                 label.destroy()
-        except:
+        except Exception:
             pass
 
         for val in self.db[key]:
@@ -452,7 +452,7 @@ class SelectLagInterface(tk.Toplevel):
             self._entry_vector[i].configure(bg='#FFFFFF')
             self.vector_data[i] = val
 
-        except:
+        except Exception:
             self._entry_vector[i].configure(bg='#F08080')
             self.vector_data[i] = None
 

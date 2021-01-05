@@ -17,7 +17,7 @@ def main():
     try:
         print(f'Проект {projectfilename}')
         ini = os.path.normpath(projectfilename)
-    except:
+    except Exception:
         ini = None
 
     main_win = MainWindow(root, projectfilename=ini)

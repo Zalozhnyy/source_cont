@@ -240,7 +240,7 @@ class MainWindow(tk.Frame):
 
             a = list(map(float, self.lag.strip().split()[1:]))
 
-        except:
+        except Exception:
             a = []
 
         ex = SelectLagInterface(self.path, a)
@@ -274,7 +274,7 @@ class MainWindow(tk.Frame):
             try:
                 with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
                     load_db = pickle.load(f)
-            except:
+            except Exception:
                 mb.showerror('Error', 'Ошибка при попытке прочитать бинарный файл сохранения. Сохраните проект зново')
 
             if load_db.keys() == self.global_tree_db.keys() and not self._save_flag:
@@ -379,7 +379,7 @@ class MainWindow(tk.Frame):
 
         try:
             self.reset()
-        except:
+        except Exception:
             pass
 
         self.file_dict = self.check_folder()
@@ -414,7 +414,7 @@ class MainWindow(tk.Frame):
                 try:
                     with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
                         self.global_tree_db = pickle.load(f)
-                except:
+                except Exception:
                     mb.showerror('Error',
                                  'Ошибка при попытке прочитать бинарный файл сохранения. Загрузка невозможна.')
                     return
@@ -799,7 +799,7 @@ class MainWindow(tk.Frame):
                 if name in self.global_tree_db.keys():
                     print('Данное имя занято другим воздействием')
                     return
-            except:
+            except Exception:
                 pass
 
         ind = len(self.tabs_dict)
@@ -1100,7 +1100,7 @@ class MainWindow(tk.Frame):
                     break
             try:
                 self.global_tree_db[name].delete_first_level(f_key)
-            except:
+            except Exception:
                 print('The object can not be deleted')
                 return
             self.tree[index].delete(id)
@@ -1335,7 +1335,7 @@ class MainWindow(tk.Frame):
                 lines = file.readlines()
 
                 number = int(lines[2].strip())
-        except:
+        except Exception:
             number = None
             print(f'Спектр {fname} не найден в проекте')
         return number

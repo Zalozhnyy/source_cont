@@ -9,6 +9,8 @@ from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 from tkinter import simpledialog
 
+import traceback
+
 import numpy as np
 from scipy import integrate
 from loguru import logger
@@ -263,6 +265,7 @@ class SpectreConfigure(tk.Frame):
             self.open_notepad_with_chosen_file()
         except Exception:
             print('Тип спектра не распознан или структура нарушена.')
+            # traceback.print_exc()
             self.open_notepad_with_chosen_file()
 
         try:
@@ -1730,6 +1733,8 @@ class SpectreDataStructure:
             tmp = []
             for line in lines[14:]:
                 line = line.strip().split()
+                if len(line) == 0:
+                    continue
                 tmp.append(line)
 
             self.data = np.array(tmp, dtype=float)
@@ -1744,6 +1749,8 @@ class SpectreDataStructure:
             tmp = []
             for line in lines[18:]:
                 line = line.strip().split()
+                if len(line) == 0:
+                    continue
                 tmp.append(line)
 
             self.data = np.array(tmp, dtype=float)
@@ -1758,6 +1765,8 @@ class SpectreDataStructure:
             tmp = []
             for line in lines[16:]:
                 line = line.strip().split()
+                if len(line) == 0:
+                    continue
                 tmp.append(line)
 
             self.data = np.array(tmp, dtype=float)

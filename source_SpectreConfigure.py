@@ -1683,6 +1683,10 @@ class SpectreConfigure(tk.Frame):
         self.spectre_type_combobox_values = ['Граничный']
         self.spetre_type_cobbobox.configure(value=[val for val in self.spectre_type_combobox_values])
 
+    def change_flux_allowed_creation_list(self):
+        self.spectre_type_combobox_values = ['Фиксированный', 'Разыгрывание']
+        self.spetre_type_cobbobox.configure(value=[val for val in self.spectre_type_combobox_values])
+
 
 @logger.catch()
 class SpectreDataStructure:

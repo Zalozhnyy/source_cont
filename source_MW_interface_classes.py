@@ -211,8 +211,10 @@ class StandardizedSourceMainInterface(tk.Frame):
         ex = SpectreConfigure(self.path, top_level_root)
         ex.grid(sticky='NWSE')
 
-        if 'Boundaries' in self.sk or 'Flu' in self.sk:
+        if 'Boundaries' in self.sk:
             ex.change_boundaries_allowed_creation_list()
+        if 'Flu' in self.sk:
+            ex.change_flux_allowed_creation_list()
 
         self.wait_window(top_level_root)
 

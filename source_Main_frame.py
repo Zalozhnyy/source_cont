@@ -73,10 +73,10 @@ class FrameGen(ttk.LabelFrame):
         self.entry_func_frame()
 
         self.update()
-        w = self.__nb_widget.winfo_width()
-        h = self.__nb_widget.winfo_height()
-        if w > 500:
-            self.__root_widget.geometry(f'{w}x{h}')
+        # w = self.__root_widget.winfo_width()
+        # h = self.__root_widget.winfo_height()
+        # if w > 500:
+        #     self.__root_widget.geometry(f'{w}x{h}')
 
     def _initial_start_values(self):
 

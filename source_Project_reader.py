@@ -414,9 +414,9 @@ class DataParser:
                         return out
         return out
 
-    def get_distribution_for_current_and_energy(self, part_number, layer_number, find_type):
+    def get_distribution_for_current_and_energy(self, influence_number, layer_number, find_type):
 
-        find_item = f'{find_type}_{layer_number}_{part_number}'
+        find_item = f'{find_type}_{layer_number}_{influence_number}'
 
         if find_item in os.listdir(self.path):
             return find_item

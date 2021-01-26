@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as mb
-from typing import Dict, Any
 
 import numpy as np
 from scipy import integrate

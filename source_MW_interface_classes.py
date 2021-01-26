@@ -378,7 +378,7 @@ class StandardizedSourceMainInterface(tk.Frame):
                         break
 
                 if len(file.readlines()) < 2:
-                    print('Длина файла маленькая')
+                    print('Выбран нулевой файл/ формат файла не опознан.')
                     raise Exception
 
         except Exception:
@@ -413,65 +413,95 @@ class StandardizedSourceMainInterface(tk.Frame):
 
         return save_path
 
+    def _get_current_and_sigma_distribution(self):
+        db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+        if type(db_value) is not list and db_value is not None:
+            db_value = [db_value]
+        return db_value
+
+    def _get_volume78_spectre_and_distribution(self):
+        sp = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
+        distr = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
+        db_value = sp + distr
+        return db_value
+
+    def _init_mainframe_for_volume78(self, db_value):
+        self.spectre_name_values = ['Спектр - файл не выбран', 'Энерговыделение - файл не выбран']
+        self.spectre_number_values = ['--', '--']
+        self.spectre_type_values = ['--', '--']
+
+        if db_value[0] is not None:  # обработка спектра
+            file = db_value[0]
+            f_path = os.path.join(self.path, file)
+            if os.path.exists(f_path):
+                f, number, sp_type = self.__read_spectre(f_path)
+                if f is None:
+                    return
+                number = '--' if number == -1 else number
+                sp_type = '--' if sp_type == -1 else sp_type
+
+                self.spectre_name_values[0] = f
+                self.spectre_number_values[0] = number
+                self.spectre_type_values[0] = sp_type
+
+        if db_value[1] is not None:  # обработка спектра
+            file = db_value[1]
+            f_path = os.path.join(self.path, file)
+            if os.path.exists(f_path):
+                f, number, sp_type = self.__read_spectre(f_path)
+                if f is None:
+                    return
+                number = '--' if number == -1 else number
+                sp_type = '--' if sp_type == -1 else sp_type
+
+                self.spectre_name_values[1] = f
+                self.spectre_number_values[1] = number
+                self.spectre_type_values[1] = sp_type
+
+    def _init_mainframe_for_regular(self, db_value):
+        if db_value is None:
+            return
+        if type(db_value) is not list:
+            db_value = [db_value]
+
+        self.spectre_name_values = ['Спектр - файл не выбран'] * len(db_value)
+        self.spectre_number_values = ['--'] * len(db_value)
+        self.spectre_type_values = ['--'] * len(db_value)
+
+        for i, file in enumerate(db_value):
+            f_path = os.path.join(self.path, file)
+
+            if not os.path.exists(f_path):
+                file = file if file is not None else ''
+                self.spectre_name_values[i] = f'Файл {file} не обнаружен в проекте'
+                continue
+            f, number, sp_type = self.__read_spectre(f_path)
+            if f is None:
+                self.spectre_name_values[i] = f'Файл {file} не удовлетворяет условиям'
+                continue
+
+            number = '--' if number == -1 else number
+            sp_type = '--' if sp_type == -1 else sp_type
+
+            self.spectre_name_values[i] = f
+            self.spectre_number_values[i] = number
+            self.spectre_type_values[i] = sp_type
+
     def _check_db_for_values(self):
-        if self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'energy_type') is not None:
+        if self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'energy_type') is None:
+            return
 
-            self.spectre_name_values = []
-            self.spectre_number_values = []
-            self.spectre_type_values = []
+        if 'Current' in self.sk or 'Sigma' in self.sk:
+            db_value = self._get_current_and_sigma_distribution()
+        elif 'Volume78' in self.sk:
+            db_value = self._get_volume78_spectre_and_distribution()
+        else:
+            db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
 
-            if 'Current' in self.sk or 'Sigma' in self.sk:
-                db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
-                if type(db_value) is not list and db_value is not None:
-                    db_value = [db_value]
-
-            elif 'Volume78' in self.sk:
-                sp = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
-                sp_part = sp if None not in sp else []
-
-                try:
-                    distr = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'distribution')
-                    en_part = distr if None not in distr else []
-                except KeyError:
-                    en_part = []
-                db_value = list(sp_part + en_part)
-
-            else:
-                db_value = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'spectre')
-
-            if db_value is None or len(db_value) == 0:
-                if 'Volume78' in self.sk:
-                    self.spectre_name_values = ['Спектр - файл не выбран', 'Энерговыделение - файл не выбран']
-                    self.spectre_number_values = ['--', '--']
-                    self.spectre_type_values = ['--', '--']
-                else:
-                    self.spectre_name_values = ['Файл не выбран']
-                    self.spectre_number_values = ['--']
-                    self.spectre_type_values = ['--']
-                return
-
-            for file in db_value:
-                f_path = os.path.join(self.path, file)
-                try:
-                    if not os.path.exists(f_path):
-                        raise Exception
-
-                    f, number, sp_type = self.__read_spectre(f_path)
-
-                    if f is None:
-                        raise Exception
-
-                    number = '--' if number == -1 else number
-                    sp_type = '--' if sp_type == -1 else sp_type
-
-                    self.spectre_name_values.append(f)
-                    self.spectre_number_values.append(number)
-                    self.spectre_type_values.append(sp_type)
-
-                except Exception:
-                    self.spectre_name_values.append('Файл не обнаружен в проекте')
-                    self.spectre_number_values.append('')
-                    self.spectre_type_values.append('')
+        if 'Volume78' in self.sk:
+            self._init_mainframe_for_volume78(db_value)
+        else:
+            self._init_mainframe_for_regular(db_value)
 
     def _set_data_to_data_structure(self, spectre_file_name, spectre_number):
 

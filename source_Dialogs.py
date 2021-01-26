@@ -59,6 +59,7 @@ class SelectParticleDialog(tk.Toplevel):
         self.selected_data.grid(row=0, column=0, rowspan=15, columnspan=2, pady=3)
 
         self.selected_data.bind("<<ListboxSelect>>", self.lb_get)
+        self.selected_data.bind("<Double-Button-1>", self.add_e)
 
         self.button_choice = tk.Button(self, text='Добавить', width=10, command=self.add)
         self.button_choice.grid(row=3, column=2, padx=3)
@@ -74,7 +75,11 @@ class SelectParticleDialog(tk.Toplevel):
     def add(self):
         if self.lb_current is None:
             return
+        self.destroy()
 
+    def add_e(self, event):
+        if self.lb_current is None:
+            return
         self.destroy()
 
     def onExit(self):
@@ -102,6 +107,7 @@ class DeleteGSourceDialog(tk.Toplevel):
         self.selected_data.grid(row=0, column=0, rowspan=15, columnspan=2, pady=3)
 
         self.selected_data.bind("<<ListboxSelect>>", self.lb_get)
+        self.selected_data.bind("<Double-Button-1>", self.add_e)
 
         self.button_choice = tk.Button(self, text='Удалить', width=10, command=self.add)
         self.button_choice.grid(row=3, column=2, padx=3)
@@ -122,6 +128,12 @@ class DeleteGSourceDialog(tk.Toplevel):
             self.destroy()
         else:
             return
+
+    def add_e(self, event):
+        if self.lb_current is None:
+            return
+        self.destroy()
+
 
     def onExit(self):
         self.lb_current = None
@@ -148,6 +160,7 @@ class SelectSpectreToView(tk.Toplevel):
         self.selected_data.grid(row=0, column=0, rowspan=15, columnspan=2, pady=3)
 
         self.selected_data.bind("<<ListboxSelect>>", self.lb_get)
+        self.selected_data.bind("<Double-Button-1>", self.add_e)
 
         self.button_choice = tk.Button(self, text='Выбрать', width=10, command=self.add)
         self.button_choice.grid(row=3, column=2, padx=3)
@@ -161,6 +174,11 @@ class SelectSpectreToView(tk.Toplevel):
         self.lb_current = self.selected_data.get(index)
 
     def add(self):
+        if self.lb_current is None:
+            return
+        self.destroy()
+
+    def add_e(self, event):
         if self.lb_current is None:
             return
         self.destroy()

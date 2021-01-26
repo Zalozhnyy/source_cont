@@ -264,27 +264,7 @@ class MainWindow(tk.Frame):
         for name in self.global_tree_db.keys():
             self.global_tree_db[name].insert_share_data('lag', self.lag)
 
-    def onExit(self):
-        if len(self.global_tree_db) == 0:
-            self.parent.quit()
-            self.parent.destroy()
-            return
-
-        if 'Sources.pkl' in os.listdir(self.path):
-            try:
-                with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
-                    load_db = pickle.load(f)
-            except Exception:
-                mb.showerror('Error', 'Ошибка при попытке прочитать бинарный файл сохранения. Сохраните проект зново')
-
-            if load_db.keys() == self.global_tree_db.keys() and not self._save_flag:
-                if self.check_saved_ds(load_db, self.global_tree_db) is True:
-                    self.parent.quit()
-                    self.parent.destroy()
-                    return
-
-        ask = mb.askyesno('Сохранение', 'Сохранить файл?')
-
+    def _save_check_flags(self, ask):
         if ask is True:
             ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
 
@@ -308,6 +288,32 @@ class MainWindow(tk.Frame):
             self.parent.quit()
             self.parent.destroy()
             return
+
+    def onExit(self):
+        if len(self.global_tree_db) == 0:
+            self.parent.quit()
+            self.parent.destroy()
+            return
+
+        if 'Sources.pkl' in os.listdir(self.path):
+            try:
+                with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
+                    load_db = pickle.load(f)
+            except Exception:
+                mb.showerror('Error', 'Ошибка при попытке прочитать бинарный файл сохранения. Сохраните проект зново')
+                ask1 = mb.askyesno('Сохранение', 'Ошибка при попытке прочитать бинарный файл сохранения.'
+                                                 'Сохранить проект заново?')
+                self._save_check_flags(ask1)
+                return
+
+            if load_db.keys() == self.global_tree_db.keys() and not self._save_flag:
+                if self.check_saved_ds(load_db, self.global_tree_db) is True:
+                    self.parent.quit()
+                    self.parent.destroy()
+                    return
+
+        ask = mb.askyesno('Сохранение', 'Сохранить файл?')
+        self._save_check_flags(ask)
 
     def browse_from_recent(self, path):
         self.prj_path = path
@@ -575,8 +581,8 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
 
                     current_file = DataParser(self.path).get_distribution_for_current_and_energy(
-                        obj.get_share_data('influence number')
-                        , i,
+                        obj.get_share_data('influence number'),
+                        self.layer_numbers[i],
                         f'j{axis.lower()}')
 
                     obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
@@ -590,7 +596,9 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
 
                 current_file = DataParser(self.path).get_distribution_for_current_and_energy(
-                    obj.get_share_data('influence number'), i, f'en')
+                    obj.get_share_data('influence number'),
+                    self.layer_numbers[i],
+                    f'en')
                 obj.insert_third_level('Sigma', f'{name}', 'distribution', current_file)
 
         return obj
@@ -607,6 +615,7 @@ class MainWindow(tk.Frame):
 
         number = self.PAR[particle]['number']
         type = self.PAR[particle]['type']
+        influence_number = int(obj.get_share_data('influence number'))
 
         obj.insert_share_data('particle number', {*obj.get_share_data('particle number'), self.PAR[particle]['number']})
 
@@ -628,7 +637,9 @@ class MainWindow(tk.Frame):
                         obj.insert_third_level('Current', f'{name}', 'name', name)
                         obj.insert_third_level('Current', f'{name}', 'energy_type', energy_type)
 
-                        current_file = DataParser(self.path).get_distribution_for_current_and_energy(number, i,
+                        current_file = DataParser(self.path).get_distribution_for_current_and_energy(influence_number,
+                                                                                                     self.layer_numbers[
+                                                                                                         i],
                                                                                                      f'j{axis.lower()}')
                         obj.insert_third_level('Current', f'{name}', 'distribution', current_file)
 
@@ -643,7 +654,9 @@ class MainWindow(tk.Frame):
                     obj.insert_third_level('Sigma', f'{name}', 'name', name)
                     obj.insert_third_level('Sigma', f'{name}', 'energy_type', energy_type)
 
-                    current_file = DataParser(self.path).get_distribution_for_current_and_energy(number, i, f'en')
+                    current_file = DataParser(self.path).get_distribution_for_current_and_energy(influence_number,
+                                                                                                 self.layer_numbers[i],
+                                                                                                 f'en')
                     obj.insert_third_level('Sigma', f'{name}', 'distribution', current_file)
 
         ar = self.PL_surf.get(number)
@@ -731,16 +744,14 @@ class MainWindow(tk.Frame):
                 obj.insert_third_level(f'{particle}', f'{name}', 'energy_type', energy_type)
                 obj.insert_third_level(f'{particle}', f'{name}', 'name', name)
 
-                distr = DataParser(self.path).get_distribution_for_current_and_energy(number,
+                distr = DataParser(self.path).get_distribution_for_current_and_energy(influence_number,
                                                                                       self.layer_numbers[i],
                                                                                       'en')
-
-                obj.insert_third_level(f'{particle}', f'{name}', 'distribution', [distr])
-
-                sp, sp_number = self.__find_spectre_in_project(type, self.layer_numbers[i])
+                sp, sp_number = self.__find_spectre78_in_project(type, self.layer_numbers[i])
 
                 obj.insert_third_level(f'{particle}', f'{name}', 'spectre', [sp])
                 obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', [sp_number])
+                obj.insert_third_level(f'{particle}', f'{name}', 'distribution', [distr])
 
                 if distr is None:
                     print(f'Автоматичеки не найдено распределение для {name}')
@@ -1299,7 +1310,7 @@ class MainWindow(tk.Frame):
         self._micro_electronics = None
         self._save_flag = True
 
-    def __find_spectre_in_project(self, part_type, lay_number):
+    def __find_spectre78_in_project(self, part_type, lay_number):
         ppn = self.PPN[lay_number]['ppn']
 
         if part_type == 7 and ppn in (2, 4, 5):

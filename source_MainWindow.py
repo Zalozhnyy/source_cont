@@ -147,22 +147,22 @@ class MainWindow(tk.Frame):
 
         self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.start_pechs)
 
-        self._create_micro_electronics_menubar()
+        # self._create_micro_electronics_menubar()
 
-    def _create_micro_electronics_menubar(self):
+    # def _create_micro_electronics_menubar(self):
+    #
+    #     self.electronics_menu = tk.Menu(self.menubar, tearoff=0)
+    #
+    #     self.menubar.add_cascade(label="Микроэлектроника", menu=self.electronics_menu, state='disabled')
+    #
+    #     self.electronics_menu.add_command(label="Добавить файлы микроэлектроники", command=self.__add_microel,
+    #                                       state='normal')
+    #     self.electronics_menu.add_command(label="Удалить  файлы микроэлектроники", command=self.__delete_microel,
+    #                                       state='disabled')
 
-        self.electronics_menu = tk.Menu(self.menubar, tearoff=0)
-
-        self.menubar.add_cascade(label="Микроэлектроника", menu=self.electronics_menu, state='disabled')
-
-        self.electronics_menu.add_command(label="Добавить файлы микроэлектроники", command=self.__add_microel,
-                                          state='normal')
-        self.electronics_menu.add_command(label="Удалить  файлы микроэлектроники", command=self.__delete_microel,
-                                          state='disabled')
-
-    def _activate_micro_electronics_menubar(self, state='normal'):
-        microele_index = self.menubar.index('Микроэлектроника')
-        self.menubar.entryconfigure(microele_index, state=state)
+    # def _activate_micro_electronics_menubar(self, state='normal'):
+    #     microele_index = self.menubar.index('Микроэлектроника')
+    #     self.menubar.entryconfigure(microele_index, state=state)
 
     def menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
@@ -402,7 +402,7 @@ class MainWindow(tk.Frame):
         if self.from_project_reader() != 0:
             return
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
-        self._activate_micro_electronics_menubar(state='disabled')
+        # self._activate_micro_electronics_menubar(state='disabled')
 
         if 'remp_sources' in os.listdir(self.path):
 
@@ -851,7 +851,7 @@ class MainWindow(tk.Frame):
                         part_name = i
 
                         if self.PAR[i]['type'] == 7 or self.PAR[i]['type'] == 8:
-                            microele_flag_activate = True
+                            microele_flag_activate = True  # для активаци меню микроэлектроники, которое сейчас отключено
                         break
 
                 if part_name is not None and part_name in self.global_tree_db[
@@ -871,8 +871,8 @@ class MainWindow(tk.Frame):
         # fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
         # self.main_frame_exist = True
 
-        if microele_flag_activate:
-            self._activate_micro_electronics_menubar()
+        # if microele_flag_activate:
+        #     self._activate_micro_electronics_menubar()
 
         for index, s_type in enumerate(self.global_tree_db[name].get_first_level_keys()):
             source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
@@ -1023,8 +1023,8 @@ class MainWindow(tk.Frame):
         if new_particle is None:
             return
 
-        if self.PAR[new_particle]['type'] == 7 or self.PAR[new_particle]['type'] == 8:
-            self._activate_micro_electronics_menubar()
+        # if self.PAR[new_particle]['type'] == 7 or self.PAR[new_particle]['type'] == 8:
+        #     self._activate_micro_electronics_menubar()
 
         source = self.tree[index].get_children()[0]
 

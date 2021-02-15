@@ -914,8 +914,8 @@ class FrameGen(ttk.LabelFrame):
                     entry_t = np.delete(entry_t, np.s_[i + 1:], 0)
                     entry_f = np.delete(entry_f, np.s_[i + 1:], 0)
 
-                    entry_t = np.append(entry_t, self._grd_data[time_right_side[0] + 1])
-                    entry_f = np.append(entry_f, 0)
+                    # entry_t = np.append(entry_t, self._grd_data[time_right_side[0] + 1])
+                    # entry_f = np.append(entry_f, 0)
 
                     break
 

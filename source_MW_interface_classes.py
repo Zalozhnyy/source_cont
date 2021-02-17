@@ -50,12 +50,6 @@ class StandardizedSourceMainInterface(tk.Frame):
         self._check_db_for_values()
         self._init_ui()
 
-    def change_starts_list_values(self, name_list, number_list, type_list):
-
-        self.spectre_name_values = name_list
-        self.spectre_number_values = number_list
-        self.spectre_type_values = type_list
-
     def _init_ui(self):
         e = self.db[self.db_name].get_last_level_data(self.fk, self.sk, 'energy_type')
         energy_type_label = tk.Label(self, text=e, justify='left')
@@ -143,6 +137,9 @@ class StandardizedSourceMainInterface(tk.Frame):
         else:
             self.__choice_files(one_file=False)
 
+        if not self.__check_file_selection():  # дополнительные проверки на ошибки выбора
+            return
+
         self._set_spectre_data_to_interface()
 
         if all([i != 'Тип одного из файлов не распознан,\nдобавление невозможно' for i in self.spectre_name_values]):
@@ -150,6 +147,16 @@ class StandardizedSourceMainInterface(tk.Frame):
 
         self.configure_spectre_button['state'] = 'normal'
         self.delete_current_source_from_db_button['state'] = 'normal'
+
+    def __check_file_selection(self):
+        """if exception return False"""
+        if 'Flu' in self.sk:
+            if len(self.spectre_name_values) != 1:
+                if any([not name.endswith('.spc') for name in self.spectre_name_values]):
+                    mb.showerror('Ошибка',
+                                 'Должны быть выбраны несколько файлов .spc или один файл другого типа спектра')
+                    return False
+        return True
 
     def _flux_auto_search_button(self):
         self.__flux_auto_search()
@@ -227,6 +234,9 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_type_values = [sp_type]
 
         self._set_spectre_data_to_interface()
+
+        self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre', self.spectre_name_values)
+        self.db[self.db_name].insert_third_level(self.fk, self.sk, 'spectre numbers', self.spectre_number_values)
 
     def _delete_current_source_from_db_button(self):
 
@@ -356,6 +366,8 @@ class StandardizedSourceMainInterface(tk.Frame):
         self.spectre_name_values = file_name
         self.spectre_number_values = number
         self.spectre_type_values = sp_type
+
+        print(self.spectre_name_values)
 
     def __read_spectre(self, target):
         if not os.path.exists(target):
@@ -556,7 +568,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         to_l = self.sk.split('_')[-1]
         particle_number = self.db[self.db_name].get_share_data('particle number')
 
-        spectres = DataParser(self.path + '/').get_spectre_for_flux(particle_number, from_l, to_l)
+        spectres = DataParser(self.path + '/').get_spectre_for_flux(list(particle_number)[0], from_l, to_l)
 
         if len(spectres) == 6:
             file_name_list = []

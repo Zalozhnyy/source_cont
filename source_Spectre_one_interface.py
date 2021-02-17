@@ -487,6 +487,8 @@ class SpectreOneInterface(tk.Frame):
     def __energy_entry_constructor(self, r, event):
         try:
             count = int(self.energy_levels_val.get())
+            if count == 0:
+                return
             self.parts_count_db['energy'] = count
 
             a = self.elem_count_val.get().split()
@@ -572,6 +574,8 @@ class SpectreOneInterface(tk.Frame):
     def __theta_entry_constructor(self, r, event):
         try:
             count = int(self.theta_levels_val.get())
+            if count == 0:
+                return
             self.parts_count_db['theta'] = count
 
             a = self.elem_count_val.get().split()
@@ -622,6 +626,8 @@ class SpectreOneInterface(tk.Frame):
     def __phi_entry_constructor(self, r, event):
         try:
             count = int(self.phi_levels_val.get())
+            if count == 0:
+                return
             self.parts_count_db['phi'] = count
 
             a = self.elem_count_val.get().split()

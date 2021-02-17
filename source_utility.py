@@ -196,7 +196,7 @@ def set_recent_projects(path, path_dict):
 def get_recent_projects():
     out = {}
 
-    p = os.path.join(tempfile.gettempdir(), 'sources_properties.ini')
+    p = os.path.normpath(os.path.join(tempfile.gettempdir(), 'sources_properties.ini'))
     try:
         with open(p, 'r', encoding='utf-8') as file:
             lines = file.readlines()
@@ -208,7 +208,7 @@ def get_recent_projects():
     return out
 
 
-def rusian_words_analysis(word):
+def russian_words_analysis(word):
     r = re.compile("[а-яА-Я]")
     words = [word]
     russian = [w for w in filter(r.findall, words)]
@@ -234,29 +234,6 @@ def permission_denied_test():
         if os.path.exists(test_file):
             os.remove(test_file)
 
-
-# source_list = []
-# gursa_dict = {}
-# source_number = 1
-#
-# time_func_dict = {}
-#
-# remp_sourses_dict = {}
-# specters_dict = {}
-#
-# dict_for_recent_pr = {}
-# recent_path = ''
-# path_for_remp_save = ''
-
-# if __name__ == '__main__':
-#     test = tk.Tk()
-#
-#     tk.Button(test, text='123', command=lambda: file_dialog(title='Выберите файл spectr',
-#                                                             initialdir=f'{}/pechs/spectr',
-#                                                             filetypes=(
-#                                                                 ("all files", "*.*"), ("txt files", "*.txt*")))).pack()
-#
-#     test.mainloop()
 
 
 if __name__ == '__main__':

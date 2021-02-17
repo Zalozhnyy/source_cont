@@ -392,14 +392,16 @@ class SelectLagInterface(tk.Toplevel):
         self._enable_var = tk.IntVar()
         self._enable_var.set(0)
 
+        self.vector_data = [None, None, None]
+        self.enable = False
+
         if len(init_values) != 0:
             for i in range(len(self._entry_vector_values)):
                 self._entry_vector_values[i].set(init_values[i])
+                self.vector_data[i] = float(init_values[i])
 
             self._restore_init_values = init_values.copy()
 
-        self.vector_data = [None, None, None]
-        self.enable = False
 
         self.initUi()
 
@@ -441,7 +443,7 @@ class SelectLagInterface(tk.Toplevel):
         find_in_pech = tk.Button(self, text='Из настроек подзадачи', command=self.__find_lag_in_subtask, width=22)
         find_in_pech.grid(row=2, column=3, sticky='N', padx=5, pady=5)
 
-        save_exit = tk.Button(self, text='Сохранить', command=self.onExit, width=14)
+        save_exit = tk.Button(self, text='Ок', command=self.onExit, width=14)
         save_exit.grid(row=4, column=3, sticky='N', padx=5, pady=5)
 
         description_text = ['X', 'Y', 'Z']
@@ -472,7 +474,7 @@ class SelectLagInterface(tk.Toplevel):
 
         except Exception:
             self._entry_vector[i].configure(bg='#F08080')
-            self.vector_data[i] = None
+            self.vector_data[i] = 0
 
     def __find_lag_in_pechs(self):
         pech_path = fd.askdirectory(title='Выберите директорию проекта переноса',
@@ -512,7 +514,6 @@ class SelectLagInterface(tk.Toplevel):
 
         if state == 1:
             [self._entry_vector[i].configure(state='normal') for i in range(3)]
-
         if state == 0:
             [self._entry_vector[i].configure(state='disabled') for i in range(3)]
             [self._entry_vector_values[i].set('0') for i in range(3)]

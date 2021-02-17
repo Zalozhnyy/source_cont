@@ -21,7 +21,7 @@ class MainWindow(tk.Frame):
         self.parent = parent
         self.path = None
 
-        self.parent.protocol("WM_DELETE_WINDOW", self.onExit)
+        self.parent.protocol("WM_DELETE_WINDOW", self.__onExit)
 
         self.prj_path = None
 
@@ -31,9 +31,7 @@ class MainWindow(tk.Frame):
         self.global_tree_db = {}
         self._influence_numbers = set()
 
-        self.toolbar()
-
-        self.remp_source_exist = False
+        self.__toolbar()
 
         self._marple = None
         self._micro_electronics = None
@@ -47,13 +45,13 @@ class MainWindow(tk.Frame):
                 if os.path.exists(projectfilename):
                     self.prj_path = projectfilename
                     self.path = os.path.split(self.prj_path)[0]
-                    self.check_project()
+                    self.__check_project()
             else:
                 raise Exception
         except Exception:
             self.path = path
 
-    def _set_influence_number(self):
+    def __set_influence_number(self):
         i = 1
         while True:
             if not self._influence_numbers.__contains__(i):
@@ -64,7 +62,7 @@ class MainWindow(tk.Frame):
 
         return i
 
-    def from_project_reader(self):
+    def __from_project_reader(self):
 
         # self.tok_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('TOK')))
         self.pl_dir = os.path.normpath(os.path.join(self.path, self.file_dict.get('PL')))
@@ -106,7 +104,7 @@ class MainWindow(tk.Frame):
                 return -1
         return 0
 
-    def toolbar(self):
+    def __toolbar(self):
         self.parent.title("Sources")
         self.menubar = tk.Menu(self.parent, postcommand=self.update)
         self.parent.config(menu=self.menubar)
@@ -115,21 +113,21 @@ class MainWindow(tk.Frame):
         self.menubar.add_cascade(label="Файл", menu=self.filemenu)
         self.recent_pr_menu = tk.Menu(self.filemenu, tearoff=0)
 
-        self.filemenu.add_command(label="Открыть проект", command=self.browse_folder)
+        self.filemenu.add_command(label="Открыть проект", command=self.__browse_folder)
 
-        funcs = [(lambda k: lambda: self.browse_from_recent(k))(key) for key in get_recent_projects().keys()]
+        funcs = [(lambda k: lambda: self.__browse_from_recent(k))(key) for key in get_recent_projects().keys()]
         for key, f in zip(get_recent_projects().keys(), funcs):
             self.recent_pr_menu.add_command(label=f'{key}', command=f)
 
         self.filemenu.add_cascade(label="Недавние проекты", menu=self.recent_pr_menu)
 
-        self.filemenu.add_command(label="Сохранение для РЭМП", command=self.save, state='disabled')
+        self.filemenu.add_command(label="Сохранение для РЭМП", command=self.__save, state='disabled')
 
-        self.filemenu.add_command(label="Открыть папку с проектом", command=self.open_folder, state='disabled')
+        self.filemenu.add_command(label="Открыть папку с проектом", command=self.__open_folder, state='disabled')
 
-        self.filemenu.add_command(label="Направление воздействия", command=self._configure_lag, state='disabled')
+        self.filemenu.add_command(label="Направление воздействия", command=self.__configure_lag, state='disabled')
 
-        self.filemenu.add_command(label="Exit", command=self.onExit)
+        self.filemenu.add_command(label="Exit", command=self.__onExit)
 
         self.menubar.add_command(label='Добавить воздействие',
                                  command=self.__add_source_button, state='disabled')
@@ -145,26 +143,26 @@ class MainWindow(tk.Frame):
                                      state='normal')
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
-        self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.start_pechs)
+        self.menubar.add_command(label="Добавить спектр переноса", state='disabled', command=self.__start_pechs)
 
         # self._create_micro_electronics_menubar()
 
-    # def _create_micro_electronics_menubar(self):
-    #
-    #     self.electronics_menu = tk.Menu(self.menubar, tearoff=0)
-    #
-    #     self.menubar.add_cascade(label="Микроэлектроника", menu=self.electronics_menu, state='disabled')
-    #
-    #     self.electronics_menu.add_command(label="Добавить файлы микроэлектроники", command=self.__add_microel,
-    #                                       state='normal')
-    #     self.electronics_menu.add_command(label="Удалить  файлы микроэлектроники", command=self.__delete_microel,
-    #                                       state='disabled')
+    def __create_micro_electronics_menubar(self):
 
-    # def _activate_micro_electronics_menubar(self, state='normal'):
-    #     microele_index = self.menubar.index('Микроэлектроника')
-    #     self.menubar.entryconfigure(microele_index, state=state)
+        self.electronics_menu = tk.Menu(self.menubar, tearoff=0)
 
-    def menubar_activate(self):
+        self.menubar.add_cascade(label="Микроэлектроника", menu=self.electronics_menu, state='disabled')
+
+        self.electronics_menu.add_command(label="Добавить файлы микроэлектроники", command=self.__add_microel,
+                                          state='normal')
+        self.electronics_menu.add_command(label="Удалить  файлы микроэлектроники", command=self.__delete_microel,
+                                          state='disabled')
+
+    def __activate_micro_electronics_menubar(self, state='normal'):
+        microele_index = self.menubar.index('Микроэлектроника')
+        self.menubar.entryconfigure(microele_index, state=state)
+
+    def __menubar_activate(self):
         add_index = self.menubar.index('Добавить воздействие')
         del_index = self.menubar.index('Удалить воздействие')
 
@@ -185,11 +183,11 @@ class MainWindow(tk.Frame):
         pechs_index = self.menubar.index('Добавить спектр переноса')
         self.menubar.entryconfigure(pechs_index, state='normal')
 
-    def start_pechs(self):
+    def __start_pechs(self):
         ex = PeSource(self.path, self.parent)
         ex.main_calculation()
 
-    def check_saved_ds(self, db, saved_db):
+    def __check_saved_ds(self, db, saved_db):
         same = True
         for key in saved_db.keys():
             if db[key].get_dict_object() != saved_db[key].get_dict_object():
@@ -197,7 +195,7 @@ class MainWindow(tk.Frame):
                 return same
         return same
 
-    def set_lag(self):
+    def __set_lag(self):
         sub = SubtaskDecoder(self.path)
 
         if sub.subtask_path is not None:
@@ -228,7 +226,7 @@ class MainWindow(tk.Frame):
         for name in self.global_tree_db.keys():
             self.global_tree_db[name].insert_share_data('lag', self.lag)
 
-    def _configure_lag(self):
+    def __configure_lag(self):
 
         for name in self.global_tree_db.keys():
             self.lag = self.global_tree_db[name].get_share_data('lag')
@@ -264,7 +262,7 @@ class MainWindow(tk.Frame):
         for name in self.global_tree_db.keys():
             self.global_tree_db[name].insert_share_data('lag', self.lag)
 
-    def _save_check_flags(self, ask):
+    def __save_check_flags(self, ask):
         if ask is True:
             ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
 
@@ -289,7 +287,7 @@ class MainWindow(tk.Frame):
             self.parent.destroy()
             return
 
-    def onExit(self):
+    def __onExit(self):
         if len(self.global_tree_db) == 0:
             self.parent.quit()
             self.parent.destroy()
@@ -303,19 +301,19 @@ class MainWindow(tk.Frame):
                 mb.showerror('Error', 'Ошибка при попытке прочитать бинарный файл сохранения. Сохраните проект зново')
                 ask1 = mb.askyesno('Сохранение', 'Ошибка при попытке прочитать бинарный файл сохранения.'
                                                  'Сохранить проект заново?')
-                self._save_check_flags(ask1)
+                self.__save_check_flags(ask1)
                 return
 
             if load_db.keys() == self.global_tree_db.keys() and not self._save_flag:
-                if self.check_saved_ds(load_db, self.global_tree_db) is True:
+                if self.__check_saved_ds(load_db, self.global_tree_db) is True:
                     self.parent.quit()
                     self.parent.destroy()
                     return
 
         ask = mb.askyesno('Сохранение', 'Сохранить файл?')
-        self._save_check_flags(ask)
+        self.__save_check_flags(ask)
 
-    def browse_from_recent(self, path):
+    def __browse_from_recent(self, path):
         self.prj_path = path
 
         test_complete, error_messages = remp_files_test(self.prj_path)
@@ -331,9 +329,10 @@ class MainWindow(tk.Frame):
             return
 
         self.path = os.path.dirname(self.prj_path)
-        self.check_project()
+        self.__check_project()
 
-    def browse_folder(self):
+    def __browse_folder(self):
+        """Инициализирует страт приложения"""
         self.prj_path = fd.askopenfilename(title='Укажите путь к проекту REMP', initialdir=f'{os.getcwd()}',
                                            filetypes=[('PRJ files', '.PRJ')])
         if self.prj_path == '' or self.prj_path is None:
@@ -351,9 +350,9 @@ class MainWindow(tk.Frame):
         if not test_passed:
             return
         self.path = os.path.dirname(self.prj_path)
-        self.check_project()
+        self.__check_project()
 
-    def check_folder(self):
+    def __check_folder(self):
 
         try:
             with open(self.prj_path, 'r', encoding='utf-8') as file:
@@ -378,17 +377,30 @@ class MainWindow(tk.Frame):
 
         return out
 
+    def __reset(self):
+        if self.path is None:
+            return
+        self.notebook.destroy()
+        self.notebook = None
+        self.tabs_dict = {}
+        self.tree = []
+        self.global_tree_db = {}
+        self._influence_numbers.clear()
+
     @logger.catch()
-    def check_project(self):
+    def __check_project(self):
+        """
+        Логика по созданию пустого окна и загрузке файла Source.pkl (ранее сохраненный remp_sources).
+        """
         if self.path is None:
             return
 
         try:
-            self.reset()
+            self.__reset()
         except Exception:
             pass
 
-        self.file_dict = self.check_folder()
+        self.file_dict = self.__check_folder()
 
         set_recent_projects(self.prj_path, get_recent_projects())
 
@@ -399,168 +411,46 @@ class MainWindow(tk.Frame):
         self.notebook = ttk.Notebook(self.parent)
         self.notebook.grid(sticky='NWSE')
 
-        if self.from_project_reader() != 0:
+        if self.__from_project_reader() != 0:
             return
         self.parent.title(f'Source - открыт проект {os.path.normpath(self.prj_path)}')
         # self._activate_micro_electronics_menubar(state='disabled')
 
+        load_lag = True
+
         if 'remp_sources' in os.listdir(self.path):
-
             ask = mb.askyesno('Обнаружен rems source', 'Обнаружен файл remp source\nЗагрузить данные?')
-
             if ask is True:
-                if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
-                    print('Загрузка невозможна. Файл Sources.pkl не найден')
-                    mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
-                    self.menubar_activate()
-                    return
+                l = PreviousProjectLoader(self.path, [self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound])
+                if l.loaded_flag:  # load successfully
+                    self.global_tree_db, self.lag = l.get_db_and_lag()
+                    load_lag = False
+                    self.__construct_loaded_data()
+        if load_lag:
+            self.__set_lag()
 
-                self.remp_source_exist = True
+        self.__menubar_activate()
 
-                try:
-                    with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
-                        self.global_tree_db = pickle.load(f)
-                except Exception:
-                    mb.showerror('Error',
-                                 'Ошибка при попытке прочитать бинарный файл сохранения. Загрузка невозможна.')
-                    return
+    def __construct_loaded_data(self):
+        for i in self.global_tree_db.items():
+            try:
+                part_number_tuple = self.global_tree_db[i[0]].get_share_data('particle number')
 
-                for i in self.global_tree_db.items():
-                    """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""
-                    self.tree_db_delete_old(i[1])
+                if type(part_number_tuple) is not set:
+                    part_number_tuple = {part_number_tuple}
+                    self.global_tree_db[i[0]].insert_share_data('particle number', part_number_tuple)
 
-                    try:
-                        part_number_tuple = self.global_tree_db[i[0]].get_share_data('particle number')
+            except KeyError:
+                part_number_tuple = None
 
-                        if type(part_number_tuple) is not set:
-                            part_number_tuple = {part_number_tuple}
-                            self.global_tree_db[i[0]].insert_share_data('particle number', part_number_tuple)
+            self.__tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number_tuple))
 
-                    except KeyError:
-                        part_number_tuple = None
-
-                    self.tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number_tuple))
-
-                self._marple, self._micro_electronics = DataParser(self.path).load_marple_data_from_remp_source()
-
-            elif ask is False:
-                self.set_lag()
-        else:
-            self.set_lag()
-
-        self.menubar_activate()
-
-    def reset(self):
-        if self.path is None:
-            return
-        self.notebook.destroy()
-        self.notebook = None
-        self.tabs_dict = {}
-        self.tree = []
-        self.global_tree_db = {}
-        self._influence_numbers.clear()
-
-    def open_folder(self):
+    def __open_folder(self):
         if self.path is None:
             return
         os.startfile(self.path)
 
-    def tree_db_delete_old(self, obj):
-        try:
-            part_number_tuple = obj.get_share_data('particle number')
-        except KeyError:
-            part_number_tuple = None
-
-        # удаление из базы данных несуществующих частиц
-        delete_part_list = set()
-
-        """удаление источников energy для совместимости старых source.pkl удалить при добавлении источника energy"""
-        for f_key in obj.get_first_level_keys():
-            if f_key == 'Energy':
-                delete_part_list.add(f_key)
-
-        if len(delete_part_list) != 0:
-            for f_key in delete_part_list:
-                if len(obj.get_second_level_keys(f_key)) == 0:
-                    obj.replace_legacy_energy_to_sigma({})
-                else:
-                    for key2 in obj.get_second_level_keys(f_key):
-                        name = obj.get_last_level_data(f_key, key2, 'name').replace('Energy', 'Sigma')
-                        energy_type = 'Sigma'
-                        distribution = obj.get_last_level_data(f_key, key2, 'name')
-
-                        insert_dict = {name: {
-                            'name': name,
-                            'energy_type': energy_type,
-                            'distribution': distribution
-                        }
-                        }
-
-                        obj.replace_legacy_energy_to_sigma(insert_dict)
-
-        if part_number_tuple is None and len(delete_part_list) == 0:
-            return
-
-        db_s_keys = set()
-
-        for f_key in obj.get_first_level_keys():
-            for s_key in obj.get_second_level_keys(f_key):
-                db_s_keys.add(s_key)
-
-        for f_key in obj.get_first_level_keys():
-            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Sigma':
-                delete_part_list.add(f_key)
-
-        for f_key in delete_part_list:
-            obj.delete_first_level(f_key)
-
-        for key in db_s_keys:
-            if 'Current' in key:
-                cur_lay = int(key.split('_')[-1])
-                self._delete_source_safely((lambda: self.LAY[cur_lay, 1] == 0), obj, key)
-            if 'Sigma' in key:
-                cur_lay = int(key.split('_')[-1])
-                self._delete_source_safely(lambda: (self.LAY[cur_lay, 2] == 0), obj, key)
-            if 'Flu' in key:
-                from_l = int(key.split('_')[-2])
-                to_l = int(key.split('_')[-1])
-                part_number = int(key.split('_')[-3])
-                self._delete_source_safely(lambda: (self.PL_surf[part_number][to_l, from_l] == 0), obj, key)
-            if 'Volume78' == key.split('_')[0]:
-                vol_lay = int(key.split('_')[-1])
-                part_number = int(key.split('_')[-2])
-                self._delete_source_safely(lambda: (self.PL_vol[part_number][vol_lay] == 0), obj, key)
-            if 'Volume' == key.split('_')[0]:
-                vol_lay = int(key.split('_')[-1])
-                part_number = int(key.split('_')[-2])
-                self._delete_source_safely(lambda: self.PL_vol[part_number][vol_lay] == 0, obj, key)
-            if 'Boundaries' in key:
-                boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
-                bo_lay_k = key.split('_')[-1]
-                part_number = int(key.split('_')[-2])
-                for i in boundaries_decode.items():
-                    if i[1] == bo_lay_k:
-                        bo_lay = i[0]
-                        break
-                self._delete_source_safely(lambda: (self.PL_bound[part_number][bo_lay] == 0), obj, key)
-
-        delete_f_level_set = set()
-        for f_key in obj.get_first_level_keys():  # удаляем пустые сущности частиц
-            if len(obj.get_first_level_value(f_key)) == 0 and f_key != 'Current' and f_key != 'Sigma':
-                delete_f_level_set.add(f_key)
-
-        for f_key in delete_f_level_set:
-            obj.delete_first_level(f_key)
-
-    def _delete_source_safely(self, statment, data_object, key):
-        try:
-            if statment():
-                data_object.delete_second_level(key)
-
-        except (KeyError, IndexError):
-            pass
-
-    def tree_db_insert(self, obj_name, number):
+    def __tree_db_insert(self, obj_name, number):
         obj = TreeDataStructure(obj_name)
 
         create_list = ['x', 'y', 'z']
@@ -603,7 +493,7 @@ class MainWindow(tk.Frame):
 
         return obj
 
-    def tree_db_insert_particle(self, obj_name, particle, load=False):
+    def __tree_db_insert_particle(self, obj_name, particle, load=False):
         obj = obj_name
 
         boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
@@ -782,12 +672,8 @@ class MainWindow(tk.Frame):
                             obj.insert_third_level(particle, name, 'spectre numbers', [sp_number])
 
     @logger.catch()
-    def tree_view_constructor(self, ask_name=True, load=False, load_data=None):
-        if self.path is None:
-            mb.showerror('Path', 'Сначала выберите проект')
-            return
-
-        influence_number = self._set_influence_number()
+    def __tree_view_constructor(self, ask_name=True, load=False, load_data=None):
+        influence_number = self.__set_influence_number()
 
         if ask_name is True:
             while True:
@@ -797,7 +683,7 @@ class MainWindow(tk.Frame):
                     name = f'Influence {influence_number}'
                 if name is None:
                     return
-                if rusian_words_analysis(name) == 1:
+                if russian_words_analysis(name) == 1:
                     break
                 else:
                     mb.showerror('Название воздействия', 'В названии найден русский символ.\n'
@@ -835,7 +721,7 @@ class MainWindow(tk.Frame):
         microele_flag_activate = False
 
         if load is False:
-            self.global_tree_db.update({name: self.tree_db_insert(name, influence_number)})
+            self.global_tree_db.update({name: self.__tree_db_insert(name, influence_number)})
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent),
                                self._time_grid_data)
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {influence_number}')
@@ -856,23 +742,18 @@ class MainWindow(tk.Frame):
 
                 if part_name is not None and part_name in self.global_tree_db[
                     name].get_first_level_keys():  # костыль для загрузки в структуры воздействий без частиц
-                    self.tree_db_insert_particle(self.global_tree_db[name], part_name, True)
+                    self.__tree_db_insert_particle(self.global_tree_db[name], part_name, True)
                     source_keys = self.global_tree_db[name].get_second_level_keys(part_name)
-                    self.particle_tree_constr(part_name, source_keys, source, ind)
+                    self.__particle_tree_constr(part_name, source_keys, source, ind)
 
             fr_data = FrameGen(fr, self.path, self.global_tree_db[name], (self.notebook, self.parent),
                                self._time_grid_data)
             fr_data.configure(text=self.global_tree_db[name].obj_name + f'  № {influence_number}')
+
             if self.global_tree_db[name].get_share_data('count') is not None:
                 fr_data.cell_numeric = len(self.global_tree_db[name].get_share_data('time_full'))
                 fr_data._notebooks()
                 fr_data.load_data()
-
-        # fr_data.grid(row=0, column=10, rowspan=100, columnspan=50, sticky='WN')
-        # self.main_frame_exist = True
-
-        # if microele_flag_activate:
-        #     self._activate_micro_electronics_menubar()
 
         for index, s_type in enumerate(self.global_tree_db[name].get_first_level_keys()):
             source_keys = self.global_tree_db[name].get_second_level_keys(s_type)
@@ -894,12 +775,12 @@ class MainWindow(tk.Frame):
 
         self.tree[ind].bind("<Button-3>", lambda _,
                                                  index=ind,
-                                                 name=name: self._left_button_menu(name, index, _))
+                                                 name=name: self.__left_button_menu(name, index, _))
 
         self.notebook.add(fr, text=f'{name}')
         self.tabs_dict.update({name: [len(self.tabs_dict), fr, True]})
 
-    def particle_tree_constr(self, particle, keys, main_tree, index):
+    def __particle_tree_constr(self, particle, keys, main_tree, index):
         ind = index
         s_type = particle
         source_keys = keys
@@ -996,7 +877,7 @@ class MainWindow(tk.Frame):
                 self.__destroy_data_frame(name)
                 self.tabs_dict[name][2] = False
 
-    def add_part(self, index, name, id):
+    def __add_part(self, index, name, id):
 
         if self.PAR is None:
             print('Файл .PAR не инициализирован')
@@ -1032,17 +913,25 @@ class MainWindow(tk.Frame):
 
             self.global_tree_db[name].insert_first_level(new_particle)
 
-            self.tree_db_insert_particle(self.global_tree_db[name], new_particle)
+            self.__tree_db_insert_particle(self.global_tree_db[name], new_particle)
 
             source_keys = self.global_tree_db[name].get_second_level_keys(new_particle)
 
-            self.particle_tree_constr(new_particle, source_keys, source, index)
+            self.__particle_tree_constr(new_particle, source_keys, source, index)
 
 
         else:
             print('Объект уже существует')
 
-    def _left_button_menu(self, name, index, event):
+    def __check_all_particles_is_used(self):
+        part_list = [i for i in self.PAR.keys()]
+        for gsource in self.global_tree_db.keys():
+            for i in self.global_tree_db[gsource].get_first_level_keys():
+                if any([j == i for j in part_list]):
+                    part_list.pop(part_list.index(i))
+        return True if len(part_list) == 0 else False
+
+    def __left_button_menu(self, name, index, event):
 
         iid = self.tree[index].identify_row(event.y)
         if iid:
@@ -1060,14 +949,26 @@ class MainWindow(tk.Frame):
                 self.contextMenu = tk.Menu(tearoff=0)
 
                 self.contextMenu.add_command(label="Добавить частицу",
-                                             command=lambda: self.add_part(index, name, iid),
+                                             command=lambda: self.__add_part(index, name, iid),
                                              state='normal')
 
-                self.contextMenu.add_command(label="Восстановить источники токов",
-                                             command=lambda: self.__restore_currents(influence, index))
+                if any([self.LAY[i, 1] == 1 for i in range(self.LAY.shape[0])]):
+                    self.contextMenu.add_command(label="Восстановить источники токов",
+                                                 command=lambda: self.__restore_currents(influence, index),
+                                                 state='normal')
+                else:
+                    self.contextMenu.add_command(label="Восстановить источники токов",
+                                                 command=lambda: self.__restore_currents(influence, index),
+                                                 state='disabled')
 
-                self.contextMenu.add_command(label="Восстановить источники энерговыделения",
-                                             command=lambda: self.__restore_energy_distribution(influence, index))
+                if any([self.LAY[i, 2] == 1 for i in range(self.LAY.shape[0])]):
+                    self.contextMenu.add_command(label="Восстановить источники энерговыделения",
+                                                 command=lambda: self.__restore_energy_distribution(influence, index),
+                                                 state='normal')
+                else:
+                    self.contextMenu.add_command(label="Восстановить источники энерговыделения",
+                                                 command=lambda: self.__restore_energy_distribution(influence, index),
+                                                 state='disabled')
 
                 self.contextMenu.add_command(label="Удалить воздействие",
                                              command=lambda: self.__tree_view_deconstructor(influence))
@@ -1078,7 +979,7 @@ class MainWindow(tk.Frame):
             elif 'Current' in self.tree[index].item(iid)['text'] or 'Sigma' in self.tree[index].item(iid)['text']:
                 self.contextMenu = tk.Menu(tearoff=0)
 
-                self.contextMenu.add_command(label="Удалить", command=lambda: self.delete_particle(index, name, iid),
+                self.contextMenu.add_command(label="Удалить", command=lambda: self.__delete_particle(index, name, iid),
                                              state='normal')
 
                 self.tree[index].selection_set(iid)
@@ -1087,7 +988,7 @@ class MainWindow(tk.Frame):
             elif any([i in self.tree[index].item(iid)['text'] for i in particle_list]):
                 self.contextMenu = tk.Menu(tearoff=0)
 
-                self.contextMenu.add_command(label="Удалить", command=lambda: self.delete_particle(index, name, iid),
+                self.contextMenu.add_command(label="Удалить", command=lambda: self.__delete_particle(index, name, iid),
                                              state='normal')
 
                 self.tree[index].selection_set(iid)
@@ -1096,7 +997,7 @@ class MainWindow(tk.Frame):
             else:
                 pass
 
-    def delete_particle(self, index, name, id):
+    def __delete_particle(self, index, name, id):
         first_list = []
         second_list = []
         for key in self.global_tree_db[name].get_first_level_keys():
@@ -1162,10 +1063,16 @@ class MainWindow(tk.Frame):
 
             self.tree[index].bind("<Button-3>", lambda _,
                                                        index=index,
-                                                       name=item[0]: self._left_button_menu(name, index, _))
+                                                       name=item[0]: self.__left_button_menu(name, index, _))
 
     @logger.catch()
-    def save(self):
+    def __save(self):
+        if not self.__check_all_particles_is_used():
+            ask = mb.askyesno('Внимание', f'Обнаружены неиспользуемые частицы.\n'
+                                          'Использование данного проектра в расчете приведет к ошибке!\n'
+                                          'Сохранить?')
+            if not ask:
+                return
         ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
 
     def __restore_currents(self, object_name, index):
@@ -1214,7 +1121,8 @@ class MainWindow(tk.Frame):
         #     ask = mb.askyesno('Внимание', 'Количество частиц больше количества воздействий.\nСоздать новую чатицу?')
         #     if ask is False:
         #         return
-        self.tree_view_constructor()
+        self.__tree_view_constructor()
+        self.notebook.select(self.notebook.tabs()[-1])
 
     def __destroy_data_frame(self, name):
         if len(self.tabs_dict[name][1].winfo_children()) < 2:
@@ -1350,3 +1258,136 @@ class MainWindow(tk.Frame):
             number = None
             print(f'Спектр {fname} не найден в проекте')
         return number
+
+
+class PreviousProjectLoader:
+    @logger.catch()
+    def __init__(self, path: str, project_data: list):
+        self.loaded_flag = False
+        self.path = path
+
+        self.global_tree_db = {}
+        self._marple, self._micro_electronics = {}, {}
+        self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound = project_data
+
+        self.__start_reading()
+
+    def get_db_and_lag(self):
+        lag = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('lag')
+        return self.global_tree_db, lag
+
+    def __start_reading(self):
+        if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
+            print('Загрузка невозможна. Файл Sources.pkl не найден')
+            mb.showerror('load error', 'Загрузка невозможна. Файл Sources.pkl не найден')
+            return
+
+        try:
+            with open(os.path.join(self.path, 'Sources.pkl'), 'rb') as f:
+                self.global_tree_db = pickle.load(f)
+        except Exception:
+            mb.showerror('Error',
+                         'Ошибка при попытке прочитать бинарный файл сохранения. Загрузка невозможна.')
+            return
+
+        for i in self.global_tree_db.items():
+            """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""
+            self.__tree_db_delete_old(i[1])
+
+        self._marple, self._micro_electronics = DataParser(self.path).load_marple_data_from_remp_source()
+        self.loaded_flag = True
+
+    def __tree_db_delete_old(self, obj):
+        try:
+            part_number_tuple = obj.get_share_data('particle number')
+        except KeyError:
+            part_number_tuple = None
+
+        # удаление из базы данных несуществующих частиц
+        delete_part_list = set()
+
+        """удаление источников energy для совместимости старых source.pkl удалить при добавлении источника energy"""
+        for f_key in obj.get_first_level_keys():
+            if f_key == 'Energy':
+                delete_part_list.add(f_key)
+
+        if len(delete_part_list) != 0:
+            for f_key in delete_part_list:
+                if len(obj.get_second_level_keys(f_key)) == 0:
+                    obj.replace_legacy_energy_to_sigma({})
+                else:
+                    for key2 in obj.get_second_level_keys(f_key):
+                        name = obj.get_last_level_data(f_key, key2, 'name').replace('Energy', 'Sigma')
+                        energy_type = 'Sigma'
+                        distribution = obj.get_last_level_data(f_key, key2, 'name')
+
+                        insert_dict = {name: {
+                            'name': name,
+                            'energy_type': energy_type,
+                            'distribution': distribution
+                        }
+                        }
+
+                        obj.replace_legacy_energy_to_sigma(insert_dict)
+
+        if part_number_tuple is None and len(delete_part_list) == 0:
+            return
+
+        db_s_keys = set()
+
+        for f_key in obj.get_first_level_keys():
+            for s_key in obj.get_second_level_keys(f_key):
+                db_s_keys.add(s_key)
+
+        for f_key in obj.get_first_level_keys():
+            if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Sigma':
+                delete_part_list.add(f_key)
+
+        for f_key in delete_part_list:
+            obj.delete_first_level(f_key)
+
+        for key in db_s_keys:
+            if 'Current' in key:
+                cur_lay = int(key.split('_')[-1])
+                self.__delete_source_safely((lambda: self.LAY[cur_lay, 1] == 0), obj, key)
+            if 'Sigma' in key:
+                cur_lay = int(key.split('_')[-1])
+                self.__delete_source_safely(lambda: (self.LAY[cur_lay, 2] == 0), obj, key)
+            if 'Flu' in key:
+                from_l = int(key.split('_')[-2])
+                to_l = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-3])
+                self.__delete_source_safely(lambda: (self.PL_surf[part_number][to_l, from_l] == 0), obj, key)
+            if 'Volume78' == key.split('_')[0]:
+                vol_lay = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-2])
+                self.__delete_source_safely(lambda: (self.PL_vol[part_number][vol_lay] == 0), obj, key)
+            if 'Volume' == key.split('_')[0]:
+                vol_lay = int(key.split('_')[-1])
+                part_number = int(key.split('_')[-2])
+                self.__delete_source_safely(lambda: self.PL_vol[part_number][vol_lay] == 0, obj, key)
+            if 'Boundaries' in key:
+                boundaries_decode = {0: 'X', 1: 'Y', 2: 'Z', 3: '-X', 4: '-Y', 5: '-Z'}
+                bo_lay_k = key.split('_')[-1]
+                part_number = int(key.split('_')[-2])
+                for i in boundaries_decode.items():
+                    if i[1] == bo_lay_k:
+                        bo_lay = i[0]
+                        break
+                self.__delete_source_safely(lambda: (self.PL_bound[part_number][bo_lay] == 0), obj, key)
+
+        delete_f_level_set = set()
+        for f_key in obj.get_first_level_keys():  # удаляем пустые сущности частиц
+            if len(obj.get_first_level_value(f_key)) == 0 and f_key != 'Current' and f_key != 'Sigma':
+                delete_f_level_set.add(f_key)
+
+        for f_key in delete_f_level_set:
+            obj.delete_first_level(f_key)
+
+    def __delete_source_safely(self, statment, data_object, key):
+        try:
+            if statment():
+                data_object.delete_second_level(key)
+
+        except (KeyError, IndexError):
+            print(f'Ошибка удаления источника {key}')

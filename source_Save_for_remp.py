@@ -432,6 +432,7 @@ class Save_remp:
                                           'Показать подробности?')
             if ask is True:
                 ex = ShowDuplicateSpectreNumbers(re_numbers)
+                ex.grab_set()
 
     def create_spectre_list(self):
 

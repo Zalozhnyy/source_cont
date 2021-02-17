@@ -1140,7 +1140,7 @@ class SpectreConfigure(tk.Frame):
             np.savetxt(save_path, out_data, comments='', header=header, delimiter='   ', fmt=['%5.5E', '%5.6E'])
 
         if self.spectre_type_cb == 'SP_1':
-            a = self.sp_one_interface.__save()
+            a = self.sp_one_interface.save()
             if a is None:
                 return
             with open(os.path.join(save_path), 'w') as f:

@@ -166,6 +166,7 @@ class FrameGen(ttk.LabelFrame):
 
         self.entry_f = tk.Entry(self.constants_fr, width=16, textvariable=self.entry_f_val)
         self.entry_f.grid(row=0, column=2, padx=3)
+        self.entry_f.focus_force()
 
         combobox_values = ['шт', 'шт/с']
         decode = [True, False]

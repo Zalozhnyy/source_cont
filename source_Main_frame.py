@@ -871,11 +871,16 @@ class FrameGen(ttk.LabelFrame):
             mb.showerror('Entry error', 'Значение функции не может быть отрицательным')
             return None, None, None
 
+        if self.user_timeset > self._grd_data[-1]:
+            self.user_timeset = self._grd_data[-1]
+            self.entry_time_fix_val.set(str(self.user_timeset))
+
+        self.backup_tf = np.copy(entry_t)
+        self.backup_fu = np.copy(entry_f)
+
         # блок проверки на ограничение пользователем тайм функции
         if self._grd_data[-1] == self.user_timeset:
             time_cell = self._grd_data
-            self.backup_tf = np.copy(entry_t)
-            self.backup_fu = np.copy(entry_f)
 
             # if entry_t[-1] != time_cell[-1]:
             #     entry_t = np.append(entry_t, time_cell[-1])
@@ -888,16 +893,10 @@ class FrameGen(ttk.LabelFrame):
 
             time_right_side = np.where(self.user_timeset == self._grd_data)[0]
 
-            if len(time_right_side) == 0:
-                time_right_side = \
-                    np.where(abs(self.user_timeset - self._grd_data) <= (
-                            self._grd_data[1] - self._grd_data[0]) / 2)[0]
-                # print(f'right side 2nd try {time_right_side}')
-
-            time_cell = self._grd_data[:time_right_side[0]]
-
-            self.backup_tf = np.copy(entry_t)
-            self.backup_fu = np.copy(entry_f)
+            if time_right_side.shape[0] == 0:
+                time_cell = self._grd_data[:time_right_side[0]]
+            else:
+                time_cell = self._grd_data
 
             if self.user_timeset not in self.backup_tf:
                 for i in range(len(self.backup_tf)):

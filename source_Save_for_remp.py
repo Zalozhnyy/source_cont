@@ -305,6 +305,8 @@ class Save_remp:
         out += name + '\n'
         out += '<particle index>\n'
         out += str(gsource_db.get_share_data('particle number')) + '\n'
+        out += '<direction>\n'
+        out += f'{s_key.split("_")[-1]}\n'
         out += f'<source name>\n'
         out += f'{s_key}\n'
         out += f'<amplitude>\n'
@@ -710,6 +712,7 @@ class JsonSave:
         flux_dict = {
             'Type': f'{second_key.split("_")[0]}',
             'Particle index': int(f'{second_key.split("_")[1]}'),
+            'Direction': source_name.split('_')[-1],
             'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
             'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
                                                                        'spectre numbers')

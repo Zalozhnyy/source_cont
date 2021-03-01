@@ -709,10 +709,17 @@ class JsonSave:
     def write_boundaries_to_local_dict(self, name, gsource_db, first_key, second_key):
         source_name = second_key
 
+        directions = {'-X': 0,
+                      'X': 1,
+                      '-Y': 2,
+                      'Y': 3,
+                      '-Z': 4,
+                      'Z': 5, }
+
         flux_dict = {
             'Type': f'{second_key.split("_")[0]}',
             'Particle index': int(f'{second_key.split("_")[1]}'),
-            'Direction': source_name.split('_')[-1],
+            'Direction': directions[source_name.split('_')[-1]],
             'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
             'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
                                                                        'spectre numbers')

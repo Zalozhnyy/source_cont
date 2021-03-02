@@ -1268,6 +1268,11 @@ class MainWindow(tk.Frame):
 
 
 class PreviousProjectLoader:
+    """
+    Класс предназначен для сопоставления данных из загрузки и проектных данных.
+    Осуществляет удаление из БД несуществующих в преокте абстракций.
+    """
+
     @logger.catch()
     def __init__(self, path: str, project_data: list):
         self.loaded_flag = False

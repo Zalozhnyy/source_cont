@@ -265,7 +265,7 @@ class SpectreConfigure(tk.Frame):
             self.open_notepad_with_chosen_file()
         except Exception:
             print('Тип спектра не распознан или структура нарушена.')
-            # traceback.print_exc()
+            traceback.print_exc()
             self.open_notepad_with_chosen_file()
 
         try:
@@ -564,6 +564,11 @@ class SpectreConfigure(tk.Frame):
         self.starts_count_val.set(str(self.data_struct.starts_count))
 
         self.rows_count_val.set(str(self.data_struct.data.shape[0]))
+
+        if self.data_struct.spectre_type == 2:
+            self.direction_vector_val.set(f'{self.data_struct.direction_vector[0]}'
+                                          f' {self.data_struct.direction_vector[1]}'
+                                          f' {self.data_struct.direction_vector[2]}')
 
         if self.data_struct.spectre_type == 5:
             if self.data_struct.sp_5_type == 0:
@@ -1902,14 +1907,9 @@ class SpectreDataStructure:
 if __name__ == '__main__':
     root = tk.Tk()
 
-    x = SpectreConfigure(parent=root, path=r'C:\Users\Zalozhnyy_N\Dropbox\work_cloud\source_cont\spectres_micr')
+    x = SpectreConfigure(parent=root, path=r'C:\Work\test_projects\kub3')
     x.grid(sticky='NWSE')
 
     root.protocol("WM_DELETE_WINDOW", x.onExit)
 
     root.mainloop()
-
-    # a = SpectreDataStructure(r'C:\Users\Nick\Desktop\sp_2_ex')
-    # a.spectre_type_identifier()
-    # print(a.direction_vector)
-    # print(a.data)

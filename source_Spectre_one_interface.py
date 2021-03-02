@@ -681,7 +681,7 @@ class SpectreOneInterface(tk.Frame):
         self.spectre_number_val.set(data_struct.sp_number)
         self.spectre_power_val.set(data_struct.sp_power)
         self.spectre_type_val.set('1')
-        self.part_count_val.set(data_struct.sp_part_count)
+        self.starts_count_val.set(data_struct.sp_part_count)
         self.elem_count_val.set(f'{data_struct.phi_count} {data_struct.theta_count} {data_struct.energy_count}')
 
         '''PHI'''

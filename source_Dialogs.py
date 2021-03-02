@@ -514,6 +514,8 @@ class SelectLagInterface(tk.Toplevel):
 
         if state == 1:
             [self._entry_vector[i].configure(state='normal') for i in range(3)]
+            for i in range(3):
+                self.vector_data[i] = float(self._entry_vector_values[i].get())
         if state == 0:
             [self._entry_vector[i].configure(state='disabled') for i in range(3)]
             [self._entry_vector_values[i].set('0') for i in range(3)]

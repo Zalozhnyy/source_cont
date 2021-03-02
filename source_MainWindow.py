@@ -2,6 +2,8 @@ import pickle
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
+from collections import namedtuple
+
 from loguru import logger
 
 from remp_parameters_tests import main_test as remp_files_test
@@ -228,9 +230,9 @@ class MainWindow(tk.Frame):
 
     def __configure_lag(self):
 
-        for name in self.global_tree_db.keys():
-            self.lag = self.global_tree_db[name].get_share_data('lag')
-            break
+        # for name in self.global_tree_db.keys():
+        #     self.lag = self.global_tree_db[name].get_share_data('lag')
+        #     break
 
         try:
             if self.lag is None:
@@ -443,6 +445,11 @@ class MainWindow(tk.Frame):
             except KeyError:
                 part_number_tuple = None
 
+            load_data = namedtuple('load_data', [
+                'influence_name',
+                'particle_numbers',
+                'particle_names'
+            ])
             self.__tree_view_constructor(load=True, ask_name=False, load_data=(i[0], part_number_tuple))
 
     def __open_folder(self):
@@ -1276,6 +1283,18 @@ class PreviousProjectLoader:
         lag = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('lag')
         return self.global_tree_db, lag
 
+    def __delete_particles(self, db):
+        delete_part_list = set()
+
+        for f_key in db.get_first_level_keys():
+            if 'Sigma' not in f_key and 'Current' not in f_key and 'Energy' not in f_key:
+                for part_number in db.get_share_data('particle number'):
+                    if all([part_number != self.PAR[k]['number'] for k in self.PAR.keys()]):
+                        delete_part_list.add(f_key)
+
+        for dk in delete_part_list:
+            db.delete_first_level(dk)
+
     def __start_reading(self):
         if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):
             print('Загрузка невозможна. Файл Sources.pkl не найден')
@@ -1289,6 +1308,9 @@ class PreviousProjectLoader:
             mb.showerror('Error',
                          'Ошибка при попытке прочитать бинарный файл сохранения. Загрузка невозможна.')
             return
+
+        for i in self.global_tree_db.items():
+            self.__delete_particles(i[1])
 
         for i in self.global_tree_db.items():
             """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""

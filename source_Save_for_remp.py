@@ -92,9 +92,11 @@ class Save_remp:
                             print(f'Добавьте частицу в проект')
                             return
                         elif 'None' in d:
-                            print(f'В источнике {s_key} нет тока')
-                        else:
-                            out += d
+                            print(f'Введены не все данные в источнике {s_key}.')
+                            mb.showerror('Предупреждение', f'Введены не все данные в источнике {s_key} {f_key}.\n'
+                                                           f'Выберите файл распределения или удалите ток')
+                            print(d)
+                            return
 
                     if 'Sigma' in s_key:
                         d = self.current_save(gsource_db, f_key, s_key, name, energy=True)

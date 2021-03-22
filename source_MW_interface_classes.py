@@ -380,7 +380,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         try:
             with open(os.path.join(self.path, file_name), 'r') as file:
                 for j, line in enumerate(file):
-                    if j == 0 and len(line.strip().split('\t')) == 4:
+                    if j == 0 and len(line.strip().split()) == 4:
                         number = -1
                         return file_name, number, -1
                     if j == 2:

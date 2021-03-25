@@ -1293,8 +1293,16 @@ class PreviousProjectLoader:
 
         for f_key in db.get_first_level_keys():
             if 'Sigma' not in f_key and 'Current' not in f_key and 'Energy' not in f_key:
-                for part_number in db.get_share_data('particle number'):
-                    if all([part_number != self.PAR[k]['number'] for k in self.PAR.keys()]):
+                part = db.get_share_data('particle number')
+
+                if type(part) is list:
+                    for part_number in part:
+                        if all([part_number != self.PAR[k]['number'] for k in self.PAR.keys()]):
+                            delete_part_list.add(f_key)
+
+                # условие нужно для подержки старых версий баз данных, после сохранения они переходят в новый формат
+                elif type(part) is int:
+                    if all([part != self.PAR[k]['number'] for k in self.PAR.keys()]):
                         delete_part_list.add(f_key)
 
         for dk in delete_part_list:

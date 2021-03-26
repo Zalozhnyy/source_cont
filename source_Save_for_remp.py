@@ -642,7 +642,7 @@ class JsonSave:
 
                     elif s_key.split('_')[0] == 'Volume78':
                         if 'Volume' not in self.local_influence_dict[name]['Sources'].keys():
-                            self.local_influence_dict[name]['Sources'].update({'Volume': {}})
+                            self.local_influence_dict[name]['Sources'].update({'Volume78': {}})
 
                         self.write_volume78_to_local_dict(name, gsource_db, f_key, s_key)
 
@@ -717,7 +717,7 @@ class JsonSave:
                 first_key, second_key, 'distribution') is not None else None
         }
 
-        self.local_influence_dict[name]['Sources']['Volume'].update({source_name: flux_dict})
+        self.local_influence_dict[name]['Sources']['Volume78'].update({source_name: flux_dict})
 
     def write_volume_to_local_dict(self, name, gsource_db, first_key, second_key):
         source_name = second_key

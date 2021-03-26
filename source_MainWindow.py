@@ -1,7 +1,7 @@
 import pickle
 from tkinter import simpledialog as sd
 from tkinter import ttk
-
+from typing import List, Dict
 from collections import namedtuple
 
 from loguru import logger
@@ -25,12 +25,12 @@ class MainWindow(tk.Frame):
 
         self.parent.protocol("WM_DELETE_WINDOW", self.__onExit)
 
-        self.prj_path = None
+        self.prj_path: str
 
-        self.notebook = None
-        self.tabs_dict = {}
-        self.tree = []
-        self.global_tree_db = {}
+        self.notebook: ttk.Notebook
+        self.tabs_dict: Dict[int, List[int, tk.Frame, bool]] = {}
+        self.tree: List[ttk.Treeview] = []
+        self.global_tree_db: Dict[str, TreeDataStructure] = {}
         self._influence_numbers = set()
 
         self.__toolbar()
@@ -38,7 +38,7 @@ class MainWindow(tk.Frame):
         self._marple = None
         self._micro_electronics = None
 
-        self._save_flag = False
+        self._save_flag: bool = False
 
         self.lag = None
 
@@ -1016,12 +1016,14 @@ class MainWindow(tk.Frame):
             for i in self.global_tree_db[name].get_first_level_keys():
                 if self.tree[index].item(id)['text'] in i:
                     f_key = i
-                    break
-            try:
-                self.global_tree_db[name].delete_first_level(f_key)
-            except Exception:
-                print('The object can not be deleted')
-                return
+                    try:
+                        self.global_tree_db[name].delete_first_level(f_key)
+                    except Exception:
+                        print('The object can not be deleted')
+                        return
+                    finally:
+                        break
+
             self.tree[index].delete(id)
 
         elif self.tree[index].item(id)['text'] in second_list:

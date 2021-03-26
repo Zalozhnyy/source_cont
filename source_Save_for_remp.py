@@ -1,5 +1,3 @@
-import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox as mb
 
 import numpy as np
@@ -7,6 +5,8 @@ from scipy import integrate
 import os
 import pickle
 import json
+from collections import namedtuple, Counter
+from typing import List, NamedTuple
 
 from loguru import logger
 
@@ -25,7 +25,7 @@ class Save_remp:
         self.calc_amplitude = 0.
         self.saved = False
 
-        self.exist_spectres = []
+        self.exist_spectres: List[Sp] = []
 
         self.save()
 
@@ -449,35 +449,55 @@ class Save_remp:
                     if 'Flu' in s_key:
                         data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
                         if type(data) is list:
-                            [self.exist_spectres.append(i) for i in data if i not in self.exist_spectres]
+                            [self.exist_spectres.append(Sp(i, 'spectre')) for i in data if
+                             Sp(i, 'spectre') not in self.exist_spectres]
                         else:
-                            self.exist_spectres.append(data)
+                            self.exist_spectres.append(Sp(data, 'spectre'))
 
-                    if 'Volume' in s_key:
+                    if 'Volume78' in s_key:
+                        data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
+                        distr = gsource_db.get_last_level_data(f_key, s_key, 'distribution')
+                        if type(data) is list:
+                            [self.exist_spectres.append(Sp(i, 'spectre')) for i in data if
+                             Sp(i, 'spectre') not in self.exist_spectres]
+                            [self.exist_spectres.append(Sp(i, 'volume78 distribution')) for i in distr if
+                             Sp(i, 'volume78 distribution') not in self.exist_spectres]
+                        else:
+                            self.exist_spectres.append(Sp(data, 'spectre'))
+                            self.exist_spectres.append(Sp(distr, 'volume78 distribution'))
+
+                    elif 'Volume' in s_key:
                         data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
                         if type(data) is list:
-                            [self.exist_spectres.append(i) for i in data if i not in self.exist_spectres]
+                            [self.exist_spectres.append(Sp(i, 'spectre')) for i in data if
+                             Sp(i, 'spectre') not in self.exist_spectres]
                         else:
-                            self.exist_spectres.append(data)
+                            self.exist_spectres.append(Sp(data, 'spectre'))
 
                     if 'Boundaries' in s_key:
                         data = gsource_db.get_last_level_data(f_key, s_key, 'spectre')
                         if type(data) is list:
-                            [self.exist_spectres.append(i) for i in data if i not in self.exist_spectres]
+                            [self.exist_spectres.append(Sp(i, 'spectre')) for i in data if i not in self.exist_spectres]
                         else:
-                            self.exist_spectres.append(data)
+                            self.exist_spectres.append(Sp(data, 'spectre'))
 
         with open(os.path.join(self.path, 'spectres'), 'w', encoding='utf-8') as file:
+            c = Counter()
+            for sp in self.exist_spectres:
+                c[sp.type] += 1
+
             file.write('<Particles spectrum>\n')
-            file.write(str(len(self.exist_spectres)) + '\n')
-            try:
+            file.write(str(c['spectre']) + '\n')
+            for sp in self.exist_spectres:
+                if sp.type == 'spectre':
+                    file.write(sp.file_name + '\n')
 
-                for sp in self.exist_spectres:
-                    file.write(sp + '\n')
+            file.write('<Volume78 distributions>\n')
+            file.write(str(c['volume78 distribution']) + '\n')
+            for sp in self.exist_spectres:
+                if sp.type == 'volume78 distribution':
+                    file.write(sp.file_name + '\n')
 
-            except TypeError:
-                print('Список спектров не был создан')
-                return
 
     def _get_last_level_data_with_exception(self, data_object, first_key, second_key, last_key):
         out = ''
@@ -495,6 +515,11 @@ class Save_remp:
             out += str(db_vel)
 
         return out
+
+
+class Sp(NamedTuple):
+    file_name: str
+    type: str
 
 
 @logger.catch()

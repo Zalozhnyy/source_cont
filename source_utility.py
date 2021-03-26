@@ -8,7 +8,7 @@ import tempfile
 
 
 class TreeDataStructure:
-    def __init__(self, obj_name, part_list=[]):
+    def __init__(self, obj_name: str, part_list: list = []):
         self.obj_name = obj_name
 
         self.particle_list = part_list
@@ -233,7 +233,6 @@ def permission_denied_test():
     finally:
         if os.path.exists(test_file):
             os.remove(test_file)
-
 
 
 if __name__ == '__main__':

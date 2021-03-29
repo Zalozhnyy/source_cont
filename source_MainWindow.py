@@ -1236,7 +1236,7 @@ class MainWindow(tk.Frame):
             if number is None:
                 sp, number = None, None
 
-        elif part_type == 7 and ppn in (3):
+        elif part_type == 7 and ppn in (3,):
             sp = 'micr_3'
             number = self.__get_sp_number(sp)
             if number is None:
@@ -1248,7 +1248,7 @@ class MainWindow(tk.Frame):
             if number is None:
                 sp, number = None, None
 
-        elif part_type == 8 and ppn in (3):
+        elif part_type == 8 and ppn in (3,):
             mb.showerror('Ошибка', 'Переход в диоксид запрещён!')
             sp, number = None, None
 

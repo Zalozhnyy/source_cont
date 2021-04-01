@@ -265,7 +265,6 @@ class SpectreConfigure(tk.Frame):
             self.open_notepad_with_chosen_file()
         except Exception:
             print('Тип спектра не распознан или структура нарушена.')
-            traceback.print_exc()
             self.open_notepad_with_chosen_file()
 
         try:

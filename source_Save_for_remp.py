@@ -558,11 +558,18 @@ class JsonSave:
 
         if self.marple is not None:
             marple_dict = {
-                'Marple': {
-                    'Sigma': f'{self.marple["sigma"]}',
-                    'Ionization': f'{self.marple["ion"]}'
-                }
+                'Marple': {}
             }
+            if self.marple['ion'] is not None:
+                marple_dict['Marple'].update({'Ionization': f'{self.marple["ion"]}'})
+            else:
+                marple_dict['Marple'].update({'Ionization': 'NONE'})
+
+            if self.marple['sigma'] is not None:
+                marple_dict['Marple'].update({'Sigma': f'{self.marple["sigma"]}'})
+            else:
+                marple_dict['Marple'].update({'Sigma': 'NONE'})
+
             self.save_dict = {**marple_dict, **self.save_dict}
 
         if self.micro_electronics is not None:

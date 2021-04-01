@@ -1166,9 +1166,6 @@ class MainWindow(tk.Frame):
         ion = ex.first_item
         sigma = ex.second_item
 
-        if ion is None or sigma is None:
-            return
-
         # self.marple_menu.entryconfigure(0, state='disabled')
         self.marple_menu.entryconfigure(1, state='normal')
 

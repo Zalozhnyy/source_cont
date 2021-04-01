@@ -134,7 +134,6 @@ class DeleteGSourceDialog(tk.Toplevel):
             return
         self.destroy()
 
-
     def onExit(self):
         self.lb_current = None
         self.destroy()
@@ -402,7 +401,6 @@ class SelectLagInterface(tk.Toplevel):
 
             self._restore_init_values = init_values.copy()
 
-
         self.initUi()
 
     def onExit(self, save=True):
@@ -580,21 +578,25 @@ class MarpleElectronicsInterface(tk.Toplevel):
         # item_2_clear_button.grid(row=row, column=3, sticky='NW', padx=3)
         row += 1
 
+        configure_button = tk.Button(self, text='Редактировать', command=self.open_notepad)
+        configure_button.grid(row=1 , column=2, columnspan=3, pady=5, padx=30)
+
     def onExit(self):
-        return_tuple = (self.first_item['text'], self.second_item['text'])
+        return_tuple = [self.first_item['text'], self.second_item['text']]
 
         if '' in return_tuple or 'Файл не выбран' in return_tuple:
             ask = mb.askyesno('Закрыть окно?', 'Выбраны не все файлы. Закрыть окно?')
 
             if ask is True:
-                self.first_item = None
-                self.second_item = None
+                if return_tuple[0] == 'Файл не выбран':
+                    return_tuple[0] = None
+                if return_tuple[1] == 'Файл не выбран':
+                    return_tuple[1] = None
             if ask is False:
                 return
 
-        else:
-            self.first_item = return_tuple[0]
-            self.second_item = return_tuple[1]
+        self.first_item = return_tuple[0]
+        self.second_item = return_tuple[1]
         self.destroy()
 
     def delete_choice(self, item):
@@ -610,6 +612,28 @@ class MarpleElectronicsInterface(tk.Toplevel):
 
         distribution_file = copy_to_project(distribution_file, self.path)
         item['text'] = os.path.split(distribution_file)[-1]
+
+    def open_notepad(self):
+        if self.first_item == 'Файл не выбран' and self.second_item == 'Файл не выбран':
+            return
+        if type(self.first_item) is not str:
+            return_tuple = (self.first_item['text'], self.second_item['text'])
+        else:
+            return
+
+        select_to_view = SelectSpectreToView([i for i in return_tuple if i != 'Файл не выбран'])
+        self.wait_window(select_to_view)
+
+        file = select_to_view.lb_current
+        select_to_view.destroy()
+
+        self.open_notepad_with_chosen_file(file)
+
+    def open_notepad_with_chosen_file(self, f):
+        file = os.path.join(self.path, f)
+        osCommandString = f"notepad.exe {file}"
+        os.system(osCommandString)
+
 
 
 if __name__ == '__main__':

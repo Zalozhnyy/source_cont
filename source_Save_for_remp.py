@@ -498,6 +498,12 @@ class Save_remp:
                 if sp.type == 'volume78 distribution':
                     file.write(sp.file_name + '\n')
 
+            file.write('Marple Ionization\n')
+            if self.marple is not None:
+                file.write('1\n')
+                file.write(f'{self.marple["ion"]}\n')
+            else:
+                file.write('0\n')
 
     def _get_last_level_data_with_exception(self, data_object, first_key, second_key, last_key):
         out = ''

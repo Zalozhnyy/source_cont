@@ -654,7 +654,7 @@ class JsonSave:
                         self.write_flux_to_local_dict(name, gsource_db, f_key, s_key)
 
                     elif s_key.split('_')[0] == 'Volume78':
-                        if 'Volume' not in self.local_influence_dict[name]['Sources'].keys():
+                        if 'Volume78' not in self.local_influence_dict[name]['Sources'].keys():
                             self.local_influence_dict[name]['Sources'].update({'Volume78': {}})
 
                         self.write_volume78_to_local_dict(name, gsource_db, f_key, s_key)
@@ -711,6 +711,7 @@ class JsonSave:
             'Spectre': self._get_last_level_data_with_exception(gsource_db, first_key, second_key, 'spectre'),
             'Spectre number': self._get_last_level_data_with_exception(gsource_db, first_key, second_key,
                                                                        'spectre numbers'),
+            'Direction': self._get_direction_flux(gsource_db, first_key, second_key, 'spectre'),
         }
 
         self.local_influence_dict[name]['Sources']['Surface'].update({source_name: flux_dict})
@@ -779,6 +780,21 @@ class JsonSave:
             print('Амплитуда не была поделена, найдено деление на ноль')
 
         return ampl_save
+
+    def _get_direction_flux(self, data_object, first_key, second_key, last_key):
+        db_vel = data_object.get_last_level_data(first_key, second_key, last_key)
+
+        if len(db_vel) > 0:
+            out = [-1] * len(db_vel)
+
+            for i in range(len(db_vel)):
+                if db_vel[i].endswith('.spc'):
+                    out[i] = db_vel[i].split('_')[2]
+            return ' '.join(list(map(str, out)))
+
+        else:
+            print('Ошибка в сохранении направления поверхностных источников')
+            return None
 
     def _get_last_level_data_with_exception(self, data_object, first_key, second_key, last_key):
         out = ''

@@ -4,6 +4,7 @@ from tkinter import ttk
 from typing import List, Dict
 from collections import namedtuple
 
+import numpy as np
 from loguru import logger
 
 from remp_parameters_tests import main_test as remp_files_test
@@ -423,7 +424,9 @@ class MainWindow(tk.Frame):
         if 'remp_sources' in os.listdir(self.path):
             ask = mb.askyesno('Обнаружен rems source', 'Обнаружен файл remp source\nЗагрузить данные?')
             if ask is True:
-                l = PreviousProjectLoader(self.path, [self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound])
+                l = PreviousProjectLoader(self.path,
+                                          [self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound,
+                                           self.layer_numbers])
                 if l.loaded_flag:  # load successfully
                     self.global_tree_db, self.lag = l.get_db_and_lag()
                     load_lag = False
@@ -1279,7 +1282,7 @@ class PreviousProjectLoader:
 
         self.global_tree_db = {}
         self._marple, self._micro_electronics = {}, {}
-        self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound = project_data
+        self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = project_data
 
         self.__start_reading()
 
@@ -1382,22 +1385,22 @@ class PreviousProjectLoader:
 
         for key in db_s_keys:
             if 'Current' in key:
-                cur_lay = int(key.split('_')[-1])
+                cur_lay = np.where(self.layer_numbers == int(key.split('_')[-1]))
                 self.__delete_source_safely((lambda: self.LAY[cur_lay, 1] == 0), obj, key)
             if 'Sigma' in key:
-                cur_lay = int(key.split('_')[-1])
+                cur_lay = np.where(self.layer_numbers == int(key.split('_')[-1]))
                 self.__delete_source_safely(lambda: (self.LAY[cur_lay, 2] == 0), obj, key)
             if 'Flu' in key:
-                from_l = int(key.split('_')[-2])
-                to_l = int(key.split('_')[-1])
+                from_l = np.where(self.layer_numbers == int(key.split('_')[-2]))
+                to_l = np.where(self.layer_numbers == int(key.split('_')[-1]))
                 part_number = int(key.split('_')[-3])
                 self.__delete_source_safely(lambda: (self.PL_surf[part_number][to_l, from_l] == 0), obj, key)
             if 'Volume78' == key.split('_')[0]:
-                vol_lay = int(key.split('_')[-1])
+                vol_lay = np.where(self.layer_numbers == int(key.split('_')[-1]))
                 part_number = int(key.split('_')[-2])
                 self.__delete_source_safely(lambda: (self.PL_vol[part_number][vol_lay] == 0), obj, key)
             if 'Volume' == key.split('_')[0]:
-                vol_lay = int(key.split('_')[-1])
+                vol_lay = np.where(self.layer_numbers == int(key.split('_')[-1]))
                 part_number = int(key.split('_')[-2])
                 self.__delete_source_safely(lambda: self.PL_vol[part_number][vol_lay] == 0, obj, key)
             if 'Boundaries' in key:
@@ -1423,5 +1426,6 @@ class PreviousProjectLoader:
             if statment():
                 data_object.delete_second_level(key)
 
-        except (KeyError, IndexError):
+        except Exception as e:
+            print(e)
             print(f'Ошибка удаления источника {key}')

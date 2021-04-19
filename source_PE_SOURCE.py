@@ -323,7 +323,7 @@ class SpectreDataWithConvertation:
     def start_read(self):
 
         if self.spectre_type == 5:
-            self.data = np.loadtxt(self.spectre_path, skiprows=16, dtype=float)
+            self.data = np.loadtxt(self.spectre_path, skiprows=16, dtype=float, ndmin=2)
 
             self.old_data = self.data.copy()
 
@@ -335,10 +335,10 @@ class SpectreDataWithConvertation:
                 self.five_spectre_type = 1
 
         if self.spectre_type == 'DISCRETE':
-            self.data = np.loadtxt(self.spectre_path, skiprows=2, dtype=float)
+            self.data = np.loadtxt(self.spectre_path, skiprows=2, dtype=float, ndmin=2)
 
         if self.spectre_type == 'CONTINUOUS':
-            self.data = np.loadtxt(self.spectre_path, skiprows=3, dtype=float)
+            self.data = np.loadtxt(self.spectre_path, skiprows=3, dtype=float, ndmin=2)
 
             with open(self.spectre_path, 'r') as file:
                 lines = file.readlines()
@@ -366,8 +366,9 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     try:
-        print(f'Проект {projectfilename}')
-        ini = os.path.normpath(os.path.dirname(projectfilename))
+        # print(f'Проект {projectfilename}')
+        # ini = os.path.normpath(os.path.dirname(projectfilename))
+        ini = r'C:\Work\test_projects\sources_bugs\PROJECT_12'
     except Exception:
         mb.showerror('error', 'Проект не выбран')
         destr()

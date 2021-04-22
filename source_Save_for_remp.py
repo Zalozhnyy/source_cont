@@ -13,6 +13,8 @@ from loguru import logger
 from source_Dialogs import ShowDuplicateSpectreNumbers
 
 
+SOURCES_JSON_VERSION = 1.0
+
 @logger.catch()
 class Save_remp:
     def __init__(self, marple, micro_electronics, data_object, path):
@@ -545,7 +547,8 @@ class JsonSave:
                     "Y": 0,
                     "Z": 0,
                 }
-            }
+            },
+            "Version": SOURCES_JSON_VERSION
         }
 
         self.local_influence_dict = {}

@@ -366,9 +366,8 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     try:
-        # print(f'Проект {projectfilename}')
-        # ini = os.path.normpath(os.path.dirname(projectfilename))
-        ini = r'C:\Work\test_projects\sources_bugs\PROJECT_12'
+        print(f'Проект {projectfilename}')
+        ini = os.path.normpath(os.path.dirname(projectfilename))
     except Exception:
         mb.showerror('error', 'Проект не выбран')
         destr()

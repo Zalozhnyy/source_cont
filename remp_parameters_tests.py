@@ -12,7 +12,6 @@ def get_project_files_dict(prj_path: str):
         with open(prj_path, 'r', encoding=f'{locale.getpreferredencoding()}') as file:
             lines = file.readlines()
 
-
     project_dir = os.path.dirname(prj_path)
 
     out = {}
@@ -24,12 +23,13 @@ def get_project_files_dict(prj_path: str):
         if '<Layers name>' in lines[i]:
             out.setdefault('LAY', lines[i + 1].strip())
         if '<Particles-Layers name>' in lines[i]:
-            out.setdefault('PL', lines[i + 1].strip())
+            out.setdefault('PL', None if 'NONE' in lines[i + 1].strip() else lines[i + 1].strip())
         if '<Particles name>' in lines[i]:
-            out.setdefault('PAR', lines[i + 1].strip())
+            out.setdefault('PAR', None if 'NONE' in lines[i + 1].strip() else lines[i + 1].strip())
 
     for item, value in out.items():
-        out[item] = os.path.join(project_dir, value)
+        if value is not None:
+            out[item] = os.path.join(project_dir, value)
 
     return out
 
@@ -166,20 +166,6 @@ def par_decoder(par_path: str):
 def main_test(prj_file_path: str):
     parameters_path_dict = get_project_files_dict(prj_file_path)
 
-    # типы возвращаемых массивов nd.array
-    pl_particle, pl_layers = pl_decoder(parameters_path_dict['PL'])
-    par_particle = np.array([i['number'] for i in par_decoder(parameters_path_dict['PAR']).values()])
-    lay_layers = lay_decoder(parameters_path_dict['LAY'])[:, 0]
-
-    test_passed = {
-        # 'permission_denied':
-        #     permission_denied_test(),
-        'same_layers_numbers_pl_lay_files':
-            False if lay_layers.shape != pl_layers.shape else np.all(lay_layers == pl_layers),
-        'same_particles_numbers_pl_lay_files':
-            False if par_particle.shape != pl_particle.shape else np.all(par_particle == pl_particle)
-    }
-
     exceptions_messages = {
         'permission_denied':
             'Программа не имеет доступа к файловой системе. Запустите программу от имени администратора',
@@ -192,6 +178,27 @@ def main_test(prj_file_path: str):
             'Не совпадает количество частиц в файле PL и PAR. '
             'Запустите интерфейс редактирования файлов PAR/PL для исправления данной ошибки.',
 
+    }
+
+    # типы возвращаемых массивов nd.array
+    if parameters_path_dict['PL'] is None:
+        test_passed = {
+            'same_layers_numbers_pl_lay_files': True,
+            'same_particles_numbers_pl_lay_files': True
+        }
+        return test_passed, exceptions_messages
+
+    pl_particle, pl_layers = pl_decoder(parameters_path_dict['PL'])
+    par_particle = np.array([i['number'] for i in par_decoder(parameters_path_dict['PAR']).values()])
+    lay_layers = lay_decoder(parameters_path_dict['LAY'])[:, 0]
+
+    test_passed = {
+        # 'permission_denied':
+        #     permission_denied_test(),
+        'same_layers_numbers_pl_lay_files':
+            False if lay_layers.shape != pl_layers.shape else np.all(lay_layers == pl_layers),
+        'same_particles_numbers_pl_lay_files':
+            False if par_particle.shape != pl_particle.shape else np.all(par_particle == pl_particle)
     }
 
     return test_passed, exceptions_messages

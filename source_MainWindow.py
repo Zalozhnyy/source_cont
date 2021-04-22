@@ -76,7 +76,7 @@ class MainWindow(tk.Frame):
         self._time_grid_data = DataParser(self.grd_dir).grid_parcer()
 
         # self.TOK = DataParcer(self.tok_dir).tok_decoder()
-        if os.path.exists(self.pl_dir):
+        if self.pl_dir is not None and os.path.exists(self.pl_dir):
             self.PL_surf, self.PL_vol, self.PL_bound, self.layer_numbers = DataParser(self.pl_dir).pl_decoder()
             if self.PL_surf is None:
                 mb.showerror('ERROR', 'Нарушена структура файла PL')
@@ -86,6 +86,8 @@ class MainWindow(tk.Frame):
 
         if os.path.exists(self.lay_dir):
             self.LAY, self.PPN = DataParser(self.lay_dir).lay_decoder()
+            if self.layer_numbers is None:
+                self.layer_numbers = self.LAY[:, 0]
             if self.LAY is None:
                 mb.showerror('ERROR', 'Нарушена структура файла LAY')
                 return
@@ -934,6 +936,9 @@ class MainWindow(tk.Frame):
             print('Объект уже существует')
 
     def __check_all_particles_is_used(self):
+        if self.PAR is None:
+            return True
+
         part_list = [i for i in self.PAR.keys()]
         for gsource in self.global_tree_db.keys():
             for i in self.global_tree_db[gsource].get_first_level_keys():
@@ -1377,6 +1382,8 @@ class PreviousProjectLoader:
                 db_s_keys.add(s_key)
 
         for f_key in obj.get_first_level_keys():
+            if self.PAR is None:
+                continue
             if f_key not in self.PAR.keys() and f_key != 'Current' and f_key != 'Sigma':
                 delete_part_list.add(f_key)
 

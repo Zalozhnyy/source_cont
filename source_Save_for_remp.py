@@ -540,6 +540,8 @@ class JsonSave:
         self.micro_electronics = micro_electronics
 
         self.save_dict = {
+            "Version": SOURCES_JSON_VERSION,
+
             "Influences": {
                 "Lag": {
                     "Type": 0,
@@ -547,8 +549,7 @@ class JsonSave:
                     "Y": 0,
                     "Z": 0,
                 }
-            },
-            "Version": SOURCES_JSON_VERSION
+            }
         }
 
         self.local_influence_dict = {}

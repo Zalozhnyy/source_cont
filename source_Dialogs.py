@@ -504,7 +504,7 @@ class SelectLagInterface(tk.Toplevel):
         self._enable_var.set(1)
         self.en_change()
 
-        self.vector_data = list(sub.get_subtask_koord())
+        self.vector_data = list(sub.get_subtask_koord_global())
         [self._entry_vector_values[i].set(str(self.vector_data[i])) for i in range(len(self.vector_data))]
 
     def en_change(self):

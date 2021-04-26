@@ -660,10 +660,19 @@ class SubtaskDecoder:
             'altitude': lines[15].strip()
         })
 
-    def get_subtask_koord(self):
+    def get_subtask_koord_local(self):
         x = float(self.subtask_struct['local source position']['x'])
         y = float(self.subtask_struct['local source position']['y'])
         z = float(self.subtask_struct['local source position']['z'])
+
+        vector = (x ** 2 + y ** 2 + z ** 2) ** 0.5
+
+        return x / vector, y / vector, z / vector
+
+    def get_subtask_koord_global(self):
+        x = float(self.subtask_struct['source_position']['x'])
+        y = float(self.subtask_struct['source_position']['y'])
+        z = float(self.subtask_struct['source_position']['z'])
 
         vector = (x ** 2 + y ** 2 + z ** 2) ** 0.5
 

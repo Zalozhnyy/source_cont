@@ -204,7 +204,7 @@ class MainWindow(tk.Frame):
         sub = SubtaskDecoder(self.path)
 
         if sub.subtask_path is not None:
-            x, y, z = sub.get_subtask_koord()
+            x, y, z = sub.get_subtask_koord_local()
             self.lag = f'1 {x} {y} {z}'
             print('Параметр задержки взята из файла подзадачи')
 

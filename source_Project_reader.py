@@ -667,7 +667,11 @@ class SubtaskDecoder:
 
         vector = (x ** 2 + y ** 2 + z ** 2) ** 0.5
 
-        return x / vector, y / vector, z / vector
+        out = [-x / vector if abs(-x / vector) > 1e-6 else 0,
+               -y / vector if abs(-y / vector) > 1e-6 else 0,
+               -z / vector if abs(-z / vector) > 1e-6 else 0]
+
+        return out
 
     def get_subtask_koord_global(self):
         x = float(self.subtask_struct['source_position']['x'])
@@ -676,7 +680,11 @@ class SubtaskDecoder:
 
         vector = (x ** 2 + y ** 2 + z ** 2) ** 0.5
 
-        return x / vector, y / vector, z / vector
+        out = [-x / vector if abs(-x / vector) > 1e-6 else 0,
+               -y / vector if abs(-y / vector) > 1e-6 else 0,
+               -z / vector if abs(-z / vector) > 1e-6 else 0]
+
+        return out
 
 
 if __name__ == '__main__':

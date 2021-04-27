@@ -396,7 +396,7 @@ class SelectLagInterface(tk.Toplevel):
 
         if len(init_values) != 0:
             for i in range(len(self._entry_vector_values)):
-                self._entry_vector_values[i].set(init_values[i])
+                self._entry_vector_values[i].set(f'{init_values[i]:.4g}')
                 self.vector_data[i] = float(init_values[i])
 
             self._restore_init_values = init_values.copy()
@@ -487,7 +487,7 @@ class SelectLagInterface(tk.Toplevel):
             lag = list(map(float, lag.split()))
 
             self.vector_data = lag
-            [self._entry_vector_values[i].set(str(self.vector_data[i])) for i in range(len(self.vector_data))]
+            [self._entry_vector_values[i].set(f'{self.vector_data[i]:.4g}') for i in range(len(self.vector_data))]
             # self._enable_var.set(1)
             # self.en_change()
 
@@ -504,8 +504,10 @@ class SelectLagInterface(tk.Toplevel):
         self._enable_var.set(1)
         self.en_change()
 
-        self.vector_data = list(sub.get_subtask_koord_global())
-        [self._entry_vector_values[i].set(str(self.vector_data[i])) for i in range(len(self.vector_data))]
+        self.vector_data = sub.get_subtask_koord_local()
+        assert len(self.vector_data) == 0
+
+        [self._entry_vector_values[i].set(f'{self.vector_data[i]:.4g}') for i in range(len(self.vector_data))]
 
     def en_change(self):
         state = self._enable_var.get()

@@ -86,9 +86,9 @@ class SpectreConfigure(tk.Frame):
         if find_mat_air is False:
             mb.showinfo('Перенос', 'Папка materials/mat_air не обнаружена.\nВыберите папку mat_air')
             self.mat_air_path = fd.askdirectory(title='Выберите папку materials', initialdir=self.path)
-            print(f'mat_air обнаружен в {self.mat_air_path}')
             if self.mat_air_path == '':
                 return 0
+            print(f'mat_air обнаружен в {self.mat_air_path}')
 
         photon_path = os.path.join(self.mat_air_path, r'photon\xtbl.23')
         if not os.path.exists(photon_path):
@@ -209,6 +209,8 @@ class SpectreConfigure(tk.Frame):
             elif 'Номер спектра' in lines[1] and lines[6].strip() == '5':
                 check = self.pechs_check()
                 if check == 0:
+                    self.destroy()
+                    self.parent.destroy()
                     return
 
                 self.elph = DataParser(self.path).elph_reader()
@@ -414,7 +416,7 @@ class SpectreConfigure(tk.Frame):
             self.spectre_power_exception.grid_remove()
 
             self.spectre_power_val = tk.StringVar()
-            self.spectre_power = tk.Entry(self.frame_description, textvariable=self.spectre_power_val, width=10)
+            self.spectre_power = tk.Entry(self.frame_description, textvariable=self.spectre_power_val, width=30)
             self.spectre_power.grid(row=row, column=0, columnspan=2, sticky='NW')
 
             self.spectre_power_val.trace('w', lambda name, index, mode: self._data_validation([int, float],
@@ -558,7 +560,7 @@ class SpectreConfigure(tk.Frame):
         self.spectre_number_val.set(str(self.data_struct.sp_number))
 
         if self.data_struct.spectre_type != 5:
-            self.spectre_power_val.set(str(self.data_struct.sp_power))
+            self.spectre_power_val.set(f'{self.data_struct.sp_power : .4E}')
 
         self.starts_count_val.set(str(self.data_struct.starts_count))
 

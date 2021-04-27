@@ -195,7 +195,7 @@ class StandardizedSourceMainInterface(tk.Frame):
         ex.open_spectre(use_chose_spectre=sp_path, use_constructor=True)
 
         try:
-            ex.spectre_power['state'] = 'disabled'
+            ex.spectre_power['state'] = 'normal'
             self.wait_window(top_level_root)
 
         except Exception:

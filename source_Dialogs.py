@@ -505,7 +505,6 @@ class SelectLagInterface(tk.Toplevel):
         self.en_change()
 
         self.vector_data = sub.get_subtask_koord_local()
-        assert len(self.vector_data) == 0
 
         [self._entry_vector_values[i].set(f'{self.vector_data[i]:.4g}') for i in range(len(self.vector_data))]
 

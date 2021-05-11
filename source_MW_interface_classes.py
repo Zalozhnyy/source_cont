@@ -576,6 +576,9 @@ class StandardizedSourceMainInterface(tk.Frame):
             sp_type_name_list = []
 
             for sp in spectres:
+                dc = DataParser(self.path)
+                if not dc.spc_non_empty(sp):
+                    continue
                 sp_path = os.path.join(self.path, sp)
                 file_name, number, sp_type = self.__read_spectre(sp_path)
                 if file_name is None:
@@ -589,10 +592,14 @@ class StandardizedSourceMainInterface(tk.Frame):
             self.spectre_number_values = number_list
             self.spectre_type_values = sp_type_name_list
 
+            print(self.spectre_name_values)
+
         else:
             self.spectre_name_values = ['Опознано неправильное количество спектров.\nВоспользуйтесь ручным выбором']
             self.spectre_number_values = ['']
             self.spectre_type_values = ['']
+
+
 
     def _buttons_state(self):
         if self.sk.split('_')[0] == 'Volume':

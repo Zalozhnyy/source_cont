@@ -585,27 +585,11 @@ class MainWindow(tk.Frame):
                     spectres = DataParser(self.path + '/').get_spectre_for_flux(number, from_l, to_l)
 
                     if len(spectres) == 6:
-                        obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
-                        obj.insert_third_level(particle, name, 'spectre numbers', [i for i in spectres.values()])
-
-                    # if load:
-                    #     try:
-                    #         spectre = [i for i in self.rs_data[number][name]['spectre'].split(' ')]
-                    #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre', spectre)
-                    #
-                    #         spectre_number = [i for i in self.rs_data[number][name]['spectre number'].split(' ')]
-                    #         obj.insert_third_level(f'{particle}', f'{name}', 'spectre numbers', spectre_number)
-                    #
-                    #     except:
-                    #         print(
-                    #             f'Загрузка данных в {particle} {name} произошла с ошибкой или нет данных в remp sources')
-                    #         if len(spectres) == 6:
-                    #             obj.insert_third_level(particle, name, 'spectre', [i for i in spectres.keys()])
-                    #             obj.insert_third_level(particle, name, 'spectre numbers',
-                    #                                    [i for i in spectres.values()])
-                    #         else:
-                    #             obj.insert_third_level(particle, name, 'spectre', None)
-                    #             obj.insert_third_level(particle, name, 'spectre numbers', None)
+                        obj.insert_third_level(particle, name, 'spectre',
+                                               [i for i in spectres.keys() if DataParser(self.path).spc_non_empty(i)])
+                        obj.insert_third_level(particle, name, 'spectre numbers',
+                                               [num for sp, num in zip(spectres.keys(), spectres.values()) if
+                                                DataParser(self.path).spc_non_empty(sp)])
 
         for i in range(len(self.PL_vol[number])):  # volume
             if self.PL_vol[number][i] != 0 and type != 7 and type != 8:
@@ -1291,6 +1275,20 @@ class PreviousProjectLoader:
 
         self.__start_reading()
 
+    def __reform_flux_spectres(self, obj: TreeDataStructure):
+
+        for f_key in obj.get_first_level_keys():
+            for s_key in obj.get_second_level_keys(f_key):
+                if 'Flu' in s_key:
+                    sp_old = obj.get_last_level_data(f_key, s_key, 'spectre')
+                    num_old = obj.get_last_level_data(f_key, s_key, 'spectre numbers')
+
+                    obj.insert_third_level(f_key, s_key, 'spectre',
+                                           [sp for sp in sp_old if DataParser(self.path).spc_non_empty(sp)])
+                    obj.insert_third_level(f_key, s_key, 'spectre numbers',
+                                           [num for sp, num in zip(sp_old, num_old) if
+                                            DataParser(self.path).spc_non_empty(sp)])
+
     def get_db_and_lag(self):
         lag = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('lag')
         return self.global_tree_db, lag
@@ -1335,6 +1333,7 @@ class PreviousProjectLoader:
         for i in self.global_tree_db.items():
             """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""
             self.__tree_db_delete_old(i[1])
+            self.__reform_flux_spectres(i[1])
 
         self._marple, self._micro_electronics = DataParser(self.path).load_marple_data_from_remp_source()
         self.loaded_flag = True

@@ -433,6 +433,27 @@ class DataParser:
     def return_empty_array(self, shape=(0, 0)):
         return np.zeros(shape)
 
+    def spc_non_empty(self, file_name: str) -> bool:
+        sp = file_name
+        file_name = os.path.normpath(os.path.join(self.path, file_name))
+        try:
+            f = open(file_name, 'r', encoding=self.decoding)
+            lines = f.readlines()
+        except UnicodeDecodeError:
+            f = open(file_name, 'r', encoding=self.decoding_def)
+            lines = f.readlines()
+        except Exception as e:
+            logger.exception(f"{file_name} reading failed\n {e}")
+            print(f"{file_name} reading failed\n {e}")
+            return False
+
+        f.close()
+        # print(f'{sp}  {len(lines)}')
+        if len(lines) <= 12:
+            return False
+
+        return True
+
 
 @logger.catch()
 class SpOneReader:

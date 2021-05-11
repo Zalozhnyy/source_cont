@@ -363,11 +363,30 @@ class StandardizedSourceMainInterface(tk.Frame):
                 number.append(b)
                 sp_type.append(c)
 
+        if 'Flu' in self.sk:
+            dc = DataParser(self.path)
+
+            file_name_fixed = [sp for sp in file_name if dc.spc_non_empty(sp)]
+            number_fixed = [num for sp, num in zip(file_name, number) if dc.spc_non_empty(sp)]
+            sp_type_fixed = [t for sp, t in zip(file_name, sp_type) if dc.spc_non_empty(sp)]
+
+            if len(file_name_fixed) != len(file_name):
+                print('В выбраных спектрах обнаружены нулевые. Они были отброшены из выбора.')
+                mb.showinfo('info', 'В выбраных спектрах обнаружены нулевые. Они были отброшены из выбора.')
+
+            file_name = file_name_fixed
+            number = number_fixed
+            sp_type = sp_type_fixed
+
+            if len(file_name) == 0:
+                self.spectre_name_values = ['Файл не выбран']
+                self.spectre_number_values = ['--']
+                self.spectre_type_values = ['--']
+                return
+
         self.spectre_name_values = file_name
         self.spectre_number_values = number
         self.spectre_type_values = sp_type
-
-        print(self.spectre_name_values)
 
     def __read_spectre(self, target):
         if not os.path.exists(target):
@@ -598,8 +617,6 @@ class StandardizedSourceMainInterface(tk.Frame):
             self.spectre_name_values = ['Опознано неправильное количество спектров.\nВоспользуйтесь ручным выбором']
             self.spectre_number_values = ['']
             self.spectre_type_values = ['']
-
-
 
     def _buttons_state(self):
         if self.sk.split('_')[0] == 'Volume':

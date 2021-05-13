@@ -1300,6 +1300,9 @@ class PreviousProjectLoader:
             if 'Sigma' not in f_key and 'Current' not in f_key and 'Energy' not in f_key:
                 part = db.get_share_data('particle number')
 
+                if type(part) is set:
+                    part = list(part)
+
                 if type(part) is list:
                     for part_number in part:
                         if all([part_number != self.PAR[k]['number'] for k in self.PAR.keys()]):

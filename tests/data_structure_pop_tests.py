@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../')
+
 import pytest
 
 from dataclasses import dataclass

@@ -11,19 +11,21 @@ from loguru import logger
 class DataParser:
     def __init__(self, path):
         self.path = path
-        self.dir_path = os.path.dirname(self.path)
+        if path:
+            self.dir_path = os.path.dirname(self.path)
         self.decoding_def = locale.getpreferredencoding()
         self.decoding = 'utf-8'
 
-    def lay_decoder(self):
+    def lay_decoder(self, lines: list = None):
         #### .LAY DECODER
-        try:
-            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-                lines = file.readlines()
-        except UnicodeDecodeError:
+        if not lines:
+            try:
+                with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                    lines = file.readlines()
+            except UnicodeDecodeError:
 
-            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
-                lines = file.readlines()
+                with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                    lines = file.readlines()
 
         try:
 
@@ -93,15 +95,16 @@ class DataParser:
             print('Ошибка в чтении файла .TOK')
             return
 
-    def pl_decoder(self):
+    def pl_decoder(self, lines_pl: list = None):
         #### .PL DECODER
-        try:
-            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-                lines_pl = file.readlines()
-        except UnicodeDecodeError:
+        if not lines_pl:
+            try:
+                with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                    lines_pl = file.readlines()
+            except UnicodeDecodeError:
 
-            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
-                lines_pl = file.readlines()
+                with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                    lines_pl = file.readlines()
         try:
             particle_count = int(lines_pl[2])
             layers = int(lines_pl[6])
@@ -177,13 +180,14 @@ class DataParser:
         out = np.array(lines[15].split(), dtype=float)
         return out
 
-    def par_decoder(self):
-        try:
-            with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
-                lines = file.readlines()
-        except UnicodeDecodeError:
-            with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
-                lines = file.readlines()
+    def par_decoder(self, lines: list = None):
+        if not lines:
+            try:
+                with open(rf'{self.path}', 'r', encoding=f'{self.decoding}') as file:
+                    lines = file.readlines()
+            except UnicodeDecodeError:
+                with open(rf'{self.path}', 'r', encoding=f'{self.decoding_def}') as file:
+                    lines = file.readlines()
 
         try:
             # L[0] '<Количество типов частиц>'

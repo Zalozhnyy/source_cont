@@ -123,6 +123,8 @@ class PreviousProjectLoader:
     def __delete_particles(self, db):
         delete_part_list = set()
 
+        project_particles_numbers = set([self.PAR[k]['number'] for k in self.PAR.keys()])
+        new_share_data_particles = set()
         for f_key in db.get_first_level_keys():
             if 'Sigma' not in f_key and 'Current' not in f_key and 'Energy' not in f_key:
                 part = db.get_share_data('particle number')
@@ -132,16 +134,22 @@ class PreviousProjectLoader:
 
                 if type(part) is list:
                     for part_number in part:
-                        if all([part_number != self.PAR[k]['number'] for k in self.PAR.keys()]):
+                        if part_number not in project_particles_numbers:
                             delete_part_list.add(f_key)
+                        else:
+                            new_share_data_particles.add(part_number)
 
                 # условие нужно для подержки старых версий баз данных, после сохранения они переходят в новый формат
                 elif type(part) is int:
-                    if all([part != self.PAR[k]['number'] for k in self.PAR.keys()]):
+                    if part not in project_particles_numbers:
                         delete_part_list.add(f_key)
+                    else:
+                        new_share_data_particles.add(part)
 
         for dk in delete_part_list:
             db.delete_first_level(dk)
+
+        db.insert_share_data('particle number', new_share_data_particles)
 
     def start_reading(self, tests=False):
         if not os.path.exists(os.path.join(self.path, 'Sources.pkl')):

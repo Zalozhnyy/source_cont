@@ -1,10 +1,8 @@
-import pickle
 from tkinter import simpledialog as sd
 from tkinter import ttk
 from typing import List, Dict
 from collections import namedtuple
 
-import numpy as np
 from loguru import logger
 
 from remp_parameters_tests import main_test as remp_files_test
@@ -1156,8 +1154,8 @@ class MainWindow(tk.Frame):
                                             'Создание источника обтекания')
         self.wait_window(ex)
 
-        ion = ex.first_item
-        sigma = ex.second_item
+        ion = ex.second_item
+        sigma = ex.first_item
 
         # self.marple_menu.entryconfigure(0, state='disabled')
         self.marple_menu.entryconfigure(1, state='normal')
@@ -1257,6 +1255,3 @@ class MainWindow(tk.Frame):
             number = None
             print(f'Спектр {fname} не найден в проекте')
         return number
-
-
-

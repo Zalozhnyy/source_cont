@@ -11,9 +11,10 @@ from typing import List, NamedTuple
 from loguru import logger
 
 from source_Dialogs import ShowDuplicateSpectreNumbers
-
+from source_utility import TreeDataStructure
 
 SOURCES_JSON_VERSION = 1.0
+
 
 @logger.catch()
 class Save_remp:
@@ -46,6 +47,12 @@ class Save_remp:
         for item in self.db.items():
             gsource_db = item[1]
             name = item[0]
+
+            if not self._check_unique_current_files(gsource_db):
+                print(f'Обнаружены совпадающие имена файлов токов в {name}')
+                mb.showerror('Внимание', f'Обнаружены совпадающие имена файлов токов в {name}')
+                return
+
             try:
                 if gsource_db.get_share_data('amplitude') is None or gsource_db.get_share_data('amplitude') == 0:
                     raise Exception
@@ -523,6 +530,17 @@ class Save_remp:
             out += str(db_vel)
 
         return out
+
+    def _check_unique_current_files(self, gsource_db: TreeDataStructure):
+        files = set()
+
+        for key in gsource_db.get_second_level_keys('Current'):
+            currents = gsource_db.get_last_level_data('Current', key, 'distribution')
+            if any([i in files for i in currents]):
+                return False
+            else:
+                files.add(*currents)
+        return True
 
 
 class Sp(NamedTuple):

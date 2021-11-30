@@ -27,7 +27,7 @@ class MainWindow(tk.Frame):
         self.prj_path: str
 
         self.notebook: ttk.Notebook
-        self.tabs_dict: Dict[int, List[int, tk.Frame, bool]] = {}
+        self.tabs_dict: Dict[int, List] = {}
         self.tree: List[ttk.Treeview] = []
         self.global_tree_db: Dict[str, TreeDataStructure] = {}
         self._influence_numbers = set()

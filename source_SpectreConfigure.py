@@ -9,8 +9,6 @@ from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 from tkinter import simpledialog
 
-import traceback
-
 import numpy as np
 from scipy import integrate
 from loguru import logger

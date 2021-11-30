@@ -14,7 +14,6 @@ from numpy import log as ln
 from loguru import logger
 
 from source_utility import *
-from source_Project_reader import DataParser
 from source_Spectre_one_interface import ScrolledWidget
 
 
@@ -891,12 +890,8 @@ class FrameGen(ttk.LabelFrame):
 
         else:  # тут происходит какая-то муть, не пытайся понять - просто пройди в дебаге
 
-            time_right_side = np.where(self.user_timeset == self._grd_data)[0]
-
-            if time_right_side.shape[0] == 0:
-                time_cell = self._grd_data[:time_right_side[0]]
-            else:
-                time_cell = self._grd_data
+            time_right_side = np.searchsorted(self._grd_data, self.user_timeset)
+            time_cell = self._grd_data[:time_right_side]
 
             if self.user_timeset not in self.backup_tf:
                 for i in range(len(self.backup_tf)):

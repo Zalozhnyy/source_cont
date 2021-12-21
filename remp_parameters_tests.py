@@ -2,6 +2,8 @@ import os
 import numpy as np
 import locale
 
+import re
+
 
 def get_project_files_dict(prj_path: str):
     try:
@@ -163,6 +165,12 @@ def par_decoder(par_path: str):
         return None
 
 
+def check_russian_symbols(string: str):
+    r = re.compile("[а-яА-Я]")
+    res = re.findall(r, string)
+    return False if not res else True
+
+
 def main_test(prj_file_path: str):
     parameters_path_dict = get_project_files_dict(prj_file_path)
 
@@ -177,6 +185,9 @@ def main_test(prj_file_path: str):
         'same_particles_numbers_pl_lay_files':
             'Не совпадает количество частиц в файле PL и PAR. '
             'Запустите интерфейс редактирования файлов PAR/PL для исправления данной ошибки.',
+
+        'russian_symbols_in_path':
+            'Обнаружены русские символы в пути проекта. Возможны ошибки. Удалите русские символы из пути к проекту.',
 
     }
 
@@ -198,7 +209,8 @@ def main_test(prj_file_path: str):
         'same_layers_numbers_pl_lay_files':
             False if lay_layers.shape != pl_layers.shape else np.all(lay_layers == pl_layers),
         'same_particles_numbers_pl_lay_files':
-            False if par_particle.shape != pl_particle.shape else np.all(par_particle == pl_particle)
+            False if par_particle.shape != pl_particle.shape else np.all(par_particle == pl_particle),
+        'russian_symbols_in_path': not check_russian_symbols(prj_file_path)
     }
 
     return test_passed, exceptions_messages

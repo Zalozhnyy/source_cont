@@ -39,6 +39,9 @@ class Save_remp:
         out = ''
 
         if self.marple is not None:
+            for name in self.db.keys():
+                self.db[name].insert_share_data('marple', self.marple)
+
             out += self.save_marple()
 
         if self.micro_electronics is not None:

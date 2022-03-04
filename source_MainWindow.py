@@ -142,7 +142,7 @@ class MainWindow(tk.Frame):
         self.marple_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Задача обтекания", menu=self.marple_menu, state='disabled')
 
-        self.marple_menu.add_command(label="Добавить/Изменить задачу обтекания", command=self.__add_marple,
+        self.marple_menu.add_command(label="Добавить задачу обтекания", command=self.__add_marple,
                                      state='normal')
         self.marple_menu.add_command(label="Удалить  задачу обтекания", command=self.__delete_marple, state='disabled')
 
@@ -429,7 +429,9 @@ class MainWindow(tk.Frame):
                                            self.layer_numbers])
                 l.start_reading()
                 if l.loaded_flag:  # load successfully
-                    self.global_tree_db, self.lag = l.get_db_and_lag()
+                    self.global_tree_db, self.lag, self._marple = l.get_db_lag_marple()
+                    if self._marple is not None:
+                        self.marple_menu.entryconfigure(1, state='normal')
                     load_lag = False
                     self.__construct_loaded_data()
         if load_lag:
@@ -1138,36 +1140,31 @@ class MainWindow(tk.Frame):
         return fr_data
 
     def __add_marple(self):
-        if self._marple is not None and all([i is not None for i in self._marple.values()]):
+        ion, sigma = None, None
+        for file in os.listdir(self.path):
+            if file == "marple_ion":
+                ion = file
+            if file == "marple_sigma":
+                sigma = file
 
-            tup = tuple(self._marple.values())
-            ex = MarpleElectronicsInterface(self.path,
-                                            'Проводимость',
-                                            'Степень ионизации',
-                                            'Создание источника обтекания',
-                                            tup)
-
-        else:
-            ex = MarpleElectronicsInterface(self.path,
-                                            'Проводимость',
-                                            'Степень ионизации',
-                                            'Создание источника обтекания')
-        self.wait_window(ex)
-
-        ion = ex.second_item
-        sigma = ex.first_item
+        if not ion or not sigma:
+            mb.showinfo('Задача обтекания',
+                        f'Найдены не все необходимые файлы:\n'
+                        f'marple_sigma: {sigma if sigma else "не найден"}\n'
+                        f'marple_ion: {ion if ion else "не найден"}')
+            return
 
         # self.marple_menu.entryconfigure(0, state='disabled')
-        self.marple_menu.entryconfigure(1, state='normal')
+        self.marple_menu.entryconfigure(1, state='normal')  # delete
 
         self._marple = {'ion': ion, 'sigma': sigma}
         self._save_flag = True
 
-        mb.showinfo('Задача обтекания', 'Задача обтекания будет добавлена в remp source при сохранении проекта')
+        mb.showinfo('Задача обтекания', 'Задача обтекания будет добавлена в источники при сохранении проекта')
 
     def __delete_marple(self):
         self.marple_menu.entryconfigure(0, state='normal')
-        self.marple_menu.entryconfigure(1, state='disabled')
+        self.marple_menu.entryconfigure(1, state='disabled')  # delete
 
         mb.showinfo('Задача обтекания', 'Задача обтекания не будет сохранёна в remp source')
 

@@ -36,6 +36,7 @@ class TreeDataStructure:
                                                    'time': [],
                                                    'func': [],
                                                    'lag': None,
+                                                   'marple': None,
                                                    'time_full': None,
                                                    'func_full': None,
                                                    'tf_break': None,
@@ -116,9 +117,15 @@ class PreviousProjectLoader:
                                            [num for sp, num in zip(sp_old, num_old) if
                                             DataParser(self.path).spc_non_empty(sp)])
 
-    def get_db_and_lag(self):
+    def get_db_lag_marple(self):
         lag = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('lag')
-        return self.global_tree_db, lag
+
+        try:
+            marple = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('marple')
+        except Exception:
+            marple = None
+
+        return self.global_tree_db, lag, marple
 
     def __delete_particles(self, db):
         delete_part_list = set()

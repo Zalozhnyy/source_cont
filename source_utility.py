@@ -118,12 +118,18 @@ class PreviousProjectLoader:
                                             DataParser(self.path).spc_non_empty(sp)])
 
     def get_db_lag_marple(self):
-        lag = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('lag')
+        try:
+            lag = self.global_tree_db['meta']['lag']
+        except:
+            lag = "0 0 0 0"
 
         try:
-            marple = self.global_tree_db[list(self.global_tree_db.keys())[0]].get_share_data('marple')
-        except Exception:
+            marple = self.global_tree_db['meta']['marple']
+        except:
             marple = None
+
+        if 'meta' in self.global_tree_db.keys():
+            self.global_tree_db.pop('meta')
 
         return self.global_tree_db, lag, marple
 
@@ -172,16 +178,20 @@ class PreviousProjectLoader:
                          'Ошибка при попытке прочитать бинарный файл сохранения. Загрузка невозможна.')
             return
 
-        for i in self.global_tree_db.items():
-            self.__delete_particles(i[1])
+        for key, value in self.global_tree_db.items():
+            if key == 'meta':
+                continue
+            self.__delete_particles(value)
 
-        for i in self.global_tree_db.items():
+        for key, value in self.global_tree_db.items():
+            if key == 'meta':
+                continue
+
             """Удаляем источники, которых нет в текущих файлах проекта, но есть в загрузке"""
-            self.__tree_db_delete_old(i[1])
+            self.__tree_db_delete_old(value)
             if not tests:
-                self.__reform_flux_spectres(i[1])
+                self.__reform_flux_spectres(value)
 
-        self._marple, self._micro_electronics = DataParser(self.path).load_marple_data_from_remp_source()
         self.loaded_flag = True
 
     def __tree_db_delete_old(self, obj):

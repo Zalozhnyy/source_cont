@@ -267,7 +267,7 @@ class MainWindow(tk.Frame):
 
     def __save_check_flags(self, ask):
         if ask is True:
-            ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
+            ex = Save_remp(self._marple, self._micro_electronics, self.lag, self.global_tree_db, self.path)
 
             if ex.saved is False:
                 ask_exit = mb.askyesno('Сохранение', 'Сохранение невозможно, т.к. не заданы все параметры.\n'
@@ -1075,7 +1075,7 @@ class MainWindow(tk.Frame):
                                           'Сохранить?')
             if not ask:
                 return
-        ex = Save_remp(self._marple, self._micro_electronics, self.global_tree_db, self.path)
+        ex = Save_remp(self._marple, self._micro_electronics, self.lag, self.global_tree_db, self.path)
 
     def __restore_currents(self, object_name, index):
 

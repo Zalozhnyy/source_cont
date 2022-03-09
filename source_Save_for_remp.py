@@ -3,6 +3,7 @@ from tkinter import messagebox as mb
 import numpy as np
 from scipy import integrate
 import os
+from copy import deepcopy
 import pickle
 import json
 from collections import namedtuple, Counter
@@ -18,12 +19,13 @@ SOURCES_JSON_VERSION = 1.0
 
 @logger.catch()
 class Save_remp:
-    def __init__(self, marple, micro_electronics, data_object, path):
-        self.db = data_object
+    def __init__(self, marple, micro_electronics, lag, data_object, path):
+        self.db = deepcopy(data_object)
         self.path = path
 
         self.marple = marple
         self.micro_electronics = micro_electronics
+        self.lag = lag
 
         self.calc_amplitude = 0.
         self.saved = False
@@ -37,12 +39,6 @@ class Save_remp:
     def save(self):
         self.numbers_control()
         out = ''
-
-        if self.marple is not None:
-            for name in self.db.keys():
-                self.db[name].insert_share_data('marple', self.marple)
-
-            out += self.save_marple()
 
         if self.micro_electronics is not None:
             out += self.save_micro_electronics()
@@ -131,10 +127,16 @@ class Save_remp:
                             print(a)
                             return
 
-        self.save_file(out)
+        # self.save_file(out)
+
+        self.db['meta'] = {}
+        self.db['meta']['marple'] = self.marple
+        self.db['meta']['lag'] = self.lag
 
         with open(os.path.join(self.path, 'Sources.pkl'), 'wb') as f:
             pickle.dump(self.db, f)
+
+        self.db.pop('meta')
 
         try:
             JsonSave(self.marple, self.micro_electronics, self.db, self.path)
@@ -654,6 +656,8 @@ class JsonSave:
         path = os.path.join(self.path, 'remp_sources.json')
         with open(path, 'w') as file:
             json.dump(self.save_dict, file, indent=4)
+
+        mb.showinfo('Save', f'Сохранено в remp_sources.json')
 
     def write_sources_to_local_dict(self, name, gsource_db):
 

@@ -14,10 +14,10 @@ from source_Project_reader import DataParser
 
 
 class TreeDataStructure:
-    def __init__(self, obj_name: str, part_list: list = []):
+    def __init__(self, obj_name: str):
         self.obj_name = obj_name
 
-        self.particle_list = part_list
+        self.particle_list = []
         self.__obj_structure = {self.obj_name: {}, 'share_data': {}}
 
         self.__insert_first_level()
@@ -70,7 +70,7 @@ class TreeDataStructure:
         return self.__obj_structure[self.obj_name][first_level_key][second_level_key][third_level_key]
 
     def get_first_level_keys(self):
-        return self.__obj_structure[self.obj_name].keys()
+        return [k for k in self.__obj_structure[self.obj_name].keys() if k != 'meta']
 
     def get_first_level_value(self, key):
         return self.__obj_structure[self.obj_name][key]
@@ -256,6 +256,9 @@ class PreviousProjectLoader:
                 from_l = np.where(self.layer_numbers == int(key.split('_')[-2]))
                 to_l = np.where(self.layer_numbers == int(key.split('_')[-1]))
                 part_number = int(key.split('_')[-3])
+                if len(from_l[0]) == 0 or len(to_l[0]) == 0:
+                    obj.delete_second_level(key)
+                    continue
                 self.__delete_source_safely(lambda: (self.PL_surf[part_number][to_l, from_l] == 0), obj, key)
             if 'Volume78' == key.split('_')[0]:
                 vol_lay = np.where(self.layer_numbers == int(key.split('_')[-1]))
@@ -263,6 +266,9 @@ class PreviousProjectLoader:
                 self.__delete_source_safely(lambda: (self.PL_vol[part_number][vol_lay] == 0), obj, key)
             if 'Volume' == key.split('_')[0]:
                 vol_lay = np.where(self.layer_numbers == int(key.split('_')[-1]))
+                if len(vol_lay[0]) == 0:
+                    obj.delete_second_level(key)
+                    continue
                 part_number = int(key.split('_')[-2])
                 self.__delete_source_safely(lambda: self.PL_vol[part_number][vol_lay] == 0, obj, key)
             if 'Boundaries' in key:

@@ -69,7 +69,19 @@ class FrameGen(ttk.LabelFrame):
 
         self.graph_frame()
         self.constants_frame()
-        self.entry_func_frame()
+        if self.db.get_share_data('count') < 102:
+            self.entry_func_frame()
+        else:
+            for i in range(self.db.get_share_data('count')):
+                tmp_f = tk.StringVar()
+                tmp_f.set(str(self.db.get_share_data('func')[i]))
+                self.func_entry_vel.append(tmp_f)
+
+                tmp_t = tk.StringVar()
+                tmp_t.set(str(self.db.get_share_data('time')[i]))
+                self.time_entry_vel.append(tmp_t)
+
+            self.rows_metod()
 
         self.update()
         # w = self.__root_widget.winfo_width()
@@ -110,6 +122,7 @@ class FrameGen(ttk.LabelFrame):
             from_row = True
         else:
             from_row = False
+
 
         self.cf = ScrolledWidget(self, (420, 600))
         self.cf.grid(row=4, column=0, padx=25)
@@ -217,8 +230,15 @@ class FrameGen(ttk.LabelFrame):
             self.time_entry_vel = tk.StringVar()
             self.time_entry_vel.set(tmp_t)
 
-        self.cf.destroy()
-        self.entry_func_fr.destroy()
+        try:
+            self.cf.destroy()
+        except Exception:
+            pass
+        try:
+            self.entry_func_fr.destroy()
+        except Exception:
+            pass
+
         self.entry_func_fr = tk.LabelFrame(self, text='Блок ввода данных временной функции')
         self.entry_func_fr.grid(row=4, column=0, columnspan=3, padx=5, sticky='NWE')
         self.description_fr()
@@ -368,16 +388,22 @@ class FrameGen(ttk.LabelFrame):
         func = self.db.get_share_data('func_full')
         self.entry_time_fix_val.set(self.db.get_share_data('tf_break'))
 
-        for i in range(len(self.func_entry_vel)):
-            self.func_entry_vel[i].set(str(func[i]))
-            self.time_entry_vel[i].set(str(time_[i]))
+        if isinstance(self.func_entry_vel, tk.StringVar):
+            pass
+        else:
+            for i in range(len(self.func_entry_vel)):
+                self.func_entry_vel[i].set(str(func[i]))
+                self.time_entry_vel[i].set(str(time_[i]))
 
         try:
             self.entry_f_val.set('{:0g}'.format(self.db.get_share_data('amplitude')))
         except TypeError:
             self.entry_f_val.set('1')
 
-        self.get()
+        if isinstance(self.func_entry_vel, tk.StringVar):
+            self.row_get()
+        else:
+            self.get()
 
     def ent_load(self, path):
         if path == '':
@@ -1158,11 +1184,11 @@ if __name__ == '__main__':
                                                        })
 
         def insert_share_data(self, key, value):
-            # if key in self.__obj_structure['share_data'].keys():
+            # if key in self.obj_structure['share_data'].keys():
             #     print(f'Ключ {key} был перезаписан')
             self.__obj_structure['share_data'].update({key: value})
 
-            # print(self.__obj_structure['share_data'].values())
+            # print(self.obj_structure['share_data'].values())
 
         def insert_first_level(self, key):
             self.__obj_structure[self.obj_name].update({key: {}})

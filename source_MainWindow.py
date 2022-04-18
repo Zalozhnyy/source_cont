@@ -428,6 +428,7 @@ class MainWindow(tk.Frame):
                                           [self.PAR, self.LAY, self.PL_surf, self.PL_vol, self.PL_bound,
                                            self.layer_numbers])
                 l.start_reading()
+
                 if l.loaded_flag:  # load successfully
                     self.global_tree_db, self.lag, self._marple = l.get_db_lag_marple()
                     if self._marple is not None:
